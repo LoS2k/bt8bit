@@ -206,7 +206,6 @@
     setText('p-fuel',     (data.fuel || 0).toLocaleString());
     setText('p-oil',      (data.oil || 0).toLocaleString());
     setText('p-coins',    (data.coins || 0).toLocaleString());
-    setText('p-diamonds', (data.diamonds || 0).toLocaleString());
     setText('p-playtime', (data.totalPlaytime || 0).toFixed(1) + ' год');
     setText('p-accountage', (data.accountAge || 0) + ' дн');
 
@@ -808,10 +807,7 @@
           <span><span class="res-icon">🛢️</span><span class="res-label">Нафта</span></span>
           <span class="res-value" id="p-oil">0</span>
         </div>
-        <div class="res-row">
-          <span><span class="res-icon">💎</span><span class="res-label">Діаманти</span></span>
-          <span class="res-value" id="p-diamonds">0</span>
-        </div>
+
       </div>
 
       <!-- Вийти -->
