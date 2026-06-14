@@ -8,7 +8,9 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged }
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
+    updateProfile }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -52,6 +54,79 @@
     await signOut(auth);
     showToast('Ви вийшли з акаунту');
   };
+
+  // ── EMAIL REGISTER ───────────────────────────────────────────
+  window.registerEmail = async () => {
+    const email    = document.getElementById('email-input').value.trim();
+    const password = document.getElementById('password-input').value;
+    const nickname = document.getElementById('nickname-input').value.trim();
+
+    if (!email || !password || !nickname) {
+      showToast('Заповни всі поля!', 'error'); return;
+    }
+    if (password.length < 6) {
+      showToast('Пароль мінімум 6 символів!', 'error'); return;
+    }
+    if (nickname.length < 3) {
+      showToast('Нікнейм мінімум 3 символи!', 'error'); return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: nickname });
+      showToast('Акаунт створено!');
+    } catch (e) {
+      const msg = e.code === 'auth/email-already-in-use'
+        ? 'Цей email вже зареєстрований'
+        : e.code === 'auth/invalid-email'
+        ? 'Невірний формат email'
+        : 'Помилка реєстрації: ' + e.message;
+      showToast(msg, 'error');
+    } finally { setAuthLoading(false); }
+  };
+
+  // ── EMAIL LOGIN ──────────────────────────────────────────────
+  window.loginEmail = async () => {
+    const email    = document.getElementById('email-input').value.trim();
+    const password = document.getElementById('password-input').value;
+
+    if (!email || !password) {
+      showToast('Введи email і пароль!', 'error'); return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      showToast('Успішний вхід!');
+    } catch (e) {
+      const msg = e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password'
+        ? 'Невірний email або пароль'
+        : e.code === 'auth/invalid-email'
+        ? 'Невірний формат email'
+        : 'Помилка входу: ' + e.message;
+      showToast(msg, 'error');
+    } finally { setAuthLoading(false); }
+  };
+
+  // ── RESET PASSWORD ───────────────────────────────────────────
+  window.resetPassword = async () => {
+    const email = document.getElementById('email-input').value.trim();
+    if (!email) { showToast('Введи email для скидання паролю!', 'error'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast('Лист для скидання паролю надіслано на ' + email);
+    } catch (e) {
+      showToast('Помилка: ' + e.message, 'error');
+    }
+  };
+
+  function setAuthLoading(on) {
+    const btn1 = document.getElementById('btn-login');
+    const btn2 = document.getElementById('btn-register');
+    if (btn1) btn1.disabled = on;
+    if (btn2) btn2.disabled = on;
+  }
 
   // ── LOAD PLAYER DATA ─────────────────────────────────────────
   async function loadPlayerData(uid) {
@@ -239,6 +314,59 @@
     font-size: 11px; color: var(--dim);
     line-height: 1.6;
   }
+
+  /* Auth tabs */
+  .auth-tabs { display:flex; margin-bottom:20px; border-bottom:1px solid var(--border); }
+  .auth-tab {
+    flex:1; padding:10px; background:transparent; border:none;
+    color:var(--dim); font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
+    font-family:var(--font-d);
+  }
+  .auth-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* Form inputs */
+  .auth-input {
+    width:100%; padding:12px 14px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text); font-size:13px; font-family:var(--font-b);
+    outline:none; transition:border-color .2s; margin-bottom:10px;
+    display:block;
+  }
+  .auth-input:focus { border-color:var(--gold); }
+  .auth-input::placeholder { color:var(--dim); }
+
+  .btn-email {
+    width:100%; padding:13px;
+    background:var(--gold); color:var(--bg);
+    border:none; cursor:pointer;
+    font-family:var(--font-d); font-size:12px;
+    letter-spacing:2px; text-transform:uppercase;
+    transition:background .2s; margin-bottom:8px;
+  }
+  .btn-email:hover { background:var(--gold2); }
+  .btn-email:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-email.secondary {
+    background:transparent; color:var(--steel);
+    border:1px solid var(--border);
+  }
+  .btn-email.secondary:hover { border-color:var(--steel); background:transparent; }
+
+  .divider {
+    display:flex; align-items:center; gap:12px;
+    margin:16px 0; color:var(--dim); font-size:11px;
+  }
+  .divider::before,.divider::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+
+  .forgot-link {
+    font-size:11px; color:var(--dim); cursor:pointer;
+    text-decoration:underline; background:none; border:none;
+    margin-bottom:12px; display:block; text-align:right;
+    transition:color .2s;
+  }
+  .forgot-link:hover { color:var(--gold); }
 
   /* ── PROFILE LAYOUT ──────────────────────────────────────── */
   #profile-screen { display:none; padding-top: 60px; min-height: 100vh; }
@@ -535,24 +663,56 @@
 <div id="login-screen">
   <div class="login-card">
     <span class="login-icon">🎖️</span>
-    <h2 class="login-title">Особистий кабінет</h2>
-    <p class="login-desc">
-      Увійди через Google — той самий акаунт що використовується в грі.
-      Переглядай статистику, керуй кланом і поповнюй баланс.
-    </p>
-    <button class="btn-google" onclick="signInGoogle()">
-      <svg viewBox="0 0 48 48">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      </svg>
-      Увійти через Google
-    </button>
-    <p class="login-note">
-      Використовується той самий Google акаунт що в грі.<br>
-      Дані синхронізуються автоматично.
-    </p>
+    <h2 class="login-title">BT 8BIT — Кабінет</h2>
+
+    <!-- Таби -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">Вхід</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">Реєстрація</button>
+    </div>
+
+    <!-- ВХІД -->
+    <div id="form-login">
+      <input class="auth-input" id="email-input" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="password-input" type="password" placeholder="Пароль"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter') loginEmail()">
+      <button class="forgot-link" onclick="resetPassword()">Забув пароль?</button>
+      <button class="btn-email" id="btn-login" onclick="loginEmail()">Увійти</button>
+      <div class="divider">або</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Увійти через Google
+      </button>
+    </div>
+
+    <!-- РЕЄСТРАЦІЯ -->
+    <div id="form-register" style="display:none">
+      <input class="auth-input" id="nickname-input" type="text"
+        placeholder="Нікнейм (мін. 3 символи)" maxlength="24">
+      <input class="auth-input" id="email-reg-input" type="email"
+        placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="password-reg-input" type="password"
+        placeholder="Пароль (мін. 6 символів)"
+        onkeydown="if(event.key==='Enter') registerEmailForm()">
+      <button class="btn-email" id="btn-register" onclick="registerEmailForm()">Створити акаунт</button>
+      <div class="divider">або</div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Зареєструватись через Google
+      </button>
+    </div>
+
+    <p class="login-note">Дані синхронізуються з грою автоматично.</p>
   </div>
 </div>
 
@@ -826,4 +986,27 @@ function setLang(lang) {
   });
 }
 setLang(profileLang);
+</script>
+<script>
+// ── AUTH TAB SWITCHER ────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+// ── REGISTER з форми реєстрації (окремі inputs) ──────────────
+window.registerEmailForm = async () => {
+  const nickname = document.getElementById('nickname-input')?.value.trim() || '';
+  const email    = document.getElementById('email-reg-input')?.value.trim() || '';
+  const password = document.getElementById('password-reg-input')?.value || '';
+
+  // Підставляємо в основні inputs щоб спільний registerEmail спрацював
+  document.getElementById('email-input').value    = email;
+  document.getElementById('password-input').value = password;
+  document.getElementById('nickname-input').value = nickname;
+
+  await window.registerEmail();
+};
 </script>
