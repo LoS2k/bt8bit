@@ -33,6 +33,7 @@
   // ── AUTH STATE ───────────────────────────────────────────────
   onAuthStateChanged(auth, async user => {
     if (user) {
+      _currentUser = user; // для WayForPay
       showProfile(user);
       await loadPlayerData(user.uid);
     } else {
@@ -925,11 +926,56 @@ function showTab(name) {
   });
 }
 
-// ── PAYMENT ──────────────────────────────────────────────────
+// ── WAYFORPAY ────────────────────────────────────────────────
+const WFP_MERCHANT = '8bit_lilac_vercel_app';
+let _currentUser = null;
+
 function openPayment(gold, price) {
-  // Тут буде виклик WayForPay API
-  showToast('Оплата ' + price + ' грн за ' + gold + ' золота — скоро буде підключено!', 'warn');
-  // TODO: window.open(wayforpayUrl, '_blank');
+  if (!_currentUser) {
+    showToast('Спочатку увійди в акаунт!', 'error');
+    return;
+  }
+
+  const orderRef  = 'BT8BIT_' + _currentUser.uid.slice(0,8) + '_' + Date.now();
+  const orderDate = Math.floor(Date.now() / 1000);
+  const productName = 'Золото BT 8BIT - ' + gold + ' шт';
+
+  // Створюємо форму WayForPay
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://secure.wayforpay.com/pay';
+  form.target = '_blank';
+
+  const fields = {
+    merchantAccount:    WFP_MERCHANT,
+    merchantDomainName: '8bit-lilac.vercel.app',
+    orderReference:     orderRef,
+    orderDate:          String(orderDate),
+    amount:             String(price),
+    currency:           'UAH',
+    orderTimeout:       '49000',
+    productName:        productName,
+    productCount:       '1',
+    productPrice:       String(price),
+    clientEmail:        _currentUser.email || '',
+    returnUrl:          'https://8bit-lilac.vercel.app/profile.html',
+    serviceUrl:         'https://us-central1-tanksbattles3d.cloudfunctions.net/wayforpayWebhook',
+    language:           'UA',
+  };
+
+  Object.entries(fields).forEach(([k, v]) => {
+    const inp = document.createElement('input');
+    inp.type  = 'hidden';
+    inp.name  = k;
+    inp.value = v;
+    form.appendChild(inp);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  showToast('Відкриваємо оплату ' + price + ' грн за ' + gold + ' золота...');
 }
 </script>
 
