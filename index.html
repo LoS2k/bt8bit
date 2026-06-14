@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT 8BIT — Танкові Бої 3D</title>
+<style>
+  :root {
+    --bg:#060a10; --surface:#0d1520; --card:#111e2e; --border:#1a3050;
+    --gold:#e8bc38; --gold2:#c49a20; --steel:#8eb0cc;
+    --text:#d4cdb8; --dim:#6a7a8a; --green:#2a7a40; --red:#8a1a1a;
+    --font-d:'Courier New',monospace; --font-b:system-ui,-apple-system,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;overflow-x:hidden;}
+
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:rgba(6,10,16,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo-icon{width:36px;height:36px;background:var(--gold);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:12px;font-weight:bold;color:var(--bg);}
+  .nav-logo-text{font-family:var(--font-d);font-size:16px;font-weight:bold;color:var(--gold);letter-spacing:2px;}
+  .nav-links{display:flex;gap:32px;list-style:none;}
+  .nav-links a{color:var(--dim);text-decoration:none;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:color .2s;}
+  .nav-links a:hover{color:var(--gold);}
+  .nav-right{display:flex;gap:12px;align-items:center;}
+  .nav-socials{display:flex;gap:6px;align-items:center;}
+  .nav-social-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;color:var(--dim);border:1px solid var(--border);text-decoration:none;transition:all .2s;position:relative;}
+  .nav-social-btn:hover{color:var(--gold);border-color:var(--gold);background:rgba(232,188,56,0.08);}
+  .nav-social-soon{opacity:0.4;cursor:default;}
+  .nav-social-soon:hover{color:var(--dim);border-color:var(--border);background:transparent;}
+  .soon-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:var(--gold);border-radius:50%;font-size:7px;color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:bold;}
+  .btn-nav{padding:7px 18px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:background .2s,color .2s;}
+  .btn-nav:hover{background:var(--gold);color:var(--bg);}
+
+  /* LANG SWITCHER */
+  .lang-switcher{display:flex;gap:4px;}
+  .lang-btn{padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;font-family:var(--font-d);}
+  .lang-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .lang-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.1);}
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(30,60,100,0.35) 0%,transparent 70%),linear-gradient(160deg,#060a10 0%,#0a1628 50%,#060a10 100%);}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(26,48,80,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(26,48,80,0.15) 1px,transparent 1px);background-size:40px 40px;}
+  .hero-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;}
+  .hero-content{position:relative;z-index:2;text-align:center;padding:100px 24px 60px;max-width:700px;}
+  .hero-eyebrow{display:inline-block;font-family:var(--font-d);font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;border:1px solid rgba(232,188,56,0.3);padding:5px 16px;margin-bottom:28px;animation:pulse-border 3s infinite;}
+  .hero-title{font-family:var(--font-d);font-size:clamp(40px,8vw,80px);font-weight:bold;color:#fff;line-height:1;letter-spacing:-1px;margin-bottom:8px;animation:flicker 8s infinite;}
+  .hero-title span{color:var(--gold);}
+  .hero-sub{font-family:var(--font-d);font-size:clamp(14px,3vw,22px);color:var(--steel);letter-spacing:6px;margin-bottom:20px;}
+  .hero-desc{font-size:15px;color:var(--dim);max-width:480px;margin:0 auto 40px;line-height:1.8;}
+  .hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+  .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:var(--gold);color:var(--bg);font-family:var(--font-d);font-size:12px;font-weight:bold;letter-spacing:2px;text-decoration:none;text-transform:uppercase;transition:background .2s,transform .15s;border:none;cursor:pointer;}
+  .btn-primary:hover{background:var(--gold2);transform:translateY(-2px);}
+  .btn-secondary{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:transparent;color:var(--steel);font-family:var(--font-d);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;border:1px solid var(--border);transition:border-color .2s,color .2s;}
+  .btn-secondary:hover{border-color:var(--steel);color:#fff;}
+
+  /* STATS BAR */
+  .stats-bar{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 40px;display:flex;justify-content:center;gap:0;}
+  .stat-item{flex:1;max-width:200px;text-align:center;padding:0 24px;border-right:1px solid var(--border);}
+  .stat-item:last-child{border-right:none;}
+  .stat-value{font-family:var(--font-d);font-size:28px;font-weight:bold;color:var(--gold);display:block;margin-bottom:4px;}
+  .stat-label{font-size:11px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+
+  /* SECTIONS */
+  section{padding:80px 40px;max-width:1100px;margin:0 auto;}
+  .section-eyebrow{font-family:var(--font-d);font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;display:block;}
+  h2{font-family:var(--font-d);font-size:clamp(22px,4vw,36px);color:#fff;margin-bottom:16px;line-height:1.2;}
+  .section-desc{color:var(--dim);max-width:520px;margin-bottom:48px;line-height:1.8;}
+
+  /* FEATURES */
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2px;background:var(--border);border:1px solid var(--border);}
+  .feature-card{background:var(--card);padding:32px 28px;transition:background .2s;}
+  .feature-card:hover{background:var(--surface);}
+  .feature-icon{font-size:28px;margin-bottom:16px;display:block;}
+  .feature-title{font-family:var(--font-d);font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;}
+  .feature-desc{font-size:13px;color:var(--dim);line-height:1.7;}
+
+  /* TANKS */
+  #tanks{background:var(--surface);max-width:100%;padding:80px 0;}
+  #tanks .inner{max-width:1100px;margin:0 auto;padding:0 40px;}
+  .tanks-scroll{display:flex;gap:2px;overflow-x:auto;padding:0 40px 20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .tank-card{flex-shrink:0;width:220px;background:var(--card);border:1px solid var(--border);padding:24px 20px;transition:border-color .2s;}
+  .tank-card:hover{border-color:var(--gold);}
+  .tank-nation{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .tank-name{font-family:var(--font-d);font-size:14px;color:#fff;margin-bottom:16px;}
+  .tank-tier{display:inline-block;background:var(--gold);color:var(--bg);font-family:var(--font-d);font-size:10px;font-weight:bold;padding:3px 8px;margin-bottom:16px;}
+  .tank-stats{display:flex;flex-direction:column;gap:6px;}
+  .tank-stat-row{display:flex;align-items:center;gap:8px;font-size:11px;}
+  .tank-stat-label{color:var(--dim);width:60px;flex-shrink:0;}
+  .tank-stat-bar{flex:1;height:3px;background:var(--border);position:relative;}
+  .tank-stat-fill{position:absolute;left:0;top:0;bottom:0;background:var(--gold);}
+
+  /* NEWS */
+  .news-grid{display:grid;grid-template-columns:2fr 1fr;gap:2px;background:var(--border);border:1px solid var(--border);}
+  .news-main{background:var(--card);padding:36px 32px;}
+  .news-sidebar{background:var(--card);display:flex;flex-direction:column;gap:2px;}
+  .news-tag{display:inline-block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(232,188,56,0.3);padding:3px 10px;margin-bottom:16px;}
+  .news-title-main{font-family:var(--font-d);font-size:20px;color:#fff;margin-bottom:12px;line-height:1.3;}
+  .news-date{font-size:11px;color:var(--dim);letter-spacing:1px;margin-bottom:16px;}
+  .news-text{font-size:13px;color:var(--dim);line-height:1.8;}
+  .news-item{background:var(--surface);padding:20px 24px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s;}
+  .news-item:hover{background:var(--card);}
+  .news-item:last-child{border-bottom:none;}
+  .news-item-tag{font-size:9px;color:var(--steel);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+  .news-item-title{font-size:13px;color:var(--text);margin-bottom:4px;line-height:1.4;}
+  .news-item-date{font-size:11px;color:var(--dim);}
+
+  /* DOWNLOAD */
+  #download{background:linear-gradient(135deg,var(--surface) 0%,var(--card) 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:100%;padding:80px 40px;}
+  #download .inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;}
+  .download-btns{display:flex;gap:16px;flex-wrap:wrap;}
+  .btn-download{display:flex;align-items:center;gap:14px;padding:16px 28px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:border-color .2s,background .2s;min-width:200px;}
+  .btn-download:hover{border-color:var(--gold);background:rgba(232,188,56,0.06);}
+  .btn-download-icon{font-size:28px;}
+  .btn-download-text{display:flex;flex-direction:column;}
+  .btn-download-sub{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+  .btn-download-label{font-family:var(--font-d);font-size:15px;color:#fff;}
+
+  /* FOOTER */
+  footer{background:var(--surface);border-top:1px solid var(--border);padding:48px 40px 32px;}
+  .footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+  .footer-brand p{font-size:13px;color:var(--dim);line-height:1.8;margin-top:12px;max-width:280px;}
+  .footer-col h4{font-family:var(--font-d);font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  .footer-col a{color:var(--dim);text-decoration:none;font-size:13px;transition:color .2s;}
+  .footer-col a:hover{color:var(--text);}
+  .footer-bottom{max-width:1100px;margin:0 auto;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);}
+  .pixel-divider{height:3px;background:repeating-linear-gradient(90deg,var(--gold) 0px,var(--gold) 8px,transparent 8px,transparent 16px);opacity:0.3;max-width:100%;}
+
+  @media(max-width:768px){
+    nav{padding:0 16px;}
+    .nav-links{display:none;}
+    section{padding:60px 20px;}
+    .stats-bar{flex-wrap:wrap;padding:24px 20px;}
+    .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:12px 0;}
+    .stat-item:last-child{border-bottom:none;}
+    .news-grid{grid-template-columns:1fr;}
+    .footer-inner{grid-template-columns:1fr 1fr;}
+    .footer-bottom{flex-direction:column;gap:12px;text-align:center;}
+    #download .inner{flex-direction:column;}
+  }
+  @keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.85}94%{opacity:1}}
+  @keyframes pulse-border{0%,100%{border-color:rgba(232,188,56,.3)}50%{border-color:rgba(232,188,56,.7)}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">BT</div>
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features" data-i18n="nav.features">Особливості</a></li>
+    <li><a href="#tanks"    data-i18n="nav.tanks">Танки</a></li>
+    <li><a href="#news"     data-i18n="nav.news">Новини</a></li>
+    <li><a href="#download" data-i18n="nav.download">Завантажити</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-socials">
+      <a class="nav-social-btn" href="https://t.me/tanks_battles_3d" target="_blank" title="Telegram">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+      </a>
+      <a class="nav-social-btn" href="https://www.youtube.com/@Los_2k" target="_blank" title="YouTube">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+      </a>
+      <a class="nav-social-btn" href="https://discord.gg/Rezw5FSMUC" target="_blank" title="Discord">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </a>
+      <a class="nav-social-btn nav-social-soon" href="#" title="Facebook — скоро">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <span class="soon-dot">!</span>
+      </a>
+    </div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('uk')">UA</button>
+      <button class="lang-btn"        onclick="setLang('en')">EN</button>
+    </div>
+    <a class="btn-nav" href="profile.html" data-i18n="nav.cabinet">Кабінет</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div><div class="hero-scanlines"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">Відкрите бета-тестування</div>
+    <h1 class="hero-title">BT <span>8BIT</span></h1>
+    <div class="hero-sub" data-i18n="hero.sub">ТАНКОВІ БОЇ 3D</div>
+    <p class="hero-desc" data-i18n="hero.desc">
+      Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями. Обирай танк — веди свій взвод до перемоги.
+    </p>
+    <div class="hero-btns">
+      <a class="btn-primary"   href="#download" data-i18n="hero.btn1">▶ Завантажити безкоштовно</a>
+      <a class="btn-secondary" href="#features" data-i18n="hero.btn2">Дізнатись більше</a>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label" data-i18n="stats.tanks">Танків</span></div>
+  <div class="stat-item"><span class="stat-value">7v7</span><span class="stat-label"  data-i18n="stats.battles">Командні бої</span></div>
+  <div class="stat-item"><span class="stat-value">10+</span><span class="stat-label"  data-i18n="stats.maps">Карт</span></div>
+  <div class="stat-item"><span class="stat-value">ЗБТ</span><span class="stat-label"  data-i18n="stats.beta">Скоро</span></div>
+</div>
+<div class="pixel-divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <span class="section-eyebrow" data-i18n="features.eyebrow">Можливості</span>
+  <h2 data-i18n="features.title">Що робить BT 8BIT особливим</h2>
+  <p class="section-desc" data-i18n="features.desc">Реалістична механіка бронювання, система кланів і глобальна карта — все в одній мобільній грі.</p>
+  <div class="features-grid">
+    <div class="feature-card"><span class="feature-icon">🛡️</span><div class="feature-title" data-i18n="f1.title">Реалістична броня</div><p class="feature-desc" data-i18n="f1.desc">Система пробиття броні з урахуванням кута нахилу, товщини і типу снаряда. Кожен постріл — тактичне рішення.</p></div>
+    <div class="feature-card"><span class="feature-icon">⚔️</span><div class="feature-title" data-i18n="f2.title">7 на 7 бої</div><p class="feature-desc" data-i18n="f2.desc">Командні бої в реальному часі. Координація з союзниками, захоплення точок і руйнування баз.</p></div>
+    <div class="feature-card"><span class="feature-icon">🏰</span><div class="feature-title" data-i18n="f3.title">Система кланів</div><p class="feature-desc" data-i18n="f3.desc">Створюй клан, будуй споруди, донатуй ресурси і захоплюй регіони на глобальній карті.</p></div>
+    <div class="feature-card"><span class="feature-icon">🔧</span><div class="feature-title" data-i18n="f4.title">Кастомізація</div><p class="feature-desc" data-i18n="f4.desc">Покращуй модулі, обирай спорядження і налаштовуй танк під свій стиль гри.</p></div>
+    <div class="feature-card"><span class="feature-icon">🗺️</span><div class="feature-title" data-i18n="f5.title">Глобальна карта</div><p class="feature-desc" data-i18n="f5.desc">Клани змагаються за регіони і отримують ресурси. Альянси, дипломатія і клан-війни.</p></div>
+    <div class="feature-card"><span class="feature-icon">📊</span><div class="feature-title" data-i18n="f6.title">Детальна статистика</div><p class="feature-desc" data-i18n="f6.desc">Відстежуй прогрес, вінрейт, урон і рейтинг по кожному танку і сесії.</p></div>
+  </div>
+</section>
+<div class="pixel-divider"></div>
+
+<!-- TANKS -->
+<div id="tanks">
+  <div class="inner">
+    <span class="section-eyebrow" data-i18n="tanks.eyebrow">Техніка</span>
+    <h2 data-i18n="tanks.title">Обирай свій танк</h2>
+    <p class="section-desc" data-i18n="tanks.desc">Від легких розвідників до важких штурмових машин — кожен танк має унікальні характеристики.</p>
+  </div>
+  <div class="tanks-scroll">
+    <div class="tank-card">
+      <div class="tank-nation">🇩🇪 <span data-i18n="nation.de">Німеччина</span></div>
+      <div class="tank-name">Panzer IV</div><div class="tank-tier" data-i18n="tier4">Рівень IV</div>
+      <div class="tank-stats">
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.armor">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:55%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.dmg">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:60%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.spd">Швидкість</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.view">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
+      </div>
+    </div>
+    <div class="tank-card">
+      <div class="tank-nation">🛡 <span data-i18n="nation.su">СРСР</span></div>
+      <div class="tank-name">T-34</div><div class="tank-tier" data-i18n="tier5">Рівень V</div>
+      <div class="tank-stats">
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.armor">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.dmg">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.spd">Швидкість</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:75%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.view">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
+      </div>
+    </div>
+    <div class="tank-card">
+      <div class="tank-nation">🇺🇸 <span data-i18n="nation.us">США</span></div>
+      <div class="tank-name">M18 Hellcat</div><div class="tank-tier" data-i18n="tier6">Рівень VI</div>
+      <div class="tank-stats">
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.armor">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:30%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.dmg">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:75%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.spd">Швидкість</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:95%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.view">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:85%"></div></div></div>
+      </div>
+    </div>
+    <div class="tank-card">
+      <div class="tank-nation">🇩🇪 <span data-i18n="nation.de">Німеччина</span></div>
+      <div class="tank-name">Tiger I</div><div class="tank-tier" data-i18n="tier7">Рівень VII</div>
+      <div class="tank-stats">
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.armor">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:85%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.dmg">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:80%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.spd">Швидкість</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:40%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.view">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:60%"></div></div></div>
+      </div>
+    </div>
+    <div class="tank-card">
+      <div class="tank-nation">🇫🇷 <span data-i18n="nation.fr">Франція</span></div>
+      <div class="tank-name">AMX 13</div><div class="tank-tier" data-i18n="tier7">Рівень VII</div>
+      <div class="tank-stats">
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.armor">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:25%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.dmg">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.spd">Швидкість</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:88%"></div></div></div>
+        <div class="tank-stat-row"><span class="tank-stat-label" data-i18n="stat.view">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:90%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="pixel-divider"></div>
+
+<!-- NEWS -->
+<section id="news">
+  <span class="section-eyebrow" data-i18n="news.eyebrow">Новини</span>
+  <h2 data-i18n="news.title">Останні оновлення</h2>
+  <div class="news-grid">
+    <div class="news-main">
+      <span class="news-tag" data-i18n="news.tag1">Оновлення</span>
+      <h3 class="news-title-main" data-i18n="news.main.title">Відкрите бета-тестування — скоро</h3>
+      <div class="news-date" data-i18n="news.main.date">Червень 2025</div>
+      <p class="news-text" data-i18n="news.main.text">Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж для першого танку.</p>
+    </div>
+    <div class="news-sidebar">
+      <div class="news-item"><div class="news-item-tag" data-i18n="news.tag.clans">Клани</div><div class="news-item-title" data-i18n="news.n1">Система кланів — глобальна карта і клан-війни</div><div class="news-item-date">05.2025</div></div>
+      <div class="news-item"><div class="news-item-tag" data-i18n="news.tag.tanks">Техніка</div><div class="news-item-title" data-i18n="news.n2">Додано 12 нових танків: Франція та США</div><div class="news-item-date">04.2025</div></div>
+      <div class="news-item"><div class="news-item-tag" data-i18n="news.tag.balance">Баланс</div><div class="news-item-title" data-i18n="news.n3">Оновлено фізику пробиття і рікошетів</div><div class="news-item-date">03.2025</div></div>
+      <div class="news-item"><div class="news-item-tag" data-i18n="news.tag.maps">Карти</div><div class="news-item-title" data-i18n="news.n4">Нова карта Полігон — міські бої</div><div class="news-item-date">02.2025</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<div id="download">
+  <div class="inner">
+    <div class="download-text">
+      <span class="section-eyebrow" data-i18n="dl.eyebrow">Завантажити</span>
+      <h2 data-i18n="dl.title">Готовий до бою?</h2>
+      <p data-i18n="dl.desc">Доступно безкоштовно на Android. Реєструйся зараз і отримай стартовий бонус.</p>
+    </div>
+    <div class="download-btns">
+      <a class="btn-download" href="#">
+        <span class="btn-download-icon">📱</span>
+        <span class="btn-download-text">
+          <span class="btn-download-sub" data-i18n="dl.gp.sub">Завантажити в</span>
+          <span class="btn-download-label">Google Play</span>
+        </span>
+      </a>
+      <a class="btn-download" href="#">
+        <span class="btn-download-icon">📦</span>
+        <span class="btn-download-text">
+          <span class="btn-download-sub" data-i18n="dl.apk.sub">Прямий APK</span>
+          <span class="btn-download-label">Android</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="nav-logo"><div class="nav-logo-icon">BT</div><span class="nav-logo-text">BT 8BIT</span></div>
+      <p data-i18n="footer.desc">Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.</p>
+    </div>
+    <div class="footer-col">
+      <h4 data-i18n="footer.game">Гра</h4>
+      <ul>
+        <li><a href="#features" data-i18n="nav.features">Особливості</a></li>
+        <li><a href="#tanks"    data-i18n="nav.tanks">Танки</a></li>
+        <li><a href="#news"     data-i18n="nav.news">Новини</a></li>
+        <li><a href="profile.html" data-i18n="footer.cabinet">Кабінет</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4 data-i18n="footer.support">Підтримка</h4>
+      <ul>
+        <li><a href="#" data-i18n="footer.faq">FAQ</a></li>
+        <li><a href="#" data-i18n="footer.feedback">Зворотній зв'язок</a></li>
+        <li><a href="https://discord.gg/Rezw5FSMUC" target="_blank">Discord</a></li>
+        <li><a href="https://t.me/tanks_battles_3d" target="_blank">Telegram</a></li>
+        <li><a href="https://www.youtube.com/@Los_2k" target="_blank">YouTube</a></li>
+        <li><a href="#" style="opacity:.4;cursor:default">Facebook <span style="font-size:10px;color:var(--gold)">(скоро)</span></a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4 data-i18n="footer.legal">Правове</h4>
+      <ul>
+        <li><a href="#" data-i18n="footer.terms">Угода користувача</a></li>
+        <li><a href="#" data-i18n="footer.privacy">Конфіденційність</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 BT 8BIT.</span>
+    <span data-i18n="footer.made">Розроблено в 🇺🇦 Україні</span>
+  </div>
+</footer>
+
+<script>
+// ── i18n ────────────────────────────────────────────────────
+const i18n = {
+  uk: {
+    'nav.features':'Особливості','nav.tanks':'Танки','nav.news':'Новини',
+    'nav.download':'Завантажити','nav.cabinet':'Кабінет',
+    'hero.eyebrow':'Відкрите бета-тестування','hero.sub':'ТАНКОВІ БОЇ 3D',
+    'hero.desc':'Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями. Обирай танк — веди свій взвод до перемоги.',
+    'hero.btn1':'▶ Завантажити безкоштовно','hero.btn2':'Дізнатись більше',
+    'stats.tanks':'Танків','stats.battles':'Командні бої','stats.maps':'Карт','stats.beta':'Скоро',
+    'features.eyebrow':'Можливості','features.title':'Що робить BT 8BIT особливим',
+    'features.desc':'Реалістична механіка бронювання, система кланів і глобальна карта — все в одній мобільній грі.',
+    'f1.title':'Реалістична броня','f1.desc':'Система пробиття броні з урахуванням кута нахилу, товщини і типу снаряда. Кожен постріл — тактичне рішення.',
+    'f2.title':'7 на 7 бої','f2.desc':'Командні бої в реальному часі. Координація з союзниками, захоплення точок і руйнування баз.',
+    'f3.title':'Система кланів','f3.desc':'Створюй клан, будуй споруди, донатуй ресурси і захоплюй регіони на глобальній карті.',
+    'f4.title':'Кастомізація','f4.desc':'Покращуй модулі, обирай спорядження і налаштовуй танк під свій стиль гри.',
+    'f5.title':'Глобальна карта','f5.desc':'Клани змагаються за регіони і отримують ресурси. Альянси, дипломатія і клан-війни.',
+    'f6.title':'Детальна статистика','f6.desc':'Відстежуй прогрес, вінрейт, урон і рейтинг по кожному танку і сесії.',
+    'tanks.eyebrow':'Техніка','tanks.title':'Обирай свій танк',
+    'tanks.desc':'Від легких розвідників до важких штурмових машин — кожен танк має унікальні характеристики.',
+    'nation.de':'Німеччина','nation.su':'СРСР','nation.us':'США','nation.fr':'Франція',
+    'tier4':'Рівень IV','tier5':'Рівень V','tier6':'Рівень VI','tier7':'Рівень VII',
+    'stat.armor':'Броня','stat.dmg':'Урон','stat.spd':'Швидкість','stat.view':'Огляд',
+    'news.eyebrow':'Новини','news.title':'Останні оновлення',
+    'news.tag1':'Оновлення','news.main.title':'Відкрите бета-тестування — скоро',
+    'news.main.date':'Червень 2025',
+    'news.main.text':'Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж для першого танку.',
+    'news.tag.clans':'Клани','news.tag.tanks':'Техніка','news.tag.balance':'Баланс','news.tag.maps':'Карти',
+    'news.n1':'Система кланів — глобальна карта і клан-війни',
+    'news.n2':'Додано 12 нових танків: Франція та США',
+    'news.n3':'Оновлено фізику пробиття і рікошетів',
+    'news.n4':'Нова карта Полігон — міські бої',
+    'dl.eyebrow':'Завантажити','dl.title':'Готовий до бою?',
+    'dl.desc':'Доступно безкоштовно на Android. Реєструйся зараз і отримай стартовий бонус.',
+    'dl.gp.sub':'Завантажити в','dl.apk.sub':'Прямий APK',
+    'footer.desc':'Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.',
+    'footer.game':'Гра','footer.support':'Підтримка','footer.legal':'Правове',
+    'footer.cabinet':'Кабінет','footer.faq':'FAQ','footer.feedback':"Зворотній зв'язок",
+    'footer.terms':'Угода користувача','footer.privacy':'Конфіденційність',
+    'footer.made':'Розроблено в 🇺🇦 Україні',
+  },
+  en: {
+    'nav.features':'Features','nav.tanks':'Tanks','nav.news':'News',
+    'nav.download':'Download','nav.cabinet':'Cabinet',
+    'hero.eyebrow':'Open Beta Coming Soon','hero.sub':'TANK BATTLES 3D',
+    'hero.desc':'Mobile tank game with realistic physics, clans and global battles. Choose your tank — lead your platoon to victory.',
+    'hero.btn1':'▶ Download Free','hero.btn2':'Learn More',
+    'stats.tanks':'Tanks','stats.battles':'Team Battles','stats.maps':'Maps','stats.beta':'Soon',
+    'features.eyebrow':'Features','features.title':'What makes BT 8BIT special',
+    'features.desc':'Realistic armor mechanics, clan system and global map — all in one mobile game.',
+    'f1.title':'Realistic Armor','f1.desc':'Shell penetration system accounting for angle, thickness and shell type. Every shot is a tactical decision.',
+    'f2.title':'7 vs 7 Battles','f2.desc':'Real-time team battles. Coordinate with allies, capture points and destroy bases.',
+    'f3.title':'Clan System','f3.desc':'Create a clan, build structures, donate resources and capture regions on the global map.',
+    'f4.title':'Customization','f4.desc':'Upgrade modules, choose equipment and configure your tank to your playstyle.',
+    'f5.title':'Global Map','f5.desc':'Clans compete for regions and earn resources. Alliances, diplomacy and clan wars.',
+    'f6.title':'Detailed Stats','f6.desc':'Track your progress, winrate, damage and rating for every tank and session.',
+    'tanks.eyebrow':'Vehicles','tanks.title':'Choose Your Tank',
+    'tanks.desc':'From light scouts to heavy assault machines — every tank has unique characteristics.',
+    'nation.de':'Germany','nation.su':'USSR','nation.us':'USA','nation.fr':'France',
+    'tier4':'Tier IV','tier5':'Tier V','tier6':'Tier VI','tier7':'Tier VII',
+    'stat.armor':'Armor','stat.dmg':'Damage','stat.spd':'Speed','stat.view':'View Range',
+    'news.eyebrow':'News','news.title':'Latest Updates',
+    'news.tag1':'Update','news.main.title':'Open Beta — Coming Soon',
+    'news.main.date':'June 2025',
+    'news.main.text':'We are preparing for the launch of BT 8BIT open beta. Register now to get early access and a starter bonus — 500 gold and an exclusive camouflage for your first tank.',
+    'news.tag.clans':'Clans','news.tag.tanks':'Vehicles','news.tag.balance':'Balance','news.tag.maps':'Maps',
+    'news.n1':'Clan system — global map and clan wars',
+    'news.n2':'12 new tanks added: France and USA',
+    'news.n3':'Updated armor penetration and ricochet physics',
+    'news.n4':'New map Polygon — urban combat',
+    'dl.eyebrow':'Download','dl.title':'Ready for Battle?',
+    'dl.desc':'Free on Android. Register now and get a starter bonus.',
+    'dl.gp.sub':'Get it on','dl.apk.sub':'Direct APK',
+    'footer.desc':'Mobile tank game with realistic armor mechanics and clan system. Made in Ukraine.',
+    'footer.game':'Game','footer.support':'Support','footer.legal':'Legal',
+    'footer.cabinet':'Cabinet','footer.faq':'FAQ','footer.feedback':'Feedback',
+    'footer.terms':'Terms of Service','footer.privacy':'Privacy Policy',
+    'footer.made':'Made in 🇺🇦 Ukraine',
+  }
+};
+
+let currentLang = localStorage.getItem('bt8bit_lang') || 'uk';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('bt8bit_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[lang][key]) el.textContent = i18n[lang][key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active',
+      (btn.textContent === 'UA' && lang === 'uk') ||
+      (btn.textContent === 'EN' && lang === 'en'));
+  });
+}
+
+// Ініціалізація при завантаженні
+setLang(currentLang);
+
+// Підсвічування активного пункту меню
+window.addEventListener('scroll', () => {
+  let current = '';
+  document.querySelectorAll('section,[id]').forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.style.color = a.getAttribute('href') === '#' + current ? 'var(--gold)' : '';
+  });
+});
+</script>
+</body>
+</html>
