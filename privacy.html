@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT 8BIT — Політика конфіденційності</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;
+    --gold:#e8bc38;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;
+    --px:'Press Start 2P',monospace;--rb:'Roboto',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--rb);line-height:1.7;}
+
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 32px;height:64px;
+    background:rgba(6,10,16,0.95);backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .nav-logo img{width:36px;height:36px;image-rendering:pixelated;}
+  .nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);letter-spacing:2px;}
+  .btn-nav{padding:8px 18px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--px);font-size:10px;text-decoration:none;transition:all .2s;}
+  .btn-nav:hover{border-color:var(--gold);color:var(--gold);}
+
+  .hero-small{
+    padding:120px 40px 60px;
+    background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(30,60,100,.3) 0%,transparent 70%);
+    border-bottom:1px solid var(--border);
+    text-align:center;
+  }
+  .page-eye{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:16px;}
+  .page-title{font-family:var(--px);font-size:clamp(14px,3vw,22px);color:#fff;margin-bottom:12px;line-height:1.5;}
+  .page-date{font-family:var(--px);font-size:8px;color:var(--dim);}
+
+  .content{max-width:800px;margin:0 auto;padding:60px 40px;}
+
+  .section-block{
+    margin-bottom:48px;padding:32px;
+    background:var(--card);border:1px solid var(--border);
+    border-left:3px solid var(--steel);
+  }
+  .section-num{font-family:var(--px);font-size:8px;color:var(--steel);letter-spacing:2px;display:block;margin-bottom:12px;}
+  .section-title{font-family:var(--px);font-size:12px;color:#fff;margin-bottom:16px;line-height:1.6;}
+  .section-text{font-family:var(--rb);font-size:14px;color:var(--dim);line-height:1.9;}
+  .section-text p{margin-bottom:12px;}
+  .section-text ul{padding-left:20px;margin-bottom:12px;}
+  .section-text li{margin-bottom:8px;}
+  .section-text strong{color:var(--text);}
+
+  .data-table{width:100%;border-collapse:collapse;margin-top:16px;}
+  .data-table th{font-family:var(--px);font-size:7px;color:var(--gold);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--surf);}
+  .data-table td{font-family:var(--rb);font-size:13px;color:var(--dim);padding:10px 12px;border-bottom:1px solid rgba(26,48,80,.5);}
+  .data-table tr:last-child td{border-bottom:none;}
+
+  .highlight{
+    background:rgba(142,176,204,.06);border:1px solid rgba(142,176,204,.2);
+    padding:16px 20px;margin-top:16px;
+    font-family:var(--rb);font-size:13px;color:var(--steel);line-height:1.8;
+  }
+
+  footer{
+    background:var(--surf);border-top:1px solid var(--border);
+    padding:32px 40px;text-align:center;
+    font-family:var(--px);font-size:8px;color:var(--dim);
+  }
+  footer a{color:var(--gold);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  @media(max-width:768px){
+    nav{padding:0 16px;}
+    .content{padding:40px 20px;}
+    .hero-small{padding:100px 20px 40px;}
+    .section-block{padding:20px;}
+    .data-table{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <a class="btn-nav" href="index.html">← Головна</a>
+</nav>
+
+<div class="hero-small">
+  <span class="page-eye">Юридична інформація</span>
+  <h1 class="page-title">Політика конфіденційності</h1>
+  <span class="page-date">Редакція від 14 червня 2025 року</span>
+</div>
+
+<div class="content">
+
+  <div class="highlight">
+    Ми серйозно ставимось до захисту ваших персональних даних. Ця Політика пояснює які дані ми збираємо, як використовуємо та захищаємо їх.
+  </div>
+
+  <br>
+
+  <div class="section-block">
+    <span class="section-num">01 — Збір даних</span>
+    <div class="section-title">Які дані ми збираємо</div>
+    <div class="section-text">
+      <p>При використанні BT 8BIT ми можемо збирати наступні дані:</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Тип даних</th><th>Приклад</th><th>Мета</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ідентифікатор акаунту</td><td>UID Firebase</td><td>Авторизація</td></tr>
+          <tr><td>Email адреса</td><td>user@gmail.com</td><td>Вхід та відновлення</td></tr>
+          <tr><td>Нікнейм гравця</td><td>Tank_Player_2025</td><td>Відображення в грі</td></tr>
+          <tr><td>Ігрова статистика</td><td>Бої, перемоги, рейтинг</td><td>Ігровий прогрес</td></tr>
+          <tr><td>Ігрові ресурси</td><td>Золото, метал, нафта</td><td>Ігрова економіка</td></tr>
+          <tr><td>Дані платежів</td><td>Сума, дата, статус</td><td>Обробка покупок</td></tr>
+          <tr><td>Технічні дані</td><td>Платформа Android, версія гри</td><td>Технічна підтримка</td></tr>
+          <tr><td>Час в грі</td><td>Тривалість сесій</td><td>Статистика</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">02 — Використання даних</span>
+    <div class="section-title">Як ми використовуємо ваші дані</div>
+    <div class="section-text">
+      <p>Зібрані дані використовуються виключно для:</p>
+      <ul>
+        <li><strong>Надання послуг</strong> — забезпечення роботи гри і збереження прогресу</li>
+        <li><strong>Авторизації</strong> — ідентифікація гравця при кожному вході</li>
+        <li><strong>Обробки платежів</strong> — нарахування придбаної внутрішньоігрової валюти</li>
+        <li><strong>Підтримки</strong> — вирішення технічних проблем та звернень</li>
+        <li><strong>Безпеки</strong> — виявлення та запобігання шахрайству і читингу</li>
+        <li><strong>Покращення гри</strong> — аналіз статистики для балансування</li>
+      </ul>
+      <div class="highlight">
+        Ми не продаємо ваші персональні дані третім особам і не використовуємо їх для реклами без вашої згоди.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">03 — Зберігання даних</span>
+    <div class="section-title">Де та як зберігаються дані</div>
+    <div class="section-text">
+      <p>Всі дані гравців зберігаються в Firebase (Google Cloud Platform) з серверами в регіоні <strong>europe-west3</strong>.</p>
+      <ul>
+        <li>Дані захищені шифруванням при передачі (HTTPS/TLS)</li>
+        <li>Доступ до бази даних обмежений правилами Firestore Security Rules</li>
+        <li>Дані зберігаються протягом всього часу існування акаунту</li>
+        <li>Після видалення акаунту дані видаляються протягом 30 днів</li>
+      </ul>
+      <p>Firebase є сервісом Google LLC і підпорядковується їхній <a href="https://policies.google.com/privacy" target="_blank" style="color:var(--gold)">Політиці конфіденційності</a>.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">04 — Платежі</span>
+    <div class="section-title">Безпека фінансових даних</div>
+    <div class="section-text">
+      <p>Платежі обробляються через <strong>WayForPay</strong> — сертифікований платіжний шлюз України.</p>
+      <ul>
+        <li>Дані банківських карт <strong>не зберігаються</strong> на наших серверах</li>
+        <li>Вся платіжна інформація обробляється безпосередньо WayForPay</li>
+        <li>Ми зберігаємо лише: суму, дату, статус та UID гравця для нарахування валюти</li>
+        <li>WayForPay сертифікований за стандартом PCI DSS</li>
+      </ul>
+      <p>Детальніше про захист платіжних даних: <a href="https://wayforpay.com" target="_blank" style="color:var(--gold)">wayforpay.com</a></p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">05 — Треті особи</span>
+    <div class="section-title">Передача даних</div>
+    <div class="section-text">
+      <p>Ми можемо передавати обмежені дані наступним сервісам:</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Сервіс</th><th>Мета</th><th>Дані</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Firebase / Google</td><td>Зберігання даних, авторизація</td><td>Акаунт, статистика</td></tr>
+          <tr><td>WayForPay</td><td>Обробка платежів</td><td>Email, сума</td></tr>
+          <tr><td>Google Play</td><td>Дистрибуція гри</td><td>ID пристрою</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px">Ми не передаємо дані рекламним мережам, брокерам даних або іншим третім особам без вашої явної згоди.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">06 — Права користувача</span>
+    <div class="section-title">Ваші права щодо даних</div>
+    <div class="section-text">
+      <p>Відповідно до законодавства України ви маєте право:</p>
+      <ul>
+        <li><strong>Доступ</strong> — отримати копію всіх ваших даних</li>
+        <li><strong>Виправлення</strong> — виправити неточні дані (нікнейм змінюється в грі)</li>
+        <li><strong>Видалення</strong> — видалити акаунт та всі пов'язані дані</li>
+        <li><strong>Заперечення</strong> — відмовитись від певних видів обробки даних</li>
+        <li><strong>Портативність</strong> — отримати дані у машиночитаному форматі</li>
+      </ul>
+      <p>Для реалізації своїх прав зверніться до нас через контакти нижче.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">07 — Діти</span>
+    <div class="section-title">Захист неповнолітніх</div>
+    <div class="section-text">
+      <p>Гра BT 8BIT призначена для осіб від <strong>12 років</strong>. Ми не збираємо свідомо персональні дані дітей до 13 років.</p>
+      <p>Якщо ви є батьком або опікуном і вважаєте, що ваша дитина надала нам персональні дані — зверніться до нас для їх видалення.</p>
+      <p>Внутрішньоігрові покупки для осіб до 18 років можливі лише за згодою батьків або опікунів.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">08 — Контакти</span>
+    <div class="section-title">Зв'язатись з нами</div>
+    <div class="section-text">
+      <p>З питань конфіденційності та захисту даних:</p>
+      <ul>
+        <li><strong>Telegram:</strong> <a href="https://t.me/tanks_battles_3d" style="color:var(--gold)">@tanks_battles_3d</a></li>
+        <li><strong>Discord:</strong> <a href="https://discord.gg/Rezw5FSMUC" style="color:var(--gold)">discord.gg/Rezw5FSMUC</a></li>
+        <li><strong>Email:</strong> tanksbattles3d@gmail.com</li>
+      </ul>
+      <p style="margin-top:12px">Ми відповідаємо на запити щодо персональних даних протягом <strong>10 робочих днів</strong>.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2025 BT 8BIT · <a href="terms.html">Угода користувача</a> · <a href="privacy.html">Конфіденційність</a> · <a href="index.html">Головна</a></p>
+  <p style="margin-top:12px">Розроблено в 🇺🇦 Україні</p>
+</footer>
+
+</body>
+</html>

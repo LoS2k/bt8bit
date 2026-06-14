@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT 8BIT — Угода користувача</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;
+    --gold:#e8bc38;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;
+    --px:'Press Start 2P',monospace;--rb:'Roboto',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--rb);line-height:1.7;}
+
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 32px;height:64px;
+    background:rgba(6,10,16,0.95);backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .nav-logo img{width:36px;height:36px;image-rendering:pixelated;}
+  .nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);letter-spacing:2px;}
+  .btn-nav{padding:8px 18px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--px);font-size:10px;text-decoration:none;transition:all .2s;}
+  .btn-nav:hover{border-color:var(--gold);color:var(--gold);}
+
+  .hero-small{
+    padding:120px 40px 60px;
+    background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(30,60,100,.3) 0%,transparent 70%);
+    border-bottom:1px solid var(--border);
+    text-align:center;
+  }
+  .page-eye{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:16px;}
+  .page-title{font-family:var(--px);font-size:clamp(14px,3vw,22px);color:#fff;margin-bottom:12px;line-height:1.5;}
+  .page-date{font-family:var(--px);font-size:8px;color:var(--dim);}
+
+  .content{max-width:800px;margin:0 auto;padding:60px 40px;}
+
+  .section-block{
+    margin-bottom:48px;
+    padding:32px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--gold);
+  }
+  .section-num{
+    font-family:var(--px);font-size:8px;color:var(--gold);
+    letter-spacing:2px;display:block;margin-bottom:12px;
+  }
+  .section-title{
+    font-family:var(--px);font-size:12px;color:#fff;
+    margin-bottom:16px;line-height:1.6;
+  }
+  .section-text{
+    font-family:var(--rb);font-size:14px;color:var(--dim);
+    line-height:1.9;
+  }
+  .section-text p{margin-bottom:12px;}
+  .section-text ul{padding-left:20px;margin-bottom:12px;}
+  .section-text li{margin-bottom:8px;}
+  .section-text strong{color:var(--text);}
+
+  .highlight{
+    background:rgba(232,188,56,.06);
+    border:1px solid rgba(232,188,56,.2);
+    padding:16px 20px;margin-top:16px;
+    font-family:var(--rb);font-size:13px;color:var(--steel);
+    line-height:1.8;
+  }
+
+  footer{
+    background:var(--surf);border-top:1px solid var(--border);
+    padding:32px 40px;text-align:center;
+    font-family:var(--px);font-size:8px;color:var(--dim);
+  }
+  footer a{color:var(--gold);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  @media(max-width:768px){
+    nav{padding:0 16px;}
+    .content{padding:40px 20px;}
+    .hero-small{padding:100px 20px 40px;}
+    .section-block{padding:20px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <a class="btn-nav" href="index.html">← Головна</a>
+</nav>
+
+<div class="hero-small">
+  <span class="page-eye">Юридична інформація</span>
+  <h1 class="page-title">Угода користувача</h1>
+  <span class="page-date">Редакція від 14 червня 2025 року</span>
+</div>
+
+<div class="content">
+
+  <div class="highlight">
+    Використовуючи гру BT 8BIT та пов'язані сервіси, ви погоджуєтесь з умовами цієї Угоди. Будь ласка, прочитайте її уважно перед початком використання.
+  </div>
+
+  <br>
+
+  <div class="section-block">
+    <span class="section-num">01 — Загальні положення</span>
+    <div class="section-title">Предмет угоди</div>
+    <div class="section-text">
+      <p>Ця Угода користувача (далі — «Угода») регулює відносини між розробником гри BT 8BIT (далі — «Розробник») та користувачем (далі — «Гравець») щодо використання мобільної гри «BT 8BIT — Tanks Battles 3D» та пов'язаних сервісів, включаючи веб-сайт bt8bit.com.ua.</p>
+      <p>Розпочинаючи використання гри, гравець підтверджує, що прочитав, зрозумів та погоджується з усіма умовами цієї Угоди.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">02 — Акаунт</span>
+    <div class="section-title">Реєстрація та безпека</div>
+    <div class="section-text">
+      <p>Для повноцінного використання гри необхідно створити акаунт. Гравець несе повну відповідальність за:</p>
+      <ul>
+        <li>Збереження конфіденційності паролю та даних акаунту</li>
+        <li>Всі дії, здійснені через акаунт</li>
+        <li>Достовірність наданих при реєстрації даних</li>
+        <li>Негайне повідомлення Розробника про несанкціонований доступ</li>
+      </ul>
+      <p>Розробник залишає за собою право заблокувати акаунт у разі порушення цієї Угоди без попередження та без повернення коштів.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">03 — Правила поведінки</span>
+    <div class="section-title">Заборонені дії</div>
+    <div class="section-text">
+      <p>При використанні гри категорично забороняється:</p>
+      <ul>
+        <li><strong>Чітинг та хакінг</strong> — використання стороннього програмного забезпечення для отримання переваги</li>
+        <li><strong>Образи та токсичність</strong> — образа інших гравців, мова ненависті, дискримінація</li>
+        <li><strong>Продаж акаунтів</strong> — передача, продаж або обмін акаунтами</li>
+        <li><strong>Спам</strong> — розсилка небажаних повідомлень у чаті</li>
+        <li><strong>Шахрайство</strong> — обман інших гравців або Розробника</li>
+        <li><strong>Мультиакаунти</strong> — створення кількох акаунтів для отримання бонусів</li>
+        <li><strong>Реверс-інжиніринг</strong> — декомпіляція або модифікація гри</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">04 — Внутрішньоігрові покупки</span>
+    <div class="section-title">Платежі та повернення</div>
+    <div class="section-text">
+      <p>Гра BT 8BIT надає можливість придбати внутрішньоігрову валюту (Нафту) за реальні гроші через платіжну систему WayForPay.</p>
+      <ul>
+        <li>Всі покупки є добровільними та остаточними</li>
+        <li>Внутрішньоігрова валюта не має реальної грошової вартості</li>
+        <li>Нафта зараховується автоматично після підтвердження оплати</li>
+        <li>У разі технічних проблем з нарахуванням — зверніться до підтримки</li>
+      </ul>
+      <p><strong>Повернення коштів</strong> можливе лише у разі технічної помилки з боку Розробника, якщо нафта не була нарахована. Звернення розглядаються протягом 5 робочих днів.</p>
+      <div class="highlight">
+        Мінімальний вік для здійснення покупок — 18 років або за згодою батьків/опікунів.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">05 — Інтелектуальна власність</span>
+    <div class="section-title">Авторські права</div>
+    <div class="section-text">
+      <p>Всі матеріали гри BT 8BIT, включаючи але не обмежуючись:</p>
+      <ul>
+        <li>Графіку, звуки, музику та анімації</li>
+        <li>Програмний код та алгоритми</li>
+        <li>Назви, логотипи та торгові марки</li>
+        <li>Ігровий контент та дизайн</li>
+      </ul>
+      <p>є інтелектуальною власністю Розробника і захищені законодавством України про авторське право. Будь-яке використання без письмового дозволу заборонено.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">06 — Відповідальність</span>
+    <div class="section-title">Обмеження відповідальності</div>
+    <div class="section-text">
+      <p>Розробник не несе відповідальності за:</p>
+      <ul>
+        <li>Втрату ігрового прогресу через технічні збої</li>
+        <li>Тимчасову недоступність серверів</li>
+        <li>Дії третіх осіб щодо акаунту гравця</li>
+        <li>Збитки, пов'язані з використанням або неможливістю використання гри</li>
+      </ul>
+      <p>Гра надається «як є». Розробник докладає всіх зусиль для забезпечення стабільної роботи, але не гарантує безперебійний доступ.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">07 — Зміни угоди</span>
+    <div class="section-title">Оновлення умов</div>
+    <div class="section-text">
+      <p>Розробник залишає за собою право змінювати умови цієї Угоди. Про суттєві зміни гравці будуть повідомлені через:</p>
+      <ul>
+        <li>Системне повідомлення в грі</li>
+        <li>Публікацію на сайті bt8bit.com.ua</li>
+        <li>Email (якщо вказаний при реєстрації)</li>
+      </ul>
+      <p>Продовження використання гри після набрання змін чинності означає прийняття нових умов.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <span class="section-num">08 — Контакти</span>
+    <div class="section-title">Зворотній зв'язок</div>
+    <div class="section-text">
+      <p>З питань щодо цієї Угоди звертайтесь:</p>
+      <ul>
+        <li><strong>Telegram:</strong> <a href="https://t.me/tanks_battles_3d" style="color:var(--gold)">@tanks_battles_3d</a></li>
+        <li><strong>Discord:</strong> <a href="https://discord.gg/Rezw5FSMUC" style="color:var(--gold)">discord.gg/Rezw5FSMUC</a></li>
+        <li><strong>Email:</strong> tanksbattles3d@gmail.com</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2025 BT 8BIT · <a href="terms.html">Угода користувача</a> · <a href="privacy.html">Конфіденційність</a> · <a href="index.html">Головна</a></p>
+  <p style="margin-top:12px">Розроблено в 🇺🇦 Україні</p>
+</footer>
+
+</body>
+</html>
