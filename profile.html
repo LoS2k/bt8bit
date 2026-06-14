@@ -14,6 +14,8 @@
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getFunctions, httpsCallable }
+    from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
   // ── Заміни на свої дані з Firebase Console ──────────────────
   const firebaseConfig = {
@@ -28,7 +30,8 @@
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db   = getFirestore(app);
+  const db        = getFirestore(app);
+  const fbFunctions = getFunctions(app, 'us-central1');
 
   // ── AUTH STATE ───────────────────────────────────────────────
   onAuthStateChanged(auth, async user => {
@@ -832,44 +835,44 @@
 
       <!-- SHOP TAB -->
       <div id="tab-shop" class="content-panel" style="display:none">
-        <div class="panel-title">Поповнити золото</div>
+        <div class="panel-title">Поповнити нафту</div>
         <div class="shop-grid">
           <div class="shop-item" onclick="openPayment(100, 29)">
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">100</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">29 грн</div>
           </div>
           <div class="shop-item" onclick="openPayment(500, 99)">
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">500</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">99 грн</div>
           </div>
           <div class="shop-item featured" onclick="openPayment(1200, 199)">
             <div class="shop-badge">★ Найпопулярніше</div>
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">1200</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">199 грн</div>
           </div>
           <div class="shop-item" onclick="openPayment(2500, 349)">
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">2500</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">349 грн</div>
           </div>
           <div class="shop-item" onclick="openPayment(5000, 599)">
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">5000</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">599 грн</div>
           </div>
           <div class="shop-item" onclick="openPayment(12000, 999)">
             <div class="shop-badge">💎 Максимальне</div>
             <div class="shop-icon">🪙</div>
             <div class="shop-amount">12000</div>
-            <div class="shop-label">золота</div>
+            <div class="shop-label">нафти</div>
             <div class="shop-price">999 грн</div>
           </div>
         </div>
@@ -927,55 +930,50 @@ function showTab(name) {
 }
 
 // ── WAYFORPAY ────────────────────────────────────────────────
-const WFP_MERCHANT = '8bit_lilac_vercel_app';
 let _currentUser = null;
 
-function openPayment(gold, price) {
+async function openPayment(gold, price) {
   if (!_currentUser) {
     showToast('Спочатку увійди в акаунт!', 'error');
     return;
   }
 
-  const orderRef  = 'BT8BIT_' + _currentUser.uid.slice(0,8) + '_' + Date.now();
-  const orderDate = Math.floor(Date.now() / 1000);
-  const productName = 'Золото BT 8BIT - ' + gold + ' шт';
+  const btn = event?.target?.closest('.shop-item');
+  if (btn) btn.style.opacity = '0.5';
+  showToast('Готуємо платіж...');
 
-  // Створюємо форму WayForPay
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = 'https://secure.wayforpay.com/pay';
-  form.target = '_blank';
+  try {
+    // Викликаємо Cloud Function для генерації підпису
+    const createPayment = httpsCallable(fbFunctions, 'createPayment');
+    const result = await createPayment({ price });
+    const fields = result.data;
 
-  const fields = {
-    merchantAccount:    WFP_MERCHANT,
-    merchantDomainName: '8bit-lilac.vercel.app',
-    orderReference:     orderRef,
-    orderDate:          String(orderDate),
-    amount:             String(price),
-    currency:           'UAH',
-    orderTimeout:       '49000',
-    productName:        productName,
-    productCount:       '1',
-    productPrice:       String(price),
-    clientEmail:        _currentUser.email || '',
-    returnUrl:          'https://8bit-lilac.vercel.app/profile.html',
-    serviceUrl:         'https://us-central1-tanksbattles3d.cloudfunctions.net/wayforpayWebhook',
-    language:           'UA',
-  };
+    // Створюємо і відправляємо форму
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://secure.wayforpay.com/pay';
+    form.target = '_blank';
 
-  Object.entries(fields).forEach(([k, v]) => {
-    const inp = document.createElement('input');
-    inp.type  = 'hidden';
-    inp.name  = k;
-    inp.value = v;
-    form.appendChild(inp);
-  });
+    Object.entries(fields).forEach(([k, v]) => {
+      if (k === 'gold') return; // не передаємо службове поле
+      const inp = document.createElement('input');
+      inp.type  = 'hidden';
+      inp.name  = k;
+      inp.value = v;
+      form.appendChild(inp);
+    });
 
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 
-  showToast('Відкриваємо оплату ' + price + ' грн за ' + gold + ' золота...');
+    showToast('Відкриваємо оплату ' + price + ' грн за ' + fields.gold + ' золота...');
+  } catch (e) {
+    console.error('Payment error:', e);
+    showToast('Помилка платежу: ' + e.message, 'error');
+  } finally {
+    if (btn) btn.style.opacity = '1';
+  }
 }
 </script>
 
@@ -992,7 +990,7 @@ const i18nProfile = {
     'login.note':'Використовується той самий Google акаунт що в грі. Дані синхронізуються автоматично.',
     'res.title':'Баланс', 'res.gold':'Золото', 'res.metal':'Метал', 'res.fuel':'Паливо',
     'stat.battles':'Боїв', 'stat.winrate':'Вінрейт', 'stat.wins':'Перемог', 'stat.rating':'Рейтинг',
-    'shop.title':'Поповнити золото',
+    'shop.title':'Поповнити нафту',
     'shop.note':'Оплата через WayForPay. Золото зараховується автоматично протягом хвилини після оплати.',
     'btn.signout':'↩ Вийти з акаунту',
     'history.title':'Історія платежів', 'history.empty':'Історія платежів порожня.',
@@ -1007,7 +1005,7 @@ const i18nProfile = {
     'login.note':'Same Google account as in the game. Data syncs automatically.',
     'res.title':'Balance', 'res.gold':'Gold', 'res.metal':'Metal', 'res.fuel':'Fuel',
     'stat.battles':'Battles', 'stat.winrate':'Winrate', 'stat.wins':'Wins', 'stat.rating':'Rating',
-    'shop.title':'Top Up Gold',
+    'shop.title':'Top Up Fuel',
     'shop.note':'Payment via WayForPay. Gold is credited automatically within a minute after payment.',
     'btn.signout':'↩ Sign Out',
     'history.title':'Payment History', 'history.empty':'Payment history is empty.',
