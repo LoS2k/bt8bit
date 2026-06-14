@@ -35,9 +35,9 @@
   }
   .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
   .nav-logo img{width:40px;height:40px;image-rendering:pixelated;}
-  .nav-logo-text{font-family:var(--px);font-size:11px;color:var(--gold);letter-spacing:1px;line-height:1.4;}
+  .nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);letter-spacing:2px;line-height:1.4;}
   .nav-links{display:flex;gap:28px;list-style:none;}
-  .nav-links a{font-family:var(--px);color:var(--dim);text-decoration:none;font-size:8px;letter-spacing:1px;transition:color .2s;}
+  .nav-links a{font-family:var(--px);color:var(--dim);text-decoration:none;font-size:10px;letter-spacing:1px;transition:color .2s;}
   .nav-links a:hover{color:var(--gold);}
   .nav-right{display:flex;gap:10px;align-items:center;}
 
@@ -48,9 +48,9 @@
   .soon-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:var(--gold);border-radius:50%;font-size:7px;color:var(--bg);display:flex;align-items:center;justify-content:center;}
 
   .lang-sw{display:flex;gap:4px;}
-  .lang-btn{padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:8px;font-family:var(--px);cursor:pointer;transition:all .2s;}
+  .lang-btn{padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;font-family:var(--px);cursor:pointer;transition:all .2s;}
   .lang-btn:hover,.lang-btn.active{border-color:var(--gold);color:var(--gold);}
-  .btn-cab{padding:8px 16px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:8px;font-family:var(--px);cursor:pointer;text-decoration:none;transition:all .2s;}
+  .btn-cab{padding:8px 18px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:10px;font-family:var(--px);cursor:pointer;text-decoration:none;transition:all .2s;}
   .btn-cab:hover{background:var(--gold);color:var(--bg);}
 
   /* ── HERO ─────────────────────────────────────────────────── */
@@ -83,8 +83,9 @@
     max-width:760px;
   }
   .hero-logo{
-    width:120px;height:120px;
+    width:140px;height:140px;
     image-rendering:pixelated;
+    display:block;
     margin:0 auto 28px;
     filter:drop-shadow(0 0 24px rgba(232,188,56,.4));
     animation:logopulse 3s ease-in-out infinite;
@@ -292,8 +293,8 @@
 <!-- STATS -->
 <div class="stats-bar">
   <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label" data-i18n="stats.tanks">Танків</span></div>
-  <div class="stat-item"><span class="stat-value">7v7</span><span class="stat-label"  data-i18n="stats.battles">Командні бої</span></div>
-  <div class="stat-item"><span class="stat-value">10+</span><span class="stat-label"  data-i18n="stats.maps">Карт</span></div>
+  <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label"  data-i18n="stats.battles">Командні бої</span></div>
+  <div class="stat-item"><span class="stat-value">5</span><span class="stat-label"  data-i18n="stats.nations">Націй</span></div>
   <div class="stat-item"><span class="stat-value">ЗБТ</span><span class="stat-label"  data-i18n="stats.beta">Скоро</span></div>
 </div>
 <div class="pixel-div"></div>
@@ -472,7 +473,7 @@ const i18n = {
     'hero.eyebrow':'Відкрите бета-тестування','hero.sub':'ТАНКОВІ БОЇ 3D',
     'hero.desc':'Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями. Обирай танк — веди свій взвод до перемоги.',
     'hero.btn1':'▶ Завантажити','hero.btn2':'Дізнатись більше',
-    'stats.tanks':'Танків','stats.battles':'Командні бої','stats.maps':'Карт','stats.beta':'Скоро',
+    'stats.tanks':'Танків','stats.battles':'Командні бої','stats.nations':'Націй','stats.beta':'Скоро',
     'features.eyebrow':'Можливості','features.title':'Що робить BT 8BIT особливим',
     'features.desc':'Реалістична механіка бронювання, система кланів і глобальна карта — все в одній мобільній грі.',
     'f1.title':'Реалістична броня','f1.desc':'Система пробиття броні з урахуванням кута нахилу, товщини і типу снаряда.',
@@ -510,7 +511,7 @@ const i18n = {
     'hero.eyebrow':'Open Beta Coming Soon','hero.sub':'TANK BATTLES 3D',
     'hero.desc':'Mobile tank game with realistic physics, clans and global battles. Choose your tank — lead your platoon to victory.',
     'hero.btn1':'▶ Download Free','hero.btn2':'Learn More',
-    'stats.tanks':'Tanks','stats.battles':'Team Battles','stats.maps':'Maps','stats.beta':'Soon',
+    'stats.tanks':'Tanks','stats.battles':'Team Battles','stats.nations':'Nations','stats.beta':'Soon',
     'features.eyebrow':'Features','features.title':'What makes BT 8BIT special',
     'features.desc':'Realistic armor mechanics, clan system and global map — all in one mobile game.',
     'f1.title':'Realistic Armor','f1.desc':'Shell penetration with angle and thickness calculation.',
