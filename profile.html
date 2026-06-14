@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>BT 8BIT — Особистий кабінет</title>
 
 <!-- Firebase SDK -->
@@ -197,9 +199,16 @@
     setText('p-rating',   (data.rating || 0).toLocaleString());
     setText('p-battles',  (data.battles || 0).toLocaleString());
     setText('p-wins',     (data.wins || 0).toLocaleString());
+    setText('p-losses',   (data.losses || 0).toLocaleString());
+    setText('p-kills',    (data.kills || 0).toLocaleString());
     setText('p-gold',     (data.gold || 0).toLocaleString());
     setText('p-metal',    (data.metal || 0).toLocaleString());
     setText('p-fuel',     (data.fuel || 0).toLocaleString());
+    setText('p-oil',      (data.oil || 0).toLocaleString());
+    setText('p-coins',    (data.coins || 0).toLocaleString());
+    setText('p-diamonds', (data.diamonds || 0).toLocaleString());
+    setText('p-playtime', (data.totalPlaytime || 0).toFixed(1) + ' год');
+    setText('p-accountage', (data.accountAge || 0) + ' дн');
 
     // Вінрейт
     const wr = data.battles > 0
@@ -245,7 +254,7 @@
     --dim:     #6a7a8a;
     --green:   #2a7a40;
     --red:     #7a2020;
-    --font-d:  'Courier New', monospace;
+    --font-d:  'Press Start 2P', 'Courier New', monospace;
     --font-b:  system-ui, -apple-system, sans-serif;
   }
 
@@ -780,7 +789,11 @@
       <div class="resources-card">
         <div class="res-title">Баланс</div>
         <div class="res-row">
-          <span><span class="res-icon">🪙</span><span class="res-label">Золото</span></span>
+          <span><span class="res-icon">🪙</span><span class="res-label">Монети</span></span>
+          <span class="res-value" id="p-coins">0</span>
+        </div>
+        <div class="res-row">
+          <span><span class="res-icon">⭐</span><span class="res-label">Золото</span></span>
           <span class="res-value" id="p-gold">0</span>
         </div>
         <div class="res-row">
@@ -790,6 +803,14 @@
         <div class="res-row">
           <span><span class="res-icon">⛽</span><span class="res-label">Паливо</span></span>
           <span class="res-value" id="p-fuel">0</span>
+        </div>
+        <div class="res-row">
+          <span><span class="res-icon">🛢️</span><span class="res-label">Нафта</span></span>
+          <span class="res-value" id="p-oil">0</span>
+        </div>
+        <div class="res-row">
+          <span><span class="res-icon">💎</span><span class="res-label">Діаманти</span></span>
+          <span class="res-value" id="p-diamonds">0</span>
         </div>
       </div>
 
@@ -818,8 +839,24 @@
             <span class="stat-lbl">Перемог</span>
           </div>
           <div class="stat-box">
+            <span class="stat-val" id="p-losses">0</span>
+            <span class="stat-lbl">Поразок</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val gold" id="p-kills">0</span>
+            <span class="stat-lbl">Знищено</span>
+          </div>
+          <div class="stat-box">
             <span class="stat-val" id="p-rating">0</span>
             <span class="stat-lbl">Рейтинг</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val green" id="p-playtime">0</span>
+            <span class="stat-lbl">Годин</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val" id="p-accountage">0</span>
+            <span class="stat-lbl">Днів</span>
           </div>
         </div>
         <div style="color:var(--dim); font-size:13px; padding:8px 0">
