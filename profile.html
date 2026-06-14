@@ -32,6 +32,9 @@
   const auth = getAuth(app);
   const db        = getFirestore(app);
   const fbFunctions = getFunctions(app, 'us-central1');
+  // Робимо глобальними для доступу з інших скриптів
+  window._fbFunctions   = fbFunctions;
+  window._httpsCallable = httpsCallable;
 
   // ── AUTH STATE ───────────────────────────────────────────────
   onAuthStateChanged(auth, async user => {
@@ -944,7 +947,7 @@ async function openPayment(gold, price) {
 
   try {
     // Викликаємо Cloud Function для генерації підпису
-    const createPayment = httpsCallable(fbFunctions, 'createPayment');
+    const createPayment = window._httpsCallable(window._fbFunctions, 'createPayment');
     const result = await createPayment({ price });
     const fields = result.data;
 
