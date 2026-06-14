@@ -41,7 +41,7 @@
     if (user) {
       _currentUser = user; // для WayForPay
       showProfile(user);
-      await loadPlayerData(user.uid);
+      await loadPlayerData(user.uid, user);
     } else {
       showLogin();
     }
@@ -137,7 +137,7 @@
   }
 
   // ── LOAD PLAYER DATA ─────────────────────────────────────────
-  async function loadPlayerData(uid) {
+  async function loadPlayerData(uid, user) {
     try {
       setLoading(true);
       const snap = await getDoc(doc(db, 'players', uid));
