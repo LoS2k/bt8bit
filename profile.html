@@ -106,6 +106,7 @@
       }
 
       fillProfile(data);
+      window._lastData = data;
       buildCalendar(data.loginDates||[]);
       buildLegend(data.totalDamage||0);
       buildRatingGraph(data.ratingHistory||[]);
@@ -209,6 +210,7 @@
 
   function buildCompare(p1,p2){
     const el=document.getElementById('compare-content');
+    document.getElementById('compare-reset-btn').style.display='block';
     const wr1=p1.battles>0?Math.round(p1.wins/p1.battles*100):0;
     const wr2=p2.battles>0?Math.round(p2.wins/p2.battles*100):0;
     const ll1=getLegendLevel(p1.totalDamage||0);
@@ -351,6 +353,10 @@
   .panel-title{font-family:var(--font-d);font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
 
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);margin-bottom:20px;}
+  .subtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+  .subtab{padding:10px 16px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);font-size:12px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:var(--font-b);}
+  .subtab:hover{color:var(--text);}
+  .subtab.active{color:var(--gold);border-bottom-color:var(--gold);}
   .stat-box{background:var(--surface);padding:20px 16px;text-align:center;}
   .stat-val{font-family:var(--font-d);font-size:20px;color:#fff;display:block;margin-bottom:4px;}
   .stat-val.gold{color:var(--gold);}
@@ -582,11 +588,6 @@
 
       <div class="side-nav">
         <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> Статистика</div>
-        <div class="side-nav-item" onclick="showTab('rating')"><span class="side-nav-icon">📈</span> Графік рейтингу</div>
-        <div class="side-nav-item" onclick="showTab('dna')"><span class="side-nav-icon">🧬</span> ДНК гравця</div>
-        <div class="side-nav-item" onclick="showTab('log')"><span class="side-nav-icon">⚔️</span> Бойовий журнал</div>
-        <div class="side-nav-item" onclick="showTab('season')"><span class="side-nav-icon">🏆</span> Сезонні рекорди</div>
-        <div class="side-nav-item" onclick="showTab('calendar')"><span class="side-nav-icon">📅</span> Активність</div>
         <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> Легенда</div>
         <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> Промокод</div>
         <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> Пошук гравців</div>
@@ -616,7 +617,7 @@
 
     <div class="main-content">
 
-      <!-- STATS -->
+      <!-- STATS — головна вкладка з підсекціями -->
       <div id="tab-stats" class="content-panel">
         <div class="panel-title">Бойова статистика</div>
         <div class="stats-grid">
@@ -629,66 +630,61 @@
           <div class="stat-box"><span class="stat-val green" id="p-playtime">0</span><span class="stat-lbl">Годин</span></div>
           <div class="stat-box"><span class="stat-val" id="p-accountage">0</span><span class="stat-lbl">Днів</span></div>
         </div>
-        <div style="color:var(--dim);font-size:13px;padding:8px 0">Детальна статистика по танках доступна після першого бою в грі.</div>
-      </div>
 
-      <!-- RATING GRAPH -->
-      <div id="tab-rating" class="content-panel" style="display:none">
-        <div class="panel-title">Графік рейтингу</div>
-        <div class="graph-wrap">
-          <canvas id="rating-chart"></canvas>
+        <!-- Підвкладки -->
+        <div class="subtabs">
+          <button class="subtab active" onclick="showSubtab('rating')">📈 Рейтинг</button>
+          <button class="subtab" onclick="showSubtab('dna')">🧬 ДНК гравця</button>
+          <button class="subtab" onclick="showSubtab('log')">⚔️ Бойовий журнал</button>
+          <button class="subtab" onclick="showSubtab('calendar')">📅 Активність</button>
+          <button class="subtab" onclick="showSubtab('season')">🏆 Сезон</button>
         </div>
-        <div class="graph-legend">
-          <span><span class="graph-dot" style="background:#4aaa5a"></span>Перемога</span>
-          <span><span class="graph-dot" style="background:#aa4a4a"></span>Поразка</span>
-          <span><span class="graph-dot" style="background:var(--gold)"></span>Рейтинг</span>
-        </div>
-        <div style="margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7">
-          Графік відображає останні 30 боїв. Зелені зірки — перемоги, червоні — поразки. Рейтинг зараховується після кожного бою в грі.
-        </div>
-      </div>
 
-      <!-- DNA -->
-      <div id="tab-dna" class="content-panel" style="display:none">
-        <div class="panel-title">ДНК гравця</div>
-        <div class="dna-wrap">
-          <div class="dna-canvas-wrap">
-            <canvas id="dna-chart" width="220" height="220"></canvas>
+        <!-- RATING -->
+        <div id="subtab-rating">
+          <div class="graph-wrap"><canvas id="rating-chart"></canvas></div>
+          <div class="graph-legend">
+            <span><span class="graph-dot" style="background:#4aaa5a"></span>Перемога</span>
+            <span><span class="graph-dot" style="background:#aa4a4a"></span>Поразка</span>
+            <span><span class="graph-dot" style="background:var(--gold)"></span>Рейтинг</span>
           </div>
-          <div class="dna-stats" id="dna-stats-list"></div>
+          <div style="margin-top:10px;font-size:12px;color:var(--dim)">Графік відображає останні 30 боїв. Зелені точки — перемоги, червоні — поразки.</div>
         </div>
-        <div style="margin-top:16px;font-size:12px;color:var(--dim);line-height:1.7">
-          Радарна діаграма розраховується з реальної статистики боїв. Відображає твій унікальний стиль гри.
+
+        <!-- DNA -->
+        <div id="subtab-dna" style="display:none">
+          <div class="dna-wrap">
+            <div class="dna-canvas-wrap"><canvas id="dna-chart" width="220" height="220"></canvas></div>
+            <div class="dna-stats" id="dna-stats-list"></div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7">Радарна діаграма розраховується з реальної статистики боїв і відображає твій унікальний стиль гри.</div>
         </div>
-      </div>
 
-      <!-- BATTLE LOG -->
-      <div id="tab-log" class="content-panel" style="display:none">
-        <div class="panel-title">Бойовий журнал</div>
-        <div id="battle-log-content"></div>
-      </div>
-
-      <!-- SEASON RECORDS -->
-      <div id="tab-season" class="content-panel" style="display:none">
-        <div class="panel-title">Сезонні рекорди</div>
-        <div id="season-content"></div>
-      </div>
-
-      <!-- CALENDAR -->
-      <div id="tab-calendar" class="content-panel" style="display:none">
-        <div class="panel-title">Активність за рік</div>
-        <div class="cal-streak">
-          <div class="cal-streak-item"><span class="cal-streak-val" id="streak-current">0</span><span class="cal-streak-lbl">🔥 Поточна серія</span></div>
-          <div class="cal-streak-item"><span class="cal-streak-val" id="streak-best">0</span><span class="cal-streak-lbl">⚡ Найкраща серія</span></div>
-          <div class="cal-streak-item"><span class="cal-streak-val" id="streak-total">0</span><span class="cal-streak-lbl">📅 Всього днів</span></div>
+        <!-- BATTLE LOG -->
+        <div id="subtab-log" style="display:none">
+          <div id="battle-log-content"></div>
         </div>
-        <div class="calendar-wrap"><div id="cal-container"></div></div>
-        <div class="cal-legend">
-          <span>Менше</span>
-          <div class="cal-legend-cell" style="background:var(--border)"></div>
-          <div class="cal-legend-cell" style="background:#1a4a2a"></div>
-          <div class="cal-legend-cell" style="background:var(--gold)"></div>
-          <span>Більше</span>
+
+        <!-- CALENDAR -->
+        <div id="subtab-calendar" style="display:none">
+          <div class="cal-streak">
+            <div class="cal-streak-item"><span class="cal-streak-val" id="streak-current">0</span><span class="cal-streak-lbl">🔥 Поточна серія</span></div>
+            <div class="cal-streak-item"><span class="cal-streak-val" id="streak-best">0</span><span class="cal-streak-lbl">⚡ Найкраща серія</span></div>
+            <div class="cal-streak-item"><span class="cal-streak-val" id="streak-total">0</span><span class="cal-streak-lbl">📅 Всього днів</span></div>
+          </div>
+          <div class="calendar-wrap"><div id="cal-container"></div></div>
+          <div class="cal-legend">
+            <span>Менше</span>
+            <div class="cal-legend-cell" style="background:var(--border)"></div>
+            <div class="cal-legend-cell" style="background:#1a4a2a"></div>
+            <div class="cal-legend-cell" style="background:var(--gold)"></div>
+            <span>Більше</span>
+          </div>
+        </div>
+
+        <!-- SEASON -->
+        <div id="subtab-season" style="display:none">
+          <div id="season-content"></div>
         </div>
       </div>
 
@@ -737,7 +733,10 @@
 
       <!-- COMPARE -->
       <div id="tab-compare" class="content-panel" style="display:none">
-        <div class="panel-title">Порівняння гравців</div>
+        <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <span>Порівняння гравців</span>
+          <button onclick="resetCompare()" id="compare-reset-btn" style="display:none;padding:7px 14px;background:transparent;border:1px solid var(--red);color:#a05050;font-size:11px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(120,30,30,0.2)'" onmouseout="this.style.background='transparent'">✕ Скинути</button>
+        </div>
         <div id="compare-content" style="color:var(--dim);font-size:13px;padding:20px;text-align:center">
           Знайди гравця у розділі «Пошук гравців» і натисни «Порівняти →»
         </div>
@@ -789,10 +788,30 @@ function showToast(msg,type=''){
 }
 
 // TABS
-const TABS=['stats','rating','dna','log','season','calendar','legend','promo','search','compare','clan','shop'];
+const TABS=['stats','legend','promo','search','compare','clan','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
+  // При відкритті статистики — ініціалізуємо графіки
+  if(name==='stats'){ setTimeout(()=>{ if(window._lastData){ buildRatingGraph(window._lastData.ratingHistory||[]); buildDNA(window._lastData); } },50); }
+}
+
+// SUBTABS
+function showSubtab(name){
+  ['rating','dna','log','calendar','season'].forEach(t=>{
+    document.getElementById('subtab-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.subtab').forEach((el,i)=>{
+    el.classList.toggle('active',['rating','dna','log','calendar','season'][i]===name);
+  });
+  if(name==='rating'&&window._lastData) buildRatingGraph(window._lastData.ratingHistory||[]);
+  if(name==='dna'&&window._lastData) buildDNA(window._lastData);
+}
+
+// COMPARE RESET
+function resetCompare(){
+  document.getElementById('compare-content').innerHTML='<div style="color:var(--dim);font-size:13px;padding:20px;text-align:center">Знайди гравця у розділі «Пошук гравців» і натисни «Порівняти →»</div>';
+  document.getElementById('compare-reset-btn').style.display='none';
 }
 
 // AUTH TABS
