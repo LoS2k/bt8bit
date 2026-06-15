@@ -163,17 +163,56 @@
   @media(max-width:768px){
     nav{padding:0 16px;}
     .nav-links{display:none;}
-    section{padding:60px 20px;}
-    .stats-bar{flex-wrap:wrap;padding:20px;}
-    .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:12px 0;min-width:45%;}
+    .nav-right .lang-sw{display:none;}
+    section{padding:48px 16px;}
+    .stats-bar{flex-wrap:wrap;padding:16px;}
+    .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:10px 0;min-width:calc(50% - 1px);flex:none;}
+    .stat-item:nth-child(odd){border-right:1px solid var(--border);}
+    .stat-value{font-size:16px;}
     .news-grid{grid-template-columns:1fr;}
-    .footer-inner{grid-template-columns:1fr 1fr;}
+    .footer-inner{grid-template-columns:1fr;}
     .footer-bottom{flex-direction:column;gap:8px;}
     #download .inner{flex-direction:column;}
-    .hero-logo{width:90px;height:90px;}
-    .ad-block{padding:16px;}
-    .ad-mid{padding:0 20px 40px;}
+    #download{padding:48px 16px;}
+    .hero-logo{width:80px;height:80px;}
+    .hero-content{padding:80px 16px 48px;}
+    .hero-desc{font-size:14px;}
+    .ad-block{padding:12px 16px;}
+    .ad-inner{height:60px;}
+    .ad-mid{padding:0 16px 24px;}
+    .ad-mid-inner{height:60px;}
+    .leaderboard-table th:nth-child(5),.leaderboard-table td:nth-child(5){display:none;}
+    .leaderboard-table{font-size:12px;}
+    .leaderboard-table th,.leaderboard-table td{padding:10px 10px;}
+    #tanks .inner{padding:0 16px;}
+    .tanks-scroll{padding:0 16px 16px;}
+    #tournaments-bar>div{padding:0 16px;flex-direction:column;align-items:flex-start;gap:10px;padding-top:10px;padding-bottom:10px;}
+    .t-pill{font-size:7px;padding:4px 8px;}
+    #modal-tournaments{top:0;left:0;right:0;bottom:0;transform:none;width:100%;max-height:100vh;border-radius:0;}
+    #modal-tournaments>div:first-child{padding:16px 20px;}
+    #modal-tournaments>div:last-child{padding:16px 20px;}
+    .btn-primary,.btn-secondary{padding:12px 20px;font-size:8px;}
+    .dl-btns{flex-direction:column;}
+    .btn-dl{min-width:auto;}
+    h2{font-size:16px;}
   }
+  @media(max-width:480px){
+    .stat-item{min-width:100%;border-right:none;}
+    .stat-item:nth-child(odd){border-right:none;}
+    nav .btn-cab{padding:6px 12px;font-size:8px;}
+  }
+
+  /* Бургер-меню */
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+  .burger span{display:block;width:22px;height:2px;background:var(--dim);transition:all .3s;}
+  .burger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+  .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(6,10,16,0.98);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:99;padding:8px 0;}
+  .mobile-menu a{display:block;padding:14px 24px;font-family:var(--px);font-size:10px;color:var(--dim);text-decoration:none;border-bottom:1px solid rgba(26,48,80,0.3);letter-spacing:1px;}
+  .mobile-menu a:hover{color:var(--gold);}
+  .mobile-menu.open{display:block;}
+  @media(max-width:768px){.burger{display:flex;}}
 </style>
 </head>
 <body>
@@ -308,8 +347,21 @@
       <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
     <a class="btn-cab" href="profile.html">Кабінет</a>
+    <button class="burger" id="burger-btn" onclick="toggleMenu()" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- МОБІЛЬНЕ МЕНЮ -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#features" onclick="toggleMenu()">Особливості</a>
+  <a href="#tanks" onclick="toggleMenu()">Танки</a>
+  <a href="#leaderboard" onclick="toggleMenu()">Рейтинг</a>
+  <a href="#news" onclick="toggleMenu()">Новини</a>
+  <a href="#download" onclick="toggleMenu()">Завантажити</a>
+  <a href="profile.html" style="color:var(--gold)">Кабінет →</a>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -702,6 +754,20 @@ function setLang(l) {
   });
 }
 setLang(lang);
+
+function toggleMenu(){
+  const btn=document.getElementById('burger-btn');
+  const menu=document.getElementById('mobile-menu');
+  btn.classList.toggle('open');
+  menu.classList.toggle('open');
+}
+// Закрити меню при кліку на лінк
+document.querySelectorAll('.mobile-menu a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    document.getElementById('burger-btn').classList.remove('open');
+    document.getElementById('mobile-menu').classList.remove('open');
+  });
+});
 
 function openTournaments() {
   document.getElementById('modal-overlay').style.display = 'block';
