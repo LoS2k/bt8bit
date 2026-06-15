@@ -264,12 +264,15 @@
     const pct=Math.min(100,Math.round(xp/xpMax*100));
     document.getElementById('xp-bar').style.width=pct+'%';
     setText('p-xp',xp.toLocaleString()+' / '+xpMax.toLocaleString()+' XP');
-    const av=document.getElementById('p-avatar');
-    if(av) av.textContent=(data.nickname||'G')[0].toUpperCase();
+    // Оновлюємо іконку аватара (перша літера ніка як fallback)
+    const avIcon=document.getElementById('p-avatar-icon');
+    if(avIcon && avIcon.textContent.length<=2) avIcon.textContent=(data.nickname||'G')[0].toUpperCase();
     if(data.createdAt){
       const d=data.createdAt.toDate?data.createdAt.toDate():new Date(data.createdAt*1000);
       setText('p-joined','В грі з '+d.toLocaleDateString('uk-UA',{month:'long',year:'numeric'}));
     }
+    // Синхронізуємо sidebar з поточною косметикою після завантаження
+    setTimeout(()=>{ if(typeof syncSidebarAvatar==='function') syncSidebarAvatar(); },100);
   }
 
   function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
@@ -721,7 +724,14 @@
   <div class="profile-layout">
     <div class="sidebar">
       <div class="profile-card">
-        <div class="avatar" id="p-avatar">G</div>
+        <!-- Аватар оновлюється при зміні косметики -->
+        <div id="p-avatar-live" style="width:80px;height:80px;border-radius:50%;border:2px solid var(--gold);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:32px;color:var(--gold);background:linear-gradient(135deg,var(--border),var(--surface));cursor:pointer;transition:border-color .2s;position:relative;" onclick="showTab('cosmetics')" title="Змінити аватар">
+          <div id="p-avatar-icon" style="font-size:32px;line-height:1">G</div>
+          <div id="p-avatar-frame" style="position:absolute;inset:-3px;border-radius:50%;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--card);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;">✏️</div>
+        </div>
+        <!-- Титул над іменем -->
+        <div id="p-title-live" style="display:none;font-family:var(--font-d);font-size:8px;margin-bottom:6px;letter-spacing:1px;"></div>
         <div class="profile-nick" id="p-nickname">Гравець</div>
         <div class="profile-level" id="p-level">LVL 1</div>
         <div class="profile-joined" id="p-joined">В грі з 2025</div>
@@ -729,6 +739,10 @@
           <div class="xp-label"><span data-t="xp.label">Досвід</span><span id="p-xp">0 / 1000 XP</span></div>
           <div class="xp-track"><div class="xp-fill" id="xp-bar"></div></div>
         </div>
+        <!-- Кнопка косметики під досвідом -->
+        <button onclick="showTab('cosmetics')" style="width:100%;margin-top:14px;padding:9px;background:transparent;border:1px solid rgba(232,188,56,0.3);color:var(--gold);font-size:11px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(232,188,56,0.07)'" onmouseout="this.style.borderColor='rgba(232,188,56,0.3)';this.style.background='transparent'">
+          🎨 <span data-t="btn.cosmetics">Косметика та досягнення</span>
+        </button>
       </div>
 
       <div class="side-nav">
@@ -1676,7 +1690,7 @@ function updatePreview() {
   const fr = FRAMES.find(f => f.id === equippedFrame)   || FRAMES[0];
   const ti = TITLES.find(t => t.id === equippedTitle);
 
-  // Avatar with frame overlay
+  // Попередній перегляд у вкладці косметики
   const wrap = document.getElementById('prev-avatar-wrap');
   if (wrap) {
     const border = fr.id === 'fr_none' ? '2px solid var(--border)' : `3px solid ${fr.stroke}`;
@@ -1697,7 +1711,7 @@ function updatePreview() {
   const nickCos = document.getElementById('p-nickname-cos');
   if (nickCos && nick) nickCos.textContent = nick.textContent;
 
-  // Badges (earned achievements count)
+  // Badges
   const earned = ACHIEVEMENTS.filter(a => a.unlocked).length;
   const badgesEl = document.getElementById('prev-badges');
   if (badgesEl) {
@@ -1706,7 +1720,45 @@ function updatePreview() {
       ${ti ? `<span class="cos-badge" style="color:${ti.color};border-color:${ti.color}44">${ti.text}</span>` : ''}
     `;
   }
+
+  // ── СИНХРОНІЗАЦІЯ САЙДБАРУ ──────────────────────────────────
+  syncSidebarAvatar();
 }
+
+// Оновлює аватар/рамку/титул у лівому сайдбарі
+window.syncSidebarAvatar = function() {
+  const av = AVATARS.find(a => a.id === equippedAvatar) || AVATARS[0];
+  const fr = FRAMES.find(f => f.id === equippedFrame)   || FRAMES[0];
+  const ti = TITLES.find(t => t.id === equippedTitle);
+
+  // Іконка аватара
+  const iconEl = document.getElementById('p-avatar-icon');
+  if (iconEl) { iconEl.textContent = av.icon; iconEl.style.fontSize = '32px'; }
+
+  // Фон аватара
+  const liveEl = document.getElementById('p-avatar-live');
+  if (liveEl) {
+    liveEl.style.background = av.bg;
+    const glow = fr.id !== 'fr_none' ? `0 0 14px ${fr.color}55` : 'none';
+    liveEl.style.borderColor = fr.id !== 'fr_none' ? fr.stroke : 'var(--gold)';
+    liveEl.style.borderWidth = fr.id !== 'fr_none' ? '3px' : '2px';
+    liveEl.style.boxShadow = glow;
+  }
+
+  // Рамка — overlay
+  const frameEl = document.getElementById('p-avatar-frame');
+  if (frameEl && fr.id !== 'fr_none') {
+    frameEl.style.cssText = `position:absolute;inset:-4px;border-radius:50%;border:3px solid ${fr.stroke};box-shadow:0 0 10px ${fr.color}44;pointer-events:none;`;
+  } else if (frameEl) { frameEl.style.cssText = 'position:absolute;inset:-3px;border-radius:50%;pointer-events:none;'; }
+
+  // Титул над іменем у сайдбарі
+  const titleLive = document.getElementById('p-title-live');
+  if (titleLive && ti) {
+    titleLive.textContent = ti.text;
+    titleLive.style.color = ti.color;
+    titleLive.style.display = 'block';
+  } else if (titleLive) { titleLive.style.display = 'none'; }
+};
 
 function renderAvatars() {
   const sections = { earned:'cos-ava-earned', season:'cos-ava-season', premium:'cos-ava-premium' };
@@ -1855,7 +1907,7 @@ window.searchPlayer = async function() {
   document.querySelectorAll('.search-result-row').forEach(row => {
     if (!row.querySelector('.sr-cosmetic')) {
       const titleColors = ['#e8bc38','#4aaa5a','#8eb0cc','#a070cc','#e88038'];
-      const titleTexts  = ['Ветеран','Мисливець','Солдат','Руйнівник','Засновник'];
+      const titleTexts  = ['Veteran','Hunter','Soldier','Destroyer','Founder'];
       const rnd = Math.floor(Math.random() * titleColors.length);
       const badge = document.createElement('div');
       badge.className = 'sr-cosmetic';
@@ -1866,21 +1918,75 @@ window.searchPlayer = async function() {
   });
 };
 
+// ── I18N ──────────────────────────────────────────────────────
+const PT = {
+  uk: {
+    'nav.home':'Головна','nav.stats':'Статистика','nav.cosmetics':'Косметика',
+    'nav.inventory':'Інвентар','nav.legend':'Легенда','nav.promo':'Промокод',
+    'nav.search':'Пошук гравців','nav.compare':'Порівняння','nav.clan':'Клан',
+    'nav.shop':'Поповнити',
+    'xp.label':'Досвід','btn.cosmetics':'Косметика та досягнення',
+    'btn.signout':'↩ Вийти з акаунту',
+    'res.balance':'Баланс','res.coins':'Монети','res.gold':'Золото',
+    'res.metal':'Метал','res.fuel':'Паливо','res.oil':'Нафта',
+    'panel.stats':'Бойова статистика','panel.legend':'Система «Легенда»',
+    'stat.battles':'Боїв','stat.winrate':'Вінрейт','stat.wins':'Перемог',
+    'stat.losses':'Поразок','stat.kills':'Знищено','stat.rating':'Рейтинг',
+    'stat.playtime':'Годин','stat.days':'Днів',
+    'sub.rating':'📈 Рейтинг','sub.dna':'🧬 ДНК гравця',
+    'sub.log':'⚔️ Бойовий журнал','sub.calendar':'📅 Активність','sub.season':'🏆 Сезон',
+    'ad.label':'РЕКЛАМНИЙ БЛОК 728×90','ad.tag':'Реклама',
+  },
+  en: {
+    'nav.home':'Home','nav.stats':'Statistics','nav.cosmetics':'Cosmetics',
+    'nav.inventory':'Inventory','nav.legend':'Legend','nav.promo':'Promo Code',
+    'nav.search':'Player Search','nav.compare':'Compare','nav.clan':'Clan',
+    'nav.shop':'Top Up',
+    'xp.label':'Experience','btn.cosmetics':'Cosmetics & Achievements',
+    'btn.signout':'↩ Sign Out',
+    'res.balance':'Balance','res.coins':'Coins','res.gold':'Gold',
+    'res.metal':'Metal','res.fuel':'Fuel','res.oil':'Oil',
+    'panel.stats':'Combat Statistics','panel.legend':'"Legend" System',
+    'stat.battles':'Battles','stat.winrate':'Winrate','stat.wins':'Wins',
+    'stat.losses':'Losses','stat.kills':'Destroyed','stat.rating':'Rating',
+    'stat.playtime':'Hours','stat.days':'Days',
+    'sub.rating':'📈 Rating','sub.dna':'🧬 Player DNA',
+    'sub.log':'⚔️ Battle Log','sub.calendar':'📅 Activity','sub.season':'🏆 Season',
+    'ad.label':'AD BLOCK 728×90','ad.tag':'Ad',
+  }
+};
+
+let profileLang = localStorage.getItem('bt8bit_lang') || 'uk';
+
+window.setProfileLang = function(l) {
+  profileLang = l;
+  localStorage.setItem('bt8bit_lang', l);
+  document.documentElement.lang = l === 'uk' ? 'uk' : 'en';
+  document.title = l === 'en' ? 'BT 8BIT — Cabinet' : 'BT 8BIT — Особистий кабінет';
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    if (PT[l] && PT[l][k]) el.textContent = PT[l][k];
+  });
+  // Lang buttons
+  document.getElementById('plb-uk')?.classList.toggle('active', l === 'uk');
+  document.getElementById('plb-en')?.classList.toggle('active', l === 'en');
+  // Update lang-btn styles
+  document.querySelectorAll('#plb-uk,#plb-en').forEach(b => {
+    const isActive = (b.id==='plb-uk'&&l==='uk')||(b.id==='plb-en'&&l==='en');
+    b.style.borderColor = isActive ? 'var(--gold)' : 'var(--border)';
+    b.style.color = isActive ? 'var(--gold)' : 'var(--dim)';
+  });
+};
+
+// Apply on load
+setProfileLang(profileLang);
+
 // Ініціалізуємо при відкритті вкладки
 const _prevShowTab = window.showTab;
 window.showTab = function(name) {
   _prevShowTab(name);
-  if (name === 'cosmetics') {
-    setTimeout(() => { showCosTab('avatars'); updatePreview(); }, 50);
-  }
-};
-
-// Рендер інвентарю при відкритті вкладки
-const origShowTab = _prevShowTab;
-window.showTab = function(name) {
-  _prevShowTab(name);
   if (name === 'inventory') renderInv();
-  if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); }, 50); }
+  if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); syncSidebarAvatar(); }, 50); }
 };
 </script>
 </body>
