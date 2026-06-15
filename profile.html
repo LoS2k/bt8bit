@@ -577,7 +577,11 @@
     <span class="nav-logo-text">BT 8BIT</span>
   </a>
   <div class="nav-right">
-    <a class="btn-nav" href="index.html">Головна</a>
+    <div class="lang-sw" style="display:flex;gap:4px;">
+      <button class="lang-btn active" id="plb-uk" onclick="setProfileLang('uk')" style="padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;font-family:var(--font-d);cursor:pointer;transition:all .2s;">UA</button>
+      <button class="lang-btn" id="plb-en" onclick="setProfileLang('en')" style="padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;font-family:var(--font-d);cursor:pointer;transition:all .2s;">EN</button>
+    </div>
+    <a class="btn-nav" href="index.html" data-t="nav.home">Головна</a>
     <a class="btn-nav active" href="#">Кабінет</a>
   </div>
 </nav>
@@ -631,28 +635,28 @@
         <div class="profile-level" id="p-level">LVL 1</div>
         <div class="profile-joined" id="p-joined">В грі з 2025</div>
         <div class="xp-section">
-          <div class="xp-label"><span>Досвід</span><span id="p-xp">0 / 1000 XP</span></div>
+          <div class="xp-label"><span data-t="xp.label">Досвід</span><span id="p-xp">0 / 1000 XP</span></div>
           <div class="xp-track"><div class="xp-fill" id="xp-bar"></div></div>
         </div>
       </div>
 
       <div class="side-nav">
-        <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> Статистика</div>
-        <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> Легенда</div>
-        <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> Промокод</div>
-        <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> Пошук гравців</div>
-        <div class="side-nav-item" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> Порівняння</div>
-        <div class="side-nav-item" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> Клан</div>
-        <div class="side-nav-item" onclick="showTab('shop')"><span class="side-nav-icon">💰</span> Поповнити</div>
+        <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> <span data-t="nav.stats">Статистика</span></div>
+        <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> <span data-t="nav.legend">Легенда</span></div>
+        <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> <span data-t="nav.promo">Промокод</span></div>
+        <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> <span data-t="nav.search">Пошук гравців</span></div>
+        <div class="side-nav-item" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> <span data-t="nav.compare">Порівняння</span></div>
+        <div class="side-nav-item" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> <span data-t="nav.clan">Клан</span></div>
+        <div class="side-nav-item" onclick="showTab('shop')"><span class="side-nav-icon">💰</span> <span data-t="nav.shop">Поповнити</span></div>
       </div>
 
       <div class="resources-card">
-        <div class="res-title">Баланс</div>
-        <div class="res-row"><span><span class="res-icon">🪙</span><span class="res-label">Монети</span></span><span class="res-value" id="p-coins">0</span></div>
-        <div class="res-row"><span><span class="res-icon">⭐</span><span class="res-label">Золото</span></span><span class="res-value" id="p-gold">0</span></div>
-        <div class="res-row"><span><span class="res-icon">🔩</span><span class="res-label">Метал</span></span><span class="res-value" id="p-metal">0</span></div>
-        <div class="res-row"><span><span class="res-icon">⛽</span><span class="res-label">Паливо</span></span><span class="res-value" id="p-fuel">0</span></div>
-        <div class="res-row"><span><span class="res-icon">🛢️</span><span class="res-label">Нафта</span></span><span class="res-value" id="p-oil">0</span></div>
+        <div class="res-title" data-t="res.balance">Баланс</div>
+        <div class="res-row"><span><span class="res-icon">🪙</span><span class="res-label" data-t="res.coins">Монети</span></span><span class="res-value" id="p-coins">0</span></div>
+        <div class="res-row"><span><span class="res-icon">⭐</span><span class="res-label" data-t="res.gold">Золото</span></span><span class="res-value" id="p-gold">0</span></div>
+        <div class="res-row"><span><span class="res-icon">🔩</span><span class="res-label" data-t="res.metal">Метал</span></span><span class="res-value" id="p-metal">0</span></div>
+        <div class="res-row"><span><span class="res-icon">⛽</span><span class="res-label" data-t="res.fuel">Паливо</span></span><span class="res-value" id="p-fuel">0</span></div>
+        <div class="res-row"><span><span class="res-icon">🛢️</span><span class="res-label" data-t="res.oil">Нафта</span></span><span class="res-value" id="p-oil">0</span></div>
       </div>
 
       <!-- AD блок в сайдбарі -->
@@ -662,32 +666,39 @@
         <!-- <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-XXXX" data-ad-slot="XXXX"></ins> -->
       </div>
 
-      <button class="btn-signout" onclick="signOutUser()">↩ Вийти з акаунту</button>
+      <button class="btn-signout" onclick="signOutUser()" data-t="btn.signout">↩ Вийти з акаунту</button>
     </div>
 
     <div class="main-content">
 
       <!-- STATS — головна вкладка з підсекціями -->
       <div id="tab-stats" class="content-panel">
-        <div class="panel-title">Бойова статистика</div>
+        <div class="panel-title" data-t="panel.stats">Бойова статистика</div>
         <div class="stats-grid">
-          <div class="stat-box"><span class="stat-val" id="p-battles">0</span><span class="stat-lbl">Боїв</span></div>
-          <div class="stat-box"><span class="stat-val gold" id="p-winrate">0%</span><span class="stat-lbl">Вінрейт</span></div>
-          <div class="stat-box"><span class="stat-val green" id="p-wins">0</span><span class="stat-lbl">Перемог</span></div>
-          <div class="stat-box"><span class="stat-val" id="p-losses">0</span><span class="stat-lbl">Поразок</span></div>
-          <div class="stat-box"><span class="stat-val gold" id="p-kills">0</span><span class="stat-lbl">Знищено</span></div>
-          <div class="stat-box"><span class="stat-val" id="p-rating">0</span><span class="stat-lbl">Рейтинг</span></div>
-          <div class="stat-box"><span class="stat-val green" id="p-playtime">0</span><span class="stat-lbl">Годин</span></div>
-          <div class="stat-box"><span class="stat-val" id="p-accountage">0</span><span class="stat-lbl">Днів</span></div>
+          <div class="stat-box"><span class="stat-val" id="p-battles">0</span><span class="stat-lbl" data-t="stat.battles">Боїв</span></div>
+          <div class="stat-box"><span class="stat-val gold" id="p-winrate">0%</span><span class="stat-lbl" data-t="stat.winrate">Вінрейт</span></div>
+          <div class="stat-box"><span class="stat-val green" id="p-wins">0</span><span class="stat-lbl" data-t="stat.wins">Перемог</span></div>
+          <div class="stat-box"><span class="stat-val" id="p-losses">0</span><span class="stat-lbl" data-t="stat.losses">Поразок</span></div>
+          <div class="stat-box"><span class="stat-val gold" id="p-kills">0</span><span class="stat-lbl" data-t="stat.kills">Знищено</span></div>
+          <div class="stat-box"><span class="stat-val" id="p-rating">0</span><span class="stat-lbl" data-t="stat.rating">Рейтинг</span></div>
+          <div class="stat-box"><span class="stat-val green" id="p-playtime">0</span><span class="stat-lbl" data-t="stat.playtime">Годин</span></div>
+          <div class="stat-box"><span class="stat-val" id="p-accountage">0</span><span class="stat-lbl" data-t="stat.days">Днів</span></div>
+        </div>
+
+        <!-- РЕКЛАМА під статистикою -->
+        <div style="margin:0 0 20px;width:100%;height:90px;background:var(--surface);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;position:relative;">
+          <span style="font-family:var(--font-d);font-size:8px;color:var(--dim);letter-spacing:2px" data-t="ad.label">РЕКЛАМНИЙ БЛОК 728×90</span>
+          <span style="position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim)" data-t="ad.tag">Реклама</span>
+          <!-- <ins class="adsbygoogle" style="display:block;width:100%;height:90px" data-ad-client="ca-pub-XXXX" data-ad-slot="XXXX"></ins> -->
         </div>
 
         <!-- Підвкладки -->
         <div class="subtabs">
-          <button class="subtab active" onclick="showSubtab('rating')">📈 Рейтинг</button>
-          <button class="subtab" onclick="showSubtab('dna')">🧬 ДНК гравця</button>
-          <button class="subtab" onclick="showSubtab('log')">⚔️ Бойовий журнал</button>
-          <button class="subtab" onclick="showSubtab('calendar')">📅 Активність</button>
-          <button class="subtab" onclick="showSubtab('season')">🏆 Сезон</button>
+          <button class="subtab active" onclick="showSubtab('rating')" data-t="sub.rating">📈 Рейтинг</button>
+          <button class="subtab" onclick="showSubtab('dna')" data-t="sub.dna">🧬 ДНК гравця</button>
+          <button class="subtab" onclick="showSubtab('log')" data-t="sub.log">⚔️ Бойовий журнал</button>
+          <button class="subtab" onclick="showSubtab('calendar')" data-t="sub.calendar">📅 Активність</button>
+          <button class="subtab" onclick="showSubtab('season')" data-t="sub.season">🏆 Сезон</button>
         </div>
 
         <!-- RATING -->
@@ -740,7 +751,7 @@
 
       <!-- LEGEND -->
       <div id="tab-legend" class="content-panel" style="display:none">
-        <div class="panel-title">Система «Легенда»</div>
+        <div class="panel-title" data-t="panel.legend">Система «Легенда»</div>
         <div class="legend-header">
           <div class="legend-level-badge" id="legend-badge">⚡ Легенда 1</div>
           <div class="legend-dmg-total">Сумарний урон: <span id="legend-total-dmg">0</span></div>
