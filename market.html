@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT 8BIT — Ринок</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, collection, query, where, orderBy, limit, getDocs,
+  doc, getDoc, updateDoc, addDoc, deleteDoc, increment, serverTimestamp, startAfter }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+  authDomain:"tanksbattles3d.firebaseapp.com",
+  projectId:"tanksbattles3d",
+  storageBucket:"tanksbattles3d.firebasestorage.app",
+  messagingSenderId:"626439210789",
+  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+window._db = db;
+
+let currentUser = null;
+let lastDoc = null;
+let activeFilters = { type:'all', currency:'all', sort:'newest', search:'' };
+const PAGE_SIZE = 24;
+
+onAuthStateChanged(auth, u => {
+  currentUser = u;
+  window._currentUser = u;
+  const btn = document.getElementById('auth-btn');
+  if (btn) btn.textContent = u ? u.displayName||'Кабінет' : 'Увійти';
+  if (btn) btn.href = u ? 'profile.html' : 'profile.html';
+});
+
+// ── DEMO LISTINGS (поки Firebase порожній) ─────────────────────
+const DEMO = [
+  { id:'d1', type:'tank',  name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',     price:2400,  currency:'gold',  seller:'TankMaster',  views:142, image:'tiger' },
+  { id:'d2', type:'tank',  name:'T-34-85',    nation:'🛡',  tier:4, rarity:'common',   price:850,   currency:'coins', seller:'SovietAce',   views:87,  image:'t34' },
+  { id:'d3', type:'camo',  name:'Пустеля Pro',nation:'',    tier:0, rarity:'rare',     price:320,   currency:'oil',   seller:'CamoKing',    views:203, image:'camo_desert' },
+  { id:'d4', type:'tank',  name:'M18 Hellcat',nation:'🇺🇸', tier:5, rarity:'epic',     price:5800,  currency:'gold',  currency2:'oil', price2:290, seller:'SpeedDemon',  views:318, image:'hellcat' },
+  { id:'d5', type:'camo',  name:'Арктичний',  nation:'',    tier:0, rarity:'epic',     price:680,   currency:'oil',   seller:'IceHunter',   views:95,  image:'camo_arctic' },
+  { id:'d6', type:'tank',  name:'Panzer IV',  nation:'🇩🇪', tier:3, rarity:'common',   price:400,   currency:'coins', seller:'PanzerKlaus', views:54,  image:'panzer4' },
+  { id:'d7', type:'rent',  name:'KV-2',       nation:'🛡',  tier:6, rarity:'legendary',price:180,   currency:'oil',   seller:'BigGunner',   views:421, rentDays:3, image:'kv2' },
+  { id:'d8', type:'camo',  name:'Лісовий',    nation:'',    tier:0, rarity:'common',   price:120,   currency:'coins', seller:'ForestRun',   views:33,  image:'camo_forest' },
+  { id:'d9', type:'tank',  name:'AMX ELC',    nation:'🇫🇷', tier:5, rarity:'rare',     price:3100,  currency:'gold',  seller:'FrenchSpeed', views:177, image:'amx' },
+  { id:'d10',type:'rent',  name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',     price:90,    currency:'gold',  seller:'TigerRent',   views:88,  rentDays:7, image:'tiger' },
+  { id:'d11',type:'camo',  name:'Нічний',     nation:'',    tier:0, rarity:'epic',     price:500,   currency:'oil',   seller:'NightOps',    views:267, image:'camo_night' },
+  { id:'d12',type:'tank',  name:'M4 Sherman', nation:'🇺🇸', tier:4, rarity:'common',   price:600,   currency:'coins', seller:'AllyForce',   views:41,  image:'sherman' },
+];
+
+const RARITY_COLOR = { common:'#8eb0cc', rare:'#4a90d9', epic:'#a070cc', legendary:'#e88038' };
+const RARITY_LABEL = { common:'Звичайний', rare:'Рідкісний', epic:'Епічний', legendary:'Легендарний' };
+const CURRENCY_ICON = { gold:'⭐', coins:'🪙', oil:'🛢️' };
+const CURRENCY_LABEL = { gold:'Золото', coins:'Монети', oil:'Нафта' };
+const TYPE_LABEL = { tank:'Танк', camo:'Камуфляж', rent:'Оренда' };
+
+// SVG tank silhouettes as colored shapes
+const TANK_SVG = {
+  tiger:       `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><rect x="8" y="32" width="12" height="16" rx="2" fill="#2a3a1a"/><rect x="100" y="32" width="12" height="16" rx="2" fill="#2a3a1a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  t34:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
+  hellcat:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="42" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="86" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  panzer4:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
+  kv2:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="28" width="104" height="24" rx="4" fill="#2a3a2a"/><rect x="18" y="14" width="64" height="20" rx="3" fill="#1a2a1a"/><rect x="42" y="4" width="36" height="13" rx="2" fill="#3a4a3a"/><circle cx="20" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="42" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="64" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="86" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="105" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/></svg>`,
+  amx:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="33" width="96" height="19" rx="3" fill="#3a4a5a"/><rect x="24" y="23" width="58" height="15" rx="3" fill="#2a3a4a"/><rect x="58" y="15" width="46" height="9" rx="2" fill="#4a5a6a"/><circle cx="22" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="42" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="62" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="82" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
+  sherman:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a4a"/><rect x="20" y="19" width="64" height="17" rx="3" fill="#3a4a3a"/><rect x="52" y="11" width="44" height="10" rx="2" fill="#5a6a5a"/><circle cx="20" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
+};
+const CAMO_SVG = {
+  camo_desert: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#8a6020" opacity=".8"/><ellipse cx="45" cy="65" rx="16" ry="10" fill="#a07a30" opacity=".5"/><ellipse cx="90" cy="70" rx="12" ry="8" fill="#c8a55a" opacity=".9"/></svg>`,
+  camo_arctic: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#e8f0f8" opacity=".9"/><ellipse cx="15" cy="65" rx="12" ry="8" fill="#b8ccdc" opacity=".5"/></svg>`,
+  camo_night:  `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#1a1a2a"/><ellipse cx="25" cy="25" rx="20" ry="13" fill="#2a2a3a" opacity=".8"/><ellipse cx="75" cy="55" rx="24" ry="15" fill="#141420" opacity=".9"/><ellipse cx="105" cy="25" rx="14" ry="9" fill="#222232" opacity=".7"/><ellipse cx="50" cy="68" rx="18" ry="11" fill="#0a0a18" opacity=".8"/></svg>`,
+  camo_forest: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#2d4a1e"/><ellipse cx="20" cy="20" rx="18" ry="12" fill="#1a3010" opacity=".8"/><ellipse cx="65" cy="50" rx="22" ry="14" fill="#3a5a2a" opacity=".7"/><ellipse cx="100" cy="25" rx="16" ry="10" fill="#4a6a3a" opacity=".6"/><ellipse cx="40" cy="68" rx="14" ry="9" fill="#1a3010" opacity=".9"/></svg>`,
+};
+
+function getTankSVG(item) {
+  if (item.type === 'camo') return CAMO_SVG[item.image] || CAMO_SVG.camo_forest;
+  return TANK_SVG[item.image] || TANK_SVG.tiger;
+}
+
+function renderCard(item) {
+  const rc = RARITY_COLOR[item.rarity] || '#888';
+  const rl = RARITY_LABEL[item.rarity] || item.rarity;
+  const ci = CURRENCY_ICON[item.currency] || '💰';
+  const isRent = item.type === 'rent';
+  const typeTag = isRent
+    ? `<span class="tag-rent">ОРЕНДА · ${item.rentDays}д</span>`
+    : item.type === 'camo'
+    ? `<span class="tag-camo">КАМУФЛЯЖ</span>`
+    : `<span class="tag-tank">ТАНК</span>`;
+
+  const altPrice = (item.currency2 && item.price2)
+    ? `<div class="card-alt-price">${CURRENCY_ICON[item.currency2]} ${item.price2.toLocaleString()} ${CURRENCY_LABEL[item.currency2]}</div>`
+    : '';
+
+  return `<div class="market-card" onclick="openItem('${item.id}')">
+    <div class="card-img" style="border-color:${rc}20">
+      ${getTankSVG(item)}
+      <div class="card-rarity" style="color:${rc}">${rl}</div>
+      ${typeTag}
+      ${isRent ? '' : `<div class="card-views">👁 ${item.views}</div>`}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${item.nation ? item.nation+' ' : ''}${item.name}</div>
+      ${item.tier ? `<div class="card-tier">Рівень ${item.tier}</div>` : ''}
+      <div class="card-seller">Продавець: <span>${item.seller}</span></div>
+      <div class="card-price-row">
+        <div class="card-price">${ci} ${item.price.toLocaleString()} <span>${CURRENCY_LABEL[item.currency]}</span></div>
+        ${altPrice}
+      </div>
+      <button class="card-buy-btn" onclick="event.stopPropagation();buyItem('${item.id}')">
+        ${isRent ? 'Орендувати' : 'Купити'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function getFiltered() {
+  return DEMO.filter(item => {
+    if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false;
+    if (activeFilters.currency !== 'all' && item.currency !== activeFilters.currency) return false;
+    if (activeFilters.search && !item.name.toLowerCase().includes(activeFilters.search.toLowerCase())
+        && !item.seller.toLowerCase().includes(activeFilters.search.toLowerCase())) return false;
+    return true;
+  }).sort((a,b) => {
+    if (activeFilters.sort === 'price_asc')  return a.price - b.price;
+    if (activeFilters.sort === 'price_desc') return b.price - a.price;
+    if (activeFilters.sort === 'popular')    return b.views - a.views;
+    return b.id.localeCompare(a.id); // newest
+  });
+}
+
+function renderGrid() {
+  const items = getFiltered();
+  const grid = document.getElementById('market-grid');
+  const count = document.getElementById('result-count');
+  if (count) count.textContent = items.length + ' лотів';
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state">😔 Нічого не знайдено за вашими фільтрами</div>';
+    return;
+  }
+  grid.innerHTML = items.map(renderCard).join('');
+}
+
+window.applyFilter = function(key, val) {
+  activeFilters[key] = val;
+  // update active button states
+  document.querySelectorAll(`.filter-btn[data-key="${key}"]`).forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+  renderGrid();
+};
+
+window.applySearch = function() {
+  activeFilters.search = document.getElementById('search-box').value;
+  renderGrid();
+};
+
+window.openItem = function(id) {
+  const item = DEMO.find(d => d.id === id);
+  if (!item) return;
+  const rc = RARITY_COLOR[item.rarity];
+  const rl = RARITY_LABEL[item.rarity];
+  const ci = CURRENCY_ICON[item.currency];
+  const isRent = item.type === 'rent';
+
+  document.getElementById('modal-item-content').innerHTML = `
+    <div class="item-modal-grid">
+      <div class="item-modal-img" style="border-color:${rc}30">
+        ${getTankSVG(item)}
+        <div style="text-align:center;margin-top:8px;font-size:11px;color:${rc}">${rl}</div>
+      </div>
+      <div class="item-modal-info">
+        <div class="item-modal-name">${item.nation?item.nation+' ':''} ${item.name}</div>
+        ${item.tier ? `<div class="item-modal-meta">Рівень ${item.tier} · ${item.nation||'—'}</div>` : ''}
+        <div class="item-modal-seller">Продавець: <a href="profile.html" style="color:var(--gold)">${item.seller}</a></div>
+        <div class="item-modal-stats">
+          <div class="modal-stat"><span>Тип</span><b>${TYPE_LABEL[item.type]||item.type}</b></div>
+          <div class="modal-stat"><span>Переглядів</span><b>${item.views}</b></div>
+          ${isRent ? `<div class="modal-stat"><span>Термін</span><b>${item.rentDays} днів</b></div>` : ''}
+          <div class="modal-stat"><span>Рідкість</span><b style="color:${rc}">${rl}</b></div>
+        </div>
+        <div class="item-modal-price">${ci} ${item.price.toLocaleString()} ${CURRENCY_LABEL[item.currency]}</div>
+        ${item.currency2 ? `<div style="font-size:12px;color:var(--dim);margin-bottom:12px">або ${CURRENCY_ICON[item.currency2]} ${item.price2?.toLocaleString()} ${CURRENCY_LABEL[item.currency2]}</div>` : ''}
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="modal-buy-btn" onclick="buyItem('${item.id}');closeModal()">${isRent?'Орендувати':'Купити зараз'}</button>
+          <button class="modal-wish-btn" onclick="showToast('Додано до улюблених','')">♥ Зберегти</button>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--dim);line-height:1.7">
+          Угода захищена системою BT 8BIT Market. Кошти заморожуються до підтвердження передачі.
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('item-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeModal = function() {
+  document.getElementById('item-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.buyItem = function(id) {
+  if (!window._currentUser) {
+    showToast('Спочатку увійди в кабінет!','error');
+    setTimeout(()=>{ window.location.href='profile.html'; },1500);
+    return;
+  }
+  const item = DEMO.find(d => d.id === id);
+  if (!item) return;
+  showToast(`✅ Угода підтверджена! ${item.name} додано в інвентар.`,'');
+};
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show'+(type?' '+type:'');
+  setTimeout(()=>t.className='',3000);
+}
+window.showToast = showToast;
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderGrid();
+});
+</script>
+
+<style>
+:root{--bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--rb);min-height:100vh;}
+input,button,select{font-family:var(--rb);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(6,10,16,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-icon{width:32px;height:32px;background:var(--gold);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:10px;color:var(--bg);}
+.nav-logo-text{font-family:var(--px);font-size:14px;color:var(--gold);letter-spacing:2px;}
+.nav-links{display:flex;gap:20px;list-style:none;}
+.nav-links a{font-family:var(--px);color:var(--dim);text-decoration:none;font-size:9px;letter-spacing:1px;transition:color .2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.btn-auth{padding:7px 16px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:10px;font-family:var(--px);cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-auth:hover{background:var(--gold);color:var(--bg);}
+.btn-sell{padding:7px 16px;border:1px solid var(--green);background:rgba(74,170,90,0.1);color:var(--green);font-size:10px;font-family:var(--px);cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-sell:hover{background:var(--green);color:#fff;}
+
+/* HERO MARKET */
+.market-hero{background:var(--surf);border-bottom:1px solid var(--border);padding:32px 40px 24px;}
+.market-hero-inner{max-width:1200px;margin:0 auto;}
+.market-title{font-family:var(--px);font-size:clamp(16px,3vw,28px);color:#fff;margin-bottom:8px;}
+.market-title span{color:var(--gold);}
+.market-sub{font-size:13px;color:var(--dim);margin-bottom:24px;line-height:1.6;}
+.market-stats{display:flex;gap:32px;flex-wrap:wrap;}
+.ms-item{text-align:center;}
+.ms-val{font-family:var(--px);font-size:18px;color:var(--gold);display:block;margin-bottom:4px;}
+.ms-lbl{font-size:10px;color:var(--dim);}
+
+/* LAYOUT */
+.market-layout{max-width:1200px;margin:0 auto;padding:24px 40px;display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start;}
+
+/* FILTERS SIDEBAR */
+.filters{background:var(--card);border:1px solid var(--border);padding:20px;}
+.filters-title{font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;}
+.filter-section{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(26,48,80,0.5);}
+.filter-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.filter-label{font-size:11px;color:var(--dim);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;}
+.filter-btns{display:flex;flex-direction:column;gap:4px;}
+.filter-btn{padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:8px;}
+.filter-btn:hover{border-color:var(--steel);color:var(--text);}
+.filter-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.07);}
+.filter-btn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* SORT & SEARCH */
+.market-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.search-wrap{display:flex;gap:0;flex:1;min-width:200px;}
+.search-box{flex:1;padding:10px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;transition:border-color .2s;}
+.search-box:focus{border-color:var(--gold);}
+.search-box::placeholder{color:var(--dim);}
+.search-btn{padding:10px 16px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-size:13px;font-weight:500;transition:background .2s;}
+.search-btn:hover{background:var(--gold2);}
+.sort-select{padding:10px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;cursor:pointer;}
+.sort-select option{background:var(--card);}
+.result-count{font-size:12px;color:var(--dim);white-space:nowrap;}
+
+/* GRID */
+.market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;font-size:14px;color:var(--dim);}
+
+/* CARD */
+.market-card{background:var(--card);border:1px solid var(--border);cursor:pointer;transition:border-color .2s,transform .15s;display:flex;flex-direction:column;}
+.market-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.card-img{position:relative;padding:16px;background:var(--surf);border-bottom:1px solid var(--border);}
+.card-img svg{width:100%;height:70px;display:block;}
+.card-rarity{position:absolute;top:6px;left:8px;font-size:9px;font-family:var(--px);}
+.card-views{position:absolute;top:6px;right:8px;font-size:10px;color:var(--dim);}
+.tag-tank{position:absolute;bottom:6px;left:8px;font-family:var(--px);font-size:7px;background:rgba(74,144,217,0.2);color:#4a90d9;border:1px solid rgba(74,144,217,0.3);padding:2px 6px;}
+.tag-camo{position:absolute;bottom:6px;left:8px;font-family:var(--px);font-size:7px;background:rgba(160,112,204,0.2);color:#a070cc;border:1px solid rgba(160,112,204,0.3);padding:2px 6px;}
+.tag-rent{position:absolute;bottom:6px;left:8px;font-family:var(--px);font-size:7px;background:rgba(232,128,56,0.2);color:#e88038;border:1px solid rgba(232,128,56,0.3);padding:2px 6px;}
+.card-body{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.card-name{font-size:13px;color:#fff;font-weight:500;}
+.card-tier{font-size:10px;color:var(--dim);}
+.card-seller{font-size:11px;color:var(--dim);}
+.card-seller span{color:var(--steel);}
+.card-price-row{margin-top:auto;}
+.card-price{font-family:var(--px);font-size:12px;color:var(--gold);}
+.card-price span{font-size:9px;color:var(--dim);}
+.card-alt-price{font-size:10px;color:var(--dim);margin-top:2px;}
+.card-buy-btn{margin-top:8px;width:100%;padding:9px;background:rgba(232,188,56,0.1);border:1px solid var(--gold);color:var(--gold);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+.card-buy-btn:hover{background:var(--gold);color:var(--bg);}
+
+/* ITEM MODAL */
+#item-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.item-modal-box{background:var(--card);border:1px solid var(--border);max-width:700px;width:100%;max-height:90vh;overflow-y:auto;}
+.item-modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.item-modal-close{background:transparent;border:1px solid var(--border);color:var(--dim);width:34px;height:34px;font-size:18px;cursor:pointer;transition:all .2s;}
+.item-modal-close:hover{border-color:var(--gold);color:var(--gold);}
+.item-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;}
+.item-modal-img{background:var(--surf);border:1px solid var(--border);padding:20px;}
+.item-modal-img svg{width:100%;height:140px;}
+.item-modal-name{font-family:var(--px);font-size:15px;color:#fff;margin-bottom:6px;line-height:1.4;}
+.item-modal-meta{font-size:12px;color:var(--dim);margin-bottom:10px;}
+.item-modal-seller{font-size:13px;color:var(--dim);margin-bottom:16px;}
+.item-modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.modal-stat{background:var(--surf);padding:8px 12px;}
+.modal-stat span{font-size:10px;color:var(--dim);display:block;margin-bottom:2px;}
+.modal-stat b{font-size:13px;color:var(--text);}
+.item-modal-price{font-family:var(--px);font-size:18px;color:var(--gold);margin-bottom:8px;}
+.modal-buy-btn{flex:1;padding:12px 20px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;letter-spacing:1px;transition:background .2s;}
+.modal-buy-btn:hover{background:var(--gold2);}
+.modal-wish-btn{padding:12px 16px;background:transparent;color:var(--dim);border:1px solid var(--border);cursor:pointer;font-size:13px;transition:all .2s;}
+.modal-wish-btn:hover{border-color:#e88038;color:#e88038;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.error{border-color:#7a2020;color:#c07070;}
+
+@media(max-width:900px){
+  .market-layout{grid-template-columns:1fr;padding:16px;}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+  .filters-title{grid-column:1/-1;}
+  .market-hero{padding:20px 16px 16px;}
+  .market-stats{gap:16px;}
+}
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .nav-links{display:none;}
+  .market-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .item-modal-grid{grid-template-columns:1fr;}
+  .filter-btns{flex-direction:row;flex-wrap:wrap;}
+  .filter-btn{flex:1;min-width:80px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">BT</div>
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Головна</a></li>
+    <li><a href="market.html" class="active">Ринок</a></li>
+    <li><a href="profile.html">Кабінет</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn-sell" href="profile.html#inventory">📦 Продати</a>
+    <a class="btn-auth" href="profile.html" id="auth-btn">Увійти</a>
+  </div>
+</nav>
+
+<div id="toast"></div>
+
+<!-- HERO -->
+<div class="market-hero">
+  <div class="market-hero-inner">
+    <h1 class="market-title">BT 8BIT <span>Ринок</span></h1>
+    <p class="market-sub">Купуй і продавай танки, камуфляжі та бери техніку в оренду. Угоди захищені платформою.</p>
+    <div class="market-stats">
+      <div class="ms-item"><span class="ms-val">1,247</span><span class="ms-lbl">Активних лотів</span></div>
+      <div class="ms-item"><span class="ms-val">89</span><span class="ms-lbl">Угод сьогодні</span></div>
+      <div class="ms-item"><span class="ms-val">52</span><span class="ms-lbl">Продавців онлайн</span></div>
+      <div class="ms-item"><span class="ms-val" style="color:var(--green)">●</span><span class="ms-lbl" style="color:var(--green)">Ринок відкритий</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="market-layout">
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="filters-title">Фільтри</div>
+
+    <div class="filter-section">
+      <div class="filter-label">Тип</div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-key="type" data-val="all" onclick="applyFilter('type','all')">🔍 Всі</button>
+        <button class="filter-btn" data-key="type" data-val="tank" onclick="applyFilter('type','tank')"><div class="dot" style="background:#4a90d9"></div>Танки</button>
+        <button class="filter-btn" data-key="type" data-val="camo" onclick="applyFilter('type','camo')"><div class="dot" style="background:#a070cc"></div>Камуфляжі</button>
+        <button class="filter-btn" data-key="type" data-val="rent" onclick="applyFilter('type','rent')"><div class="dot" style="background:#e88038"></div>Оренда</button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Валюта</div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-key="currency" data-val="all" onclick="applyFilter('currency','all')">💱 Всі</button>
+        <button class="filter-btn" data-key="currency" data-val="gold" onclick="applyFilter('currency','gold')">⭐ Золото</button>
+        <button class="filter-btn" data-key="currency" data-val="coins" onclick="applyFilter('currency','coins')">🪙 Монети</button>
+        <button class="filter-btn" data-key="currency" data-val="oil" onclick="applyFilter('currency','oil')">🛢️ Нафта</button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Рідкість</div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-key="rarity" data-val="all" onclick="applyFilter('rarity','all')">✨ Всі</button>
+        <button class="filter-btn" data-key="rarity" data-val="common" onclick="applyFilter('rarity','common')"><div class="dot" style="background:#8eb0cc"></div>Звичайні</button>
+        <button class="filter-btn" data-key="rarity" data-val="rare" onclick="applyFilter('rarity','rare')"><div class="dot" style="background:#4a90d9"></div>Рідкісні</button>
+        <button class="filter-btn" data-key="rarity" data-val="epic" onclick="applyFilter('rarity','epic')"><div class="dot" style="background:#a070cc"></div>Епічні</button>
+        <button class="filter-btn" data-key="rarity" data-val="legendary" onclick="applyFilter('rarity','legendary')"><div class="dot" style="background:#e88038"></div>Легендарні</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div>
+    <div class="market-top">
+      <div class="search-wrap">
+        <input class="search-box" id="search-box" type="text" placeholder="Пошук по назві або продавцю..." onkeydown="if(event.key==='Enter') applySearch()">
+        <button class="search-btn" onclick="applySearch()">🔍</button>
+      </div>
+      <select class="sort-select" onchange="applyFilter('sort',this.value)">
+        <option value="newest">Новіші спочатку</option>
+        <option value="price_asc">Ціна: дешевші</option>
+        <option value="price_desc">Ціна: дорожчі</option>
+        <option value="popular">Популярні</option>
+      </select>
+      <span class="result-count" id="result-count">12 лотів</span>
+    </div>
+
+    <div class="market-grid" id="market-grid"></div>
+  </div>
+</div>
+
+<!-- ITEM MODAL -->
+<div id="item-modal" onclick="if(event.target===this)closeModal()">
+  <div class="item-modal-box">
+    <div class="item-modal-header">
+      <span style="font-family:var(--px);font-size:10px;color:var(--gold)">BT 8BIT РИНОК</span>
+      <button class="item-modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-item-content"></div>
+  </div>
+</div>
+
+</body>
+</html>
