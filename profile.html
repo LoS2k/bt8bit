@@ -508,6 +508,33 @@
   #toast.show{transform:translateY(0);opacity:1;}
   #toast.error{border-color:var(--red);color:#c07070;}
 
+  /* INVENTORY */
+  .inv-filter{padding:7px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;}
+  .inv-filter:hover{border-color:var(--steel);color:var(--text);}
+  .inv-filter.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.07);}
+  .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+  .inv-card{background:var(--surface);border:1px solid var(--border);padding:12px;cursor:default;transition:border-color .15s;position:relative;}
+  .inv-card.listed{border-color:rgba(74,170,90,0.4);}
+  .inv-card.rented{border-color:rgba(232,128,56,0.4);}
+  .inv-card svg{width:100%;height:60px;display:block;margin-bottom:8px;}
+  .inv-card-name{font-size:12px;color:#fff;margin-bottom:3px;}
+  .inv-card-meta{font-size:10px;color:var(--dim);margin-bottom:8px;}
+  .inv-badge{position:absolute;top:6px;right:6px;font-size:8px;font-family:var(--font-d);padding:2px 6px;}
+  .inv-badge.on-sale{background:rgba(74,170,90,0.2);color:#4aaa5a;border:1px solid rgba(74,170,90,0.3);}
+  .inv-badge.on-rent{background:rgba(232,128,56,0.2);color:#e88038;border:1px solid rgba(232,128,56,0.3);}
+  .inv-sell-btn{width:100%;padding:7px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .15s;}
+  .inv-sell-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .inv-sell-btn.cancel{border-color:#7a2020;color:#a05050;}
+  .inv-sell-btn.cancel:hover{background:rgba(120,30,30,0.15);color:#c07070;}
+  .sell-type-btn{flex:1;padding:8px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;}
+  .sell-type-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.07);}
+  .curr-btn{flex:1;padding:7px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .curr-btn.active{border-color:var(--gold);color:var(--gold);}
+
+  @media(max-width:768px){
+    .inv-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+  }
+
   @media(max-width:768px){
     nav{padding:0 16px;}
     .profile-layout{grid-template-columns:1fr;padding:12px;gap:12px;}
@@ -642,6 +669,7 @@
 
       <div class="side-nav">
         <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> <span data-t="nav.stats">Статистика</span></div>
+        <div class="side-nav-item" onclick="showTab('inventory')"><span class="side-nav-icon">📦</span> <span data-t="nav.inventory">Інвентар</span></div>
         <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> <span data-t="nav.legend">Легенда</span></div>
         <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> <span data-t="nav.promo">Промокод</span></div>
         <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> <span data-t="nav.search">Пошук гравців</span></div>
@@ -749,6 +777,71 @@
         </div>
       </div>
 
+      <!-- INVENTORY -->
+      <div id="tab-inventory" class="content-panel" style="display:none">
+        <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <span>Інвентар / Склад</span>
+          <a href="market.html" style="font-family:var(--font-d);font-size:9px;color:var(--green);border:1px solid var(--green);padding:7px 14px;text-decoration:none;transition:all .2s;" onmouseover="this.style.background='rgba(74,170,90,0.1)'" onmouseout="this.style.background='transparent'">🏪 Перейти на Ринок</a>
+        </div>
+
+        <!-- Фільтри інвентарю -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="inv-filter active" onclick="filterInv('all')" data-inv="all">Всі</button>
+          <button class="inv-filter" onclick="filterInv('tank')" data-inv="tank">🚀 Танки</button>
+          <button class="inv-filter" onclick="filterInv('camo')" data-inv="camo">🎨 Камуфляжі</button>
+          <button class="inv-filter" onclick="filterInv('listed')" data-inv="listed">📋 На продажу</button>
+          <button class="inv-filter" onclick="filterInv('rented')" data-inv="rented">⏱ В оренді</button>
+        </div>
+
+        <div class="inv-grid" id="inv-grid"></div>
+
+        <!-- Sell modal -->
+        <div id="sell-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+          <div style="background:var(--card);border:1px solid var(--border);width:min(420px,95vw);padding:28px;">
+            <div style="font-family:var(--font-d);font-size:11px;color:var(--gold);margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+              <span id="sell-modal-title">Виставити на продаж</span>
+              <button onclick="closeSellModal()" style="background:none;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;cursor:pointer;font-size:16px;">✕</button>
+            </div>
+            <div id="sell-item-preview" style="background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+              <div id="sell-item-svg" style="width:80px;flex-shrink:0"></div>
+              <div>
+                <div id="sell-item-name" style="font-size:14px;color:#fff;margin-bottom:4px"></div>
+                <div id="sell-item-rarity" style="font-size:11px"></div>
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Тип оголошення</label>
+              <div style="display:flex;gap:6px;">
+                <button class="sell-type-btn active" id="st-sell" onclick="setSellType('sell')">💰 Продаж</button>
+                <button class="sell-type-btn" id="st-rent" onclick="setSellType('rent')">⏱ Оренда</button>
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Ціна</label>
+              <input type="number" id="sell-price" min="1" placeholder="Введи суму" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;margin-bottom:6px;">
+              <div style="display:flex;gap:6px;">
+                <button class="curr-btn active" id="cb-gold" onclick="setSellCurr('gold')">⭐ Золото</button>
+                <button class="curr-btn" id="cb-coins" onclick="setSellCurr('coins')">🪙 Монети</button>
+                <button class="curr-btn" id="cb-oil" onclick="setSellCurr('oil')">🛢️ Нафта</button>
+              </div>
+            </div>
+            <div id="rent-days-wrap" style="display:none;margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Термін оренди</label>
+              <div style="display:flex;gap:6px;">
+                <button class="curr-btn active" id="rd-1" onclick="setRentDays(1)">1 день</button>
+                <button class="curr-btn" id="rd-3" onclick="setRentDays(3)">3 дні</button>
+                <button class="curr-btn" id="rd-7" onclick="setRentDays(7)">7 днів</button>
+                <button class="curr-btn" id="rd-30" onclick="setRentDays(30)">30 днів</button>
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--dim);">
+              Комісія платформи: <span style="color:var(--text)">10%</span> · Ви отримаєте: <span id="sell-after-fee" style="color:var(--gold)">0</span>
+            </div>
+            <button onclick="confirmListing()" style="width:100%;padding:13px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--font-d);font-size:11px;letter-spacing:1px;transition:background .2s;">Виставити</button>
+          </div>
+        </div>
+      </div>
+
       <!-- LEGEND -->
       <div id="tab-legend" class="content-panel" style="display:none">
         <div class="panel-title" data-t="panel.legend">Система «Легенда»</div>
@@ -849,7 +942,7 @@ function showToast(msg,type=''){
 }
 
 // TABS
-const TABS=['stats','legend','promo','search','compare','clan','shop'];
+const TABS=['stats','inventory','legend','promo','search','compare','clan','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
@@ -1206,6 +1299,154 @@ buildRatingGraph([]);
 buildDNA({});
 buildBattleLog([]);
 buildSeasonRecord({});
+
+// ── INVENTORY ──────────────────────────────────────────────────
+const INV_DEMO = [
+  { id:'i1', type:'tank', name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',    image:'tiger',    listed:false, rented:false },
+  { id:'i2', type:'tank', name:'T-34',       nation:'🛡',  tier:3, rarity:'common',  image:'t34',      listed:true,  rented:false, listPrice:850, listCurr:'coins' },
+  { id:'i3', type:'camo', name:'Пустеля',    nation:'',    tier:0, rarity:'rare',    image:'camo_desert', listed:false, rented:false },
+  { id:'i4', type:'tank', name:'M18 Hellcat',nation:'🇺🇸', tier:5, rarity:'epic',    image:'hellcat',  listed:false, rented:true,  rentedTo:'PlayerXYZ', rentExpires:'22.06.2026' },
+  { id:'i5', type:'camo', name:'Арктичний',  nation:'',    tier:0, rarity:'epic',    image:'camo_arctic', listed:false, rented:false },
+  { id:'i6', type:'tank', name:'Panzer IV',  nation:'🇩🇪', tier:3, rarity:'common',  image:'panzer4',  listed:false, rented:false },
+];
+
+const RARITY_COLOR_P = { common:'#8eb0cc', rare:'#4a90d9', epic:'#a070cc', legendary:'#e88038' };
+const RARITY_LABEL_P = { common:'Звичайний', rare:'Рідкісний', epic:'Епічний', legendary:'Легендарний' };
+const TANK_SVG_P = {
+  tiger:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  t34:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
+  hellcat:`<svg viewBox="0 0 120 60" fill="none"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="42" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="86" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  panzer4:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
+  camo_desert:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#8a6020" opacity=".8"/></svg>`,
+  camo_arctic:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#e8f0f8" opacity=".9"/></svg>`,
+};
+
+let invFilter = 'all';
+let selectedItem = null;
+let sellType = 'sell';
+let sellCurr = 'gold';
+let rentDays = 1;
+
+window.filterInv = function(f) {
+  invFilter = f;
+  document.querySelectorAll('.inv-filter').forEach(b => b.classList.toggle('active', b.dataset.inv === f));
+  renderInv();
+};
+
+function renderInv() {
+  const items = INV_DEMO.filter(item => {
+    if (invFilter === 'tank')   return item.type === 'tank';
+    if (invFilter === 'camo')   return item.type === 'camo';
+    if (invFilter === 'listed') return item.listed;
+    if (invFilter === 'rented') return item.rented;
+    return true;
+  });
+  const rc = (r) => RARITY_COLOR_P[r] || '#888';
+  const rl = (r) => RARITY_LABEL_P[r] || r;
+
+  document.getElementById('inv-grid').innerHTML = items.length === 0
+    ? '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim);font-size:13px">Тут порожньо</div>'
+    : items.map(item => {
+      const svg = TANK_SVG_P[item.image] || TANK_SVG_P.t34;
+      const badge = item.listed
+        ? `<div class="inv-badge on-sale">ПРОДАЖ</div>`
+        : item.rented
+        ? `<div class="inv-badge on-rent">ОРЕНДА</div>` : '';
+      const btnTxt = item.listed ? '✕ Зняти з продажу'
+        : item.rented ? `⏱ Орендовано до ${item.rentExpires}`
+        : '+ Виставити';
+      const btnCls = item.listed ? 'inv-sell-btn cancel'
+        : item.rented ? 'inv-sell-btn cancel' : 'inv-sell-btn';
+      const disabled = item.rented ? 'disabled style="opacity:.5;cursor:not-allowed"' : '';
+      const listInfo = item.listed
+        ? `<div style="font-size:10px;color:var(--green);margin-bottom:4px">На продажу: ${item.listPrice} ${item.listCurr}</div>` : '';
+      return `<div class="inv-card ${item.listed?'listed':item.rented?'rented':''}">
+        ${badge}
+        ${svg}
+        <div class="inv-card-name">${item.nation?item.nation+' ':''}${item.name}</div>
+        <div class="inv-card-meta" style="color:${rc(item.rarity)}">${rl(item.rarity)}${item.tier?' · Рвн '+item.tier:''}</div>
+        ${listInfo}
+        <button class="${btnCls}" ${disabled} onclick="openSellModal('${item.id}')">${btnTxt}</button>
+      </div>`;
+    }).join('');
+}
+
+window.openSellModal = function(id) {
+  const item = INV_DEMO.find(i => i.id === id);
+  if (!item || item.rented) return;
+  if (item.listed) {
+    item.listed = false; item.listPrice = 0; item.listCurr = '';
+    showToast('Знято з продажу',''); renderInv(); return;
+  }
+  selectedItem = item;
+  const rc = RARITY_COLOR_P[item.rarity];
+  const rl = RARITY_LABEL_P[item.rarity];
+  document.getElementById('sell-modal-title').textContent = 'Виставити: ' + item.name;
+  document.getElementById('sell-item-svg').innerHTML = TANK_SVG_P[item.image] || '';
+  document.getElementById('sell-item-name').textContent = (item.nation?item.nation+' ':'')+item.name;
+  document.getElementById('sell-item-rarity').textContent = rl;
+  document.getElementById('sell-item-rarity').style.color = rc;
+  document.getElementById('sell-price').value = '';
+  document.getElementById('sell-after-fee').textContent = '0';
+  document.getElementById('sell-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeSellModal = function() {
+  document.getElementById('sell-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.setSellType = function(t) {
+  sellType = t;
+  document.querySelectorAll('.sell-type-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('st-'+t).classList.add('active');
+  document.getElementById('rent-days-wrap').style.display = t === 'rent' ? 'block' : 'none';
+};
+
+window.setSellCurr = function(c) {
+  sellCurr = c;
+  document.querySelectorAll('.curr-btn[id^="cb-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('cb-'+c).classList.add('active');
+  updateFee();
+};
+
+window.setRentDays = function(d) {
+  rentDays = d;
+  document.querySelectorAll('.curr-btn[id^="rd-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('rd-'+d).classList.add('active');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const priceInput = document.getElementById('sell-price');
+  if (priceInput) priceInput.addEventListener('input', updateFee);
+});
+
+function updateFee() {
+  const p = parseInt(document.getElementById('sell-price')?.value) || 0;
+  const after = Math.floor(p * 0.9);
+  const el = document.getElementById('sell-after-fee');
+  if (el) el.textContent = after.toLocaleString() + ' ' + sellCurr;
+}
+
+window.confirmListing = function() {
+  if (!selectedItem) return;
+  const price = parseInt(document.getElementById('sell-price').value);
+  if (!price || price < 1) { showToast('Введи ціну!','error'); return; }
+  selectedItem.listed = true;
+  selectedItem.listPrice = price;
+  selectedItem.listCurr = sellCurr;
+  closeSellModal();
+  showToast(`✅ ${selectedItem.name} виставлено на Ринок за ${price} ${sellCurr}`,'');
+  renderInv();
+};
+
+// Рендер інвентарю при відкритті вкладки
+const origShowTab = showTab;
+window.showTab = function(name) {
+  origShowTab(name);
+  if (name === 'inventory') renderInv();
+};
 </script>
 </body>
 </html>
