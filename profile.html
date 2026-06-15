@@ -508,6 +508,70 @@
   #toast.show{transform:translateY(0);opacity:1;}
   #toast.error{border-color:var(--red);color:#c07070;}
 
+  /* COSMETICS */
+  .cos-preview-wrap{background:var(--surface);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;align-items:center;}
+  .cos-preview-card{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;}
+  .cos-preview-avatar{width:80px;height:80px;position:relative;flex-shrink:0;}
+  .cos-preview-avatar svg{width:80px;height:80px;border-radius:50%;}
+  .cos-preview-title{font-family:var(--font-d);font-size:9px;margin-bottom:4px;letter-spacing:1px;}
+  .cos-preview-name{font-family:var(--font-d);font-size:15px;color:#fff;margin-bottom:8px;}
+  .cos-preview-badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .cos-badge{font-size:9px;padding:3px 8px;border:1px solid;font-family:var(--font-d);}
+  .cos-section-label{font-family:var(--font-d);font-size:9px;color:var(--dim);letter-spacing:2px;margin-bottom:12px;margin-top:4px;}
+  .cos-tag-season{font-size:7px;background:rgba(232,128,56,0.15);color:#e88038;border:1px solid rgba(232,128,56,0.3);padding:2px 6px;margin-left:8px;vertical-align:middle;}
+  .cos-tag-premium{font-size:7px;background:rgba(160,112,204,0.15);color:#a070cc;border:1px solid rgba(160,112,204,0.3);padding:2px 6px;margin-left:8px;vertical-align:middle;}
+  .cos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+  .cos-item{background:var(--surface);border:2px solid var(--border);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;position:relative;}
+  .cos-item:hover{border-color:var(--steel);}
+  .cos-item.equipped{border-color:var(--gold);background:rgba(232,188,56,0.06);}
+  .cos-item.locked{opacity:.5;cursor:default;}
+  .cos-item svg{width:60px;height:60px;display:block;margin:0 auto 8px;}
+  .cos-item-name{font-size:10px;color:var(--text);margin-bottom:2px;}
+  .cos-item-type{font-size:9px;color:var(--dim);}
+  .cos-item-equipped{position:absolute;top:4px;right:4px;font-size:8px;font-family:var(--font-d);background:var(--gold);color:var(--bg);padding:2px 5px;}
+  .cos-item-lock{position:absolute;top:4px;right:4px;font-size:14px;}
+  .cos-item-price{font-size:10px;color:#a070cc;margin-top:4px;}
+  .cos-item-req{font-size:9px;color:var(--dim);margin-top:2px;line-height:1.4;}
+  /* Frames */
+  .cos-frame-preview{width:60px;height:60px;border-radius:50%;margin:0 auto 8px;position:relative;display:flex;align-items:center;justify-content:center;}
+  .cos-frame-preview svg{width:48px;height:48px;border-radius:50%;}
+  /* Titles */
+  .cos-titles-list{display:flex;flex-direction:column;gap:8px;}
+  .cos-title-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border:1px solid var(--border);transition:border-color .15s;}
+  .cos-title-row.equipped{border-color:var(--gold);}
+  .cos-title-row.locked{opacity:.55;}
+  .cos-title-left{display:flex;align-items:center;gap:12px;}
+  .cos-title-badge{font-family:var(--font-d);font-size:10px;padding:5px 12px;border:1px solid;}
+  .cos-title-req{font-size:11px;color:var(--dim);}
+  .cos-title-btn{padding:7px 14px;font-size:11px;cursor:pointer;border:1px solid;transition:all .15s;background:transparent;}
+  .cos-title-btn.equip{border-color:var(--gold);color:var(--gold);}
+  .cos-title-btn.equip:hover{background:var(--gold);color:var(--bg);}
+  .cos-title-btn.equipped{border-color:var(--dim);color:var(--dim);cursor:default;}
+  .cos-title-btn.locked{border-color:var(--border);color:var(--dim);cursor:default;}
+  /* Achievements */
+  .ach-list{display:flex;flex-direction:column;gap:8px;}
+  .ach-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);transition:border-color .15s;}
+  .ach-row.unlocked{border-color:rgba(74,170,90,0.3);}
+  .ach-row.secret{opacity:.5;}
+  .ach-icon{font-size:28px;flex-shrink:0;width:40px;text-align:center;}
+  .ach-info{flex:1;}
+  .ach-name{font-size:13px;color:#fff;margin-bottom:3px;}
+  .ach-desc{font-size:11px;color:var(--dim);line-height:1.5;}
+  .ach-reward{font-size:10px;margin-top:4px;}
+  .ach-progress{margin-top:6px;}
+  .ach-prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .ach-prog-fill{height:100%;background:var(--gold);border-radius:2px;}
+  .ach-prog-label{font-size:9px;color:var(--dim);margin-top:2px;}
+  .ach-status{flex-shrink:0;text-align:right;}
+  .ach-check{font-size:20px;}
+  .ach-xp{font-family:var(--font-d);font-size:9px;color:var(--gold);}
+  /* Search result with cosmetics */
+  .sr-cosmetic{display:flex;align-items:center;gap:6px;margin-top:4px;}
+
+  @media(max-width:600px){
+    .cos-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+  }
+
   /* INVENTORY */
   .inv-filter{padding:7px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;}
   .inv-filter:hover{border-color:var(--steel);color:var(--text);}
@@ -669,6 +733,7 @@
 
       <div class="side-nav">
         <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> <span data-t="nav.stats">Статистика</span></div>
+        <div class="side-nav-item" onclick="showTab('cosmetics')"><span class="side-nav-icon">🎨</span> <span data-t="nav.cosmetics">Косметика</span></div>
         <div class="side-nav-item" onclick="showTab('inventory')"><span class="side-nav-icon">📦</span> <span data-t="nav.inventory">Інвентар</span></div>
         <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> <span data-t="nav.legend">Легенда</span></div>
         <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> <span data-t="nav.promo">Промокод</span></div>
@@ -774,6 +839,66 @@
         <!-- SEASON -->
         <div id="subtab-season" style="display:none">
           <div id="season-content"></div>
+        </div>
+      </div>
+
+      <!-- COSMETICS -->
+      <div id="tab-cosmetics" class="content-panel" style="display:none">
+        <div class="panel-title">Косметика та досягнення</div>
+
+        <!-- Активний вигляд -->
+        <div class="cos-preview-wrap">
+          <div class="cos-preview-card">
+            <div class="cos-preview-avatar" id="prev-avatar-wrap">
+              <div id="prev-avatar-svg"></div>
+            </div>
+            <div class="cos-preview-info">
+              <div class="cos-preview-title" id="prev-title-text" style="display:none"></div>
+              <div class="cos-preview-name" id="p-nickname-cos">Гравець</div>
+              <div class="cos-preview-badges" id="prev-badges"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--dim);margin-top:8px;text-align:center">Попередній перегляд · Так тебе бачать інші гравці</div>
+        </div>
+
+        <!-- Підвкладки косметики -->
+        <div class="subtabs" style="margin-top:20px">
+          <button class="subtab active" onclick="showCosTab('avatars')">🖼️ Аватари</button>
+          <button class="subtab" onclick="showCosTab('frames')">🔲 Рамки</button>
+          <button class="subtab" onclick="showCosTab('titles')">📛 Титули</button>
+          <button class="subtab" onclick="showCosTab('achievements')">🏅 Досягнення</button>
+        </div>
+
+        <!-- AVATARS -->
+        <div id="cos-avatars">
+          <div class="cos-section-label">Досягнення</div>
+          <div class="cos-grid" id="cos-ava-earned"></div>
+          <div class="cos-section-label" style="margin-top:20px">Сезонні <span class="cos-tag-season">ОБМЕЖЕНІ</span></div>
+          <div class="cos-grid" id="cos-ava-season"></div>
+          <div class="cos-section-label" style="margin-top:20px">Преміум <span class="cos-tag-premium">ЗА НАФТУ</span></div>
+          <div class="cos-grid" id="cos-ava-premium"></div>
+        </div>
+
+        <!-- FRAMES -->
+        <div id="cos-frames" style="display:none">
+          <div class="cos-section-label">Рамки профілю</div>
+          <div class="cos-grid" id="cos-frames-grid"></div>
+        </div>
+
+        <!-- TITLES -->
+        <div id="cos-titles" style="display:none">
+          <div class="cos-section-label">Титули</div>
+          <div class="cos-titles-list" id="cos-titles-list"></div>
+        </div>
+
+        <!-- ACHIEVEMENTS -->
+        <div id="cos-achievements" style="display:none">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="font-family:var(--font-d);font-size:18px;color:var(--gold)" id="ach-count">0/20</div>
+            <div style="flex:1;height:6px;background:var(--border);border-radius:3px;min-width:100px"><div id="ach-progress-bar" style="height:100%;background:var(--gold);border-radius:3px;transition:width .8s ease"></div></div>
+            <div style="font-size:11px;color:var(--dim)">Досягнень відкрито</div>
+          </div>
+          <div class="ach-list" id="ach-list"></div>
         </div>
       </div>
 
@@ -942,7 +1067,7 @@ function showToast(msg,type=''){
 }
 
 // TABS
-const TABS=['stats','inventory','legend','promo','search','compare','clan','shop'];
+const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
@@ -1441,11 +1566,321 @@ window.confirmListing = function() {
   renderInv();
 };
 
-// Рендер інвентарю при відкритті вкладки
-const origShowTab = showTab;
+// ── COSMETICS SYSTEM ──────────────────────────────────────────
+const AVATARS = [
+  // -- EARNED --
+  { id:'av_warrior',  src:'earned',  name:'Воїн',       icon:'⚔️',  color:'#4a90d9', bg:'#0a1828', req:'Перший бій',           earned:true,  equipped:true  },
+  { id:'av_veteran',  src:'earned',  name:'Ветеран',     icon:'🎖️',  color:'#e8bc38', bg:'#1a1008', req:'30 днів поспіль',      earned:false, equipped:false },
+  { id:'av_loyal',    src:'earned',  name:'Вірний',      icon:'🔥',  color:'#e88038', bg:'#1a0a00', req:'7 днів поспіль',       earned:true,  equipped:false },
+  { id:'av_destroyer',src:'earned',  name:'Руйнівник',   icon:'💥',  color:'#aa4a4a', bg:'#180808', req:'Легенда рівень 10',    earned:false, equipped:false },
+  { id:'av_sniper',   src:'earned',  name:'Снайпер',     icon:'🎯',  color:'#4aaa5a', bg:'#081408', req:'50%+ WR за 50+ боїв',  earned:false, equipped:false },
+  { id:'av_trader',   src:'earned',  name:'Торговець',   icon:'🏪',  color:'#8eb0cc', bg:'#081018', req:'Угода на Ринку',       earned:true,  equipped:false },
+  { id:'av_clan',     src:'earned',  name:'Братство',    icon:'🏰',  color:'#a070cc', bg:'#100818', req:'Клан 30 днів',         earned:false, equipped:false },
+  { id:'av_ace',      src:'earned',  name:'Туз',         icon:'🃏',  color:'#ffd700', bg:'#181208', req:'100 перемог',          earned:false, equipped:false },
+  // -- SEASON --
+  { id:'av_new24',    src:'season',  name:'Новий Рік',   icon:'🎄',  color:'#4aaa5a', bg:'#081408', req:'Грудень 2024',         earned:true,  equipped:false },
+  { id:'av_summer',   src:'season',  name:'Літній',      icon:'☀️',  color:'#e8bc38', bg:'#181008', req:'Липень 2026',          earned:false, equipped:false },
+  { id:'av_pioneer',  src:'season',  name:'Піонер',      icon:'🚀',  color:'#aa4a4a', bg:'#180808', req:'Гравець з ЗБТ',        earned:true,  equipped:false },
+  // -- PREMIUM --
+  { id:'av_dragon',   src:'premium', name:'Дракон',      icon:'🐉',  color:'#e88038', bg:'#180a00', price:500, currency:'oil',  earned:false, equipped:false },
+  { id:'av_ghost',    src:'premium', name:'Привид',      icon:'👻',  color:'#8eb0cc', bg:'#080810', price:300, currency:'oil',  earned:false, equipped:false },
+  { id:'av_emperor',  src:'premium', name:'Імператор',   icon:'👑',  color:'#ffd700', bg:'#181000', price:800, currency:'oil',  earned:false, equipped:false },
+  { id:'av_skull',    src:'premium', name:'Череп',       icon:'💀',  color:'#aa4a4a', bg:'#100000', price:400, currency:'oil',  earned:false, equipped:false },
+];
+
+const FRAMES = [
+  { id:'fr_none',    name:'Без рамки',  color:'transparent', stroke:'var(--border)', req:'За замовчуванням', earned:true,  equipped:true  },
+  { id:'fr_bronze',  name:'Бронзова',   color:'#cd7f32',     stroke:'#cd7f32',       req:'10 боїв',          earned:true,  equipped:false },
+  { id:'fr_silver',  name:'Срібна',     color:'#c0c0c0',     stroke:'#c0c0c0',       req:'50 боїв',          earned:false, equipped:false },
+  { id:'fr_gold',    name:'Золота',     color:'#ffd700',     stroke:'#ffd700',       req:'100 боїв',         earned:false, equipped:false },
+  { id:'fr_diamond', name:'Діамантова', color:'#4fc3f7',     stroke:'#4fc3f7',       req:'Легенда рвн 20',   earned:false, equipped:false },
+  { id:'fr_flame',   name:'Вогняна',    color:'#e88038',     stroke:'#ff6320',       req:'7 днів поспіль',   earned:true,  equipped:false, price:0 },
+  { id:'fr_epic',    name:'Епічна',     color:'#a070cc',     stroke:'#c090ec',       req:'500 нафти',        earned:false, equipped:false, price:500, currency:'oil' },
+  { id:'fr_legend',  name:'Легендарна', color:'#e8bc38',     stroke:'#ffd700',       req:'Легенда рвн 50',   earned:false, equipped:false },
+];
+
+const TITLES = [
+  { id:'ti_recruit',  text:'Рекрут',      color:'#8eb0cc', req:'Реєстрація',             earned:true,  equipped:false },
+  { id:'ti_soldier',  text:'Солдат',      color:'#4aaa5a', req:'10 боїв',                earned:true,  equipped:false },
+  { id:'ti_hunter',   text:'Мисливець',   color:'#e8bc38', req:'50 знищень',             earned:false, equipped:false },
+  { id:'ti_veteran',  text:'Ветеран',     color:'#c49a20', req:'30 днів у грі',          earned:false, equipped:false },
+  { id:'ti_ace',      text:'Туз',         color:'#ffd700', req:'100 перемог',            earned:false, equipped:false },
+  { id:'ti_legend',   text:'Легенда',     color:'#e88038', req:'Легенда рівень 30',      earned:false, equipped:false },
+  { id:'ti_destroyer',text:'Руйнівник',   color:'#aa4a4a', req:'1M урону',               earned:false, equipped:false },
+  { id:'ti_trader',   text:'Торговець',   color:'#a070cc', req:'10 угод на ринку',       earned:false, equipped:false },
+  { id:'ti_founder',  text:'Засновник',   color:'#4fc3f7', req:'Гравець з ЗБТ',          earned:true,  equipped:true  },
+  { id:'ti_clan',     text:'Командир',    color:'#c0c0c0', req:'Лідер клану',            earned:false, equipped:false },
+];
+
+const ACHIEVEMENTS = [
+  { id:'a1',  icon:'⚔️',  name:'Перший бій',        desc:'Зіграй перший бій у грі',              xp:50,   unlocked:true,  progress:1,  total:1  },
+  { id:'a2',  icon:'🔥',  name:'Вогонь!',            desc:'7 днів входу поспіль',                 xp:150,  unlocked:true,  progress:7,  total:7,  reward:'av_loyal'  },
+  { id:'a3',  icon:'🎖️',  name:'Ветеран',            desc:'30 днів входу поспіль',                xp:500,  unlocked:false, progress:7,  total:30, reward:'av_veteran' },
+  { id:'a4',  icon:'💥',  name:'Сотня боїв',         desc:'Зіграй 100 боїв',                      xp:300,  unlocked:false, progress:0,  total:100 },
+  { id:'a5',  icon:'🎯',  name:'Снайпер',            desc:'50%+ WR за мінімум 50 боїв',           xp:400,  unlocked:false, progress:0,  total:1  },
+  { id:'a6',  icon:'💀',  name:'50 знищень',         desc:'Знищ 50 ворожих танків',               xp:200,  unlocked:false, progress:0,  total:50 },
+  { id:'a7',  icon:'🏰',  name:'Клановець',          desc:'Вступи або створи клан',               xp:100,  unlocked:false, progress:0,  total:1  },
+  { id:'a8',  icon:'🏪',  name:'Перша угода',        desc:'Купи або продай предмет на Ринку',      xp:100,  unlocked:true,  progress:1,  total:1,  reward:'av_trader' },
+  { id:'a9',  icon:'⚡',  name:'Легенда 10',         desc:'Досягни 10 рівня Легенди',             xp:600,  unlocked:false, progress:1,  total:10, reward:'av_destroyer' },
+  { id:'a10', icon:'🌟',  name:'Мільйон урону',      desc:'Нанеси 1,000,000 урону за всі бої',    xp:800,  unlocked:false, progress:0,  total:1000000 },
+  { id:'a11', icon:'🏆',  name:'100 перемог',        desc:'Здобудь 100 перемог',                  xp:700,  unlocked:false, progress:0,  total:100, reward:'av_ace' },
+  { id:'a12', icon:'🚀',  name:'Піонер',             desc:'Реєстрація під час ЗБТ',               xp:1000, unlocked:true,  progress:1,  total:1,  reward:'av_pioneer' },
+  { id:'a13', icon:'📅',  name:'Активіст',           desc:'Відвідай сайт 30 разів',               xp:200,  unlocked:false, progress:1,  total:30 },
+  { id:'a14', icon:'💬',  name:'Дипломат',           desc:'Вступи в клан і будь 30 днів',         xp:300,  unlocked:false, progress:0,  total:30 },
+  { id:'a15', icon:'🎁',  name:'Промокод',           desc:'Активуй перший промокод',              xp:50,   unlocked:false, progress:0,  total:1  },
+  { id:'a16', icon:'💎',  name:'Донатер',            desc:'Перше поповнення рахунку',             xp:200,  unlocked:false, progress:0,  total:1  },
+  { id:'a17', icon:'🔲',  name:'Стиліст',            desc:'Встанови рамку профілю',               xp:50,   unlocked:true,  progress:1,  total:1  },
+  { id:'a18', icon:'📛',  name:'Іменний',            desc:'Встанови титул',                       xp:50,   unlocked:true,  progress:1,  total:1  },
+  { id:'a19', icon:'🧬',  name:'ДНК 80+',            desc:'Досягни 80+ балів у будь-якій категорії ДНК', xp:300, unlocked:false, progress:0, total:80 },
+  { id:'a20', icon:'?',   name:'???',                desc:'Секретне досягнення',                   xp:2000, unlocked:false, progress:0,  total:1, secret:true },
+];
+
+let equippedAvatar  = 'av_warrior';
+let equippedFrame   = 'fr_none';
+let equippedTitle   = 'ti_founder';
+let activeCosTab    = 'avatars';
+
+function showCosTab(tab) {
+  activeCosTab = tab;
+  ['avatars','frames','titles','achievements'].forEach(t => {
+    const el = document.getElementById('cos-'+t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('#tab-cosmetics .subtab').forEach((b,i) => {
+    b.classList.toggle('active', ['avatars','frames','titles','achievements'][i] === tab);
+  });
+  if (tab === 'avatars')      renderAvatars();
+  if (tab === 'frames')       renderFrames();
+  if (tab === 'titles')       renderTitles();
+  if (tab === 'achievements') renderAchievements();
+}
+window.showCosTab = showCosTab;
+
+function makeAvatarSVG(av, size=60) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="30" cy="30" r="30" fill="${av.bg||'#111e2e'}"/>
+    <text x="30" y="38" font-size="26" text-anchor="middle" dominant-baseline="middle">${av.icon}</text>
+  </svg>`;
+}
+
+function makeFrameSVG(fr, innerSVG='') {
+  const c = fr.stroke || 'var(--border)';
+  return `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="40" r="36" fill="var(--surface)" stroke="${c}" stroke-width="${fr.id==='fr_none'?1:4}"/>
+    <text x="40" y="48" font-size="22" text-anchor="middle">⚔️</text>
+  </svg>`;
+}
+
+function updatePreview() {
+  const av = AVATARS.find(a => a.id === equippedAvatar) || AVATARS[0];
+  const fr = FRAMES.find(f => f.id === equippedFrame)   || FRAMES[0];
+  const ti = TITLES.find(t => t.id === equippedTitle);
+
+  // Avatar with frame overlay
+  const wrap = document.getElementById('prev-avatar-wrap');
+  if (wrap) {
+    const border = fr.id === 'fr_none' ? '2px solid var(--border)' : `3px solid ${fr.stroke}`;
+    wrap.style.cssText = `width:80px;height:80px;border-radius:50%;border:${border};display:flex;align-items:center;justify-content:center;overflow:hidden;background:${av.bg};box-shadow:${fr.id!=='fr_none'?`0 0 12px ${fr.color}44`:'none'}`;
+    wrap.innerHTML = `<div style="font-size:36px;line-height:1">${av.icon}</div>`;
+  }
+
+  // Title
+  const titleEl = document.getElementById('prev-title-text');
+  if (titleEl && ti) {
+    titleEl.textContent = ti.text;
+    titleEl.style.color = ti.color;
+    titleEl.style.display = 'block';
+  } else if (titleEl) { titleEl.style.display = 'none'; }
+
+  // Nickname
+  const nick = document.getElementById('p-nickname');
+  const nickCos = document.getElementById('p-nickname-cos');
+  if (nickCos && nick) nickCos.textContent = nick.textContent;
+
+  // Badges (earned achievements count)
+  const earned = ACHIEVEMENTS.filter(a => a.unlocked).length;
+  const badgesEl = document.getElementById('prev-badges');
+  if (badgesEl) {
+    badgesEl.innerHTML = `
+      <span class="cos-badge" style="color:#4aaa5a;border-color:rgba(74,170,90,0.4)">🏅 ${earned}</span>
+      ${ti ? `<span class="cos-badge" style="color:${ti.color};border-color:${ti.color}44">${ti.text}</span>` : ''}
+    `;
+  }
+}
+
+function renderAvatars() {
+  const sections = { earned:'cos-ava-earned', season:'cos-ava-season', premium:'cos-ava-premium' };
+  Object.entries(sections).forEach(([src, elId]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const items = AVATARS.filter(a => a.src === src);
+    el.innerHTML = items.map(av => {
+      const isEq = av.id === equippedAvatar;
+      const locked = !av.earned;
+      return `<div class="cos-item ${isEq?'equipped':''} ${locked?'locked':''}" onclick="${locked?'':''} equipAvatar('${av.id}')">
+        ${isEq ? '<div class="cos-item-equipped">АКТИВНИЙ</div>' : ''}
+        ${locked && !av.price ? '<div class="cos-item-lock">🔒</div>' : ''}
+        <div style="font-size:36px;margin-bottom:6px;line-height:1;width:60px;height:60px;border-radius:50%;background:${av.bg};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">${av.icon}</div>
+        <div class="cos-item-name">${av.name}</div>
+        ${av.price ? `<div class="cos-item-price">🛢️ ${av.price} нафти</div>` : `<div class="cos-item-req">${av.req}</div>`}
+      </div>`;
+    }).join('');
+  });
+  updatePreview();
+}
+
+window.equipAvatar = function(id) {
+  const av = AVATARS.find(a => a.id === id);
+  if (!av) return;
+  if (!av.earned) {
+    if (av.price) showToast(`Придбай за 🛢️ ${av.price} нафти`, 'warn');
+    else showToast('Виконай умову: ' + av.req, 'warn');
+    return;
+  }
+  AVATARS.forEach(a => a.equipped = a.id === id);
+  equippedAvatar = id;
+  renderAvatars();
+  updatePreview();
+  showToast('✅ Аватар змінено', '');
+};
+
+function renderFrames() {
+  const el = document.getElementById('cos-frames-grid');
+  if (!el) return;
+  el.innerHTML = FRAMES.map(fr => {
+    const isEq = fr.id === equippedFrame;
+    const locked = !fr.earned;
+    return `<div class="cos-item ${isEq?'equipped':''} ${locked?'locked':''}" onclick="equipFrame('${fr.id}')">
+      ${isEq ? '<div class="cos-item-equipped">АКТИВНА</div>' : ''}
+      ${locked && !fr.price ? '<div class="cos-item-lock">🔒</div>' : ''}
+      <div style="width:60px;height:60px;border-radius:50%;border:${fr.id==='fr_none'?'2px dashed var(--border)':`3px solid ${fr.stroke}`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;box-shadow:${fr.id!=='fr_none'?`0 0 8px ${fr.color}44`:'none'}"><span style="font-size:20px">⚔️</span></div>
+      <div class="cos-item-name">${fr.name}</div>
+      ${fr.price ? `<div class="cos-item-price">🛢️ ${fr.price}</div>` : `<div class="cos-item-req">${fr.req}</div>`}
+    </div>`;
+  }).join('');
+}
+
+window.equipFrame = function(id) {
+  const fr = FRAMES.find(f => f.id === id);
+  if (!fr) return;
+  if (!fr.earned) {
+    if (fr.price) showToast(`Придбай за 🛢️ ${fr.price} нафти`, 'warn');
+    else showToast('Виконай умову: ' + fr.req, 'warn');
+    return;
+  }
+  FRAMES.forEach(f => f.equipped = f.id === id);
+  equippedFrame = id;
+  renderFrames();
+  updatePreview();
+  showToast('✅ Рамку змінено', '');
+};
+
+function renderTitles() {
+  const el = document.getElementById('cos-titles-list');
+  if (!el) return;
+  el.innerHTML = TITLES.map(ti => {
+    const isEq = ti.id === equippedTitle;
+    return `<div class="cos-title-row ${isEq?'equipped':''} ${!ti.earned?'locked':''}">
+      <div class="cos-title-left">
+        <div class="cos-title-badge" style="color:${ti.color};border-color:${ti.color}55">${ti.text}</div>
+        <div class="cos-title-req">${ti.req}</div>
+      </div>
+      <button class="cos-title-btn ${isEq?'equipped':ti.earned?'equip':'locked'}"
+        onclick="${ti.earned && !isEq ? `equipTitle('${ti.id}')` : ''}"
+      >${isEq ? '✓ Активний' : ti.earned ? 'Вибрати' : '🔒 Закрито'}</button>
+    </div>`;
+  }).join('');
+}
+
+window.equipTitle = function(id) {
+  TITLES.forEach(t => t.equipped = t.id === id);
+  equippedTitle = id;
+  renderTitles();
+  updatePreview();
+  showToast('✅ Титул змінено', '');
+};
+
+function renderAchievements() {
+  const unlocked = ACHIEVEMENTS.filter(a => a.unlocked).length;
+  const total = ACHIEVEMENTS.length;
+  const pct = Math.round(unlocked / total * 100);
+  const countEl = document.getElementById('ach-count');
+  const barEl = document.getElementById('ach-progress-bar');
+  if (countEl) countEl.textContent = `${unlocked}/${total}`;
+  if (barEl) barEl.style.width = pct + '%';
+
+  const el = document.getElementById('ach-list');
+  if (!el) return;
+
+  el.innerHTML = ACHIEVEMENTS.map(a => {
+    if (a.secret && !a.unlocked) {
+      return `<div class="ach-row secret">
+        <div class="ach-icon">🔒</div>
+        <div class="ach-info">
+          <div class="ach-name">Секретне досягнення</div>
+          <div class="ach-desc">Продовжуй грати, щоб відкрити</div>
+        </div>
+        <div class="ach-status"><div class="ach-xp">+2000 XP</div></div>
+      </div>`;
+    }
+    const pct = Math.min(100, Math.round((a.progress || 0) / (a.total || 1) * 100));
+    const showBar = !a.unlocked && a.total > 1;
+    const rewardText = a.reward
+      ? `<span style="color:var(--gold)">🎁 + Аватар "${AVATARS.find(av=>av.id===a.reward)?.name||''}"</span>`
+      : `<span style="color:var(--dim)">+${a.xp} XP</span>`;
+    return `<div class="ach-row ${a.unlocked?'unlocked':''}">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-info">
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-reward">${rewardText}</div>
+        ${showBar ? `<div class="ach-progress">
+          <div class="ach-prog-bar"><div class="ach-prog-fill" style="width:${pct}%"></div></div>
+          <div class="ach-prog-label">${(a.progress||0).toLocaleString()} / ${a.total.toLocaleString()}</div>
+        </div>` : ''}
+      </div>
+      <div class="ach-status">
+        <div class="ach-check">${a.unlocked ? '✅' : '⬜'}</div>
+        <div class="ach-xp">+${a.xp} XP</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Оновлюємо результат пошуку — додаємо рамку і титул
+const _origSearch = window.searchPlayer;
+window.searchPlayer = async function() {
+  await _origSearch();
+  // Після рендеру результатів — додаємо мок-бейджі (в реальному проєкті з Firebase)
+  document.querySelectorAll('.search-result-row').forEach(row => {
+    if (!row.querySelector('.sr-cosmetic')) {
+      const titleColors = ['#e8bc38','#4aaa5a','#8eb0cc','#a070cc','#e88038'];
+      const titleTexts  = ['Ветеран','Мисливець','Солдат','Руйнівник','Засновник'];
+      const rnd = Math.floor(Math.random() * titleColors.length);
+      const badge = document.createElement('div');
+      badge.className = 'sr-cosmetic';
+      badge.innerHTML = `<span style="font-size:9px;font-family:var(--font-d);color:${titleColors[rnd]};border:1px solid ${titleColors[rnd]}44;padding:2px 6px">${titleTexts[rnd]}</span>`;
+      const info = row.querySelector('.sr-info');
+      if (info) info.appendChild(badge);
+    }
+  });
+};
+
+// Ініціалізуємо при відкритті вкладки
+const _prevShowTab = window.showTab;
 window.showTab = function(name) {
-  origShowTab(name);
+  _prevShowTab(name);
+  if (name === 'cosmetics') {
+    setTimeout(() => { showCosTab('avatars'); updatePreview(); }, 50);
+  }
+};
+
+// Рендер інвентарю при відкритті вкладки
+const origShowTab = _prevShowTab;
+window.showTab = function(name) {
+  _prevShowTab(name);
   if (name === 'inventory') renderInv();
+  if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); }, 50); }
 };
 </script>
 </body>
