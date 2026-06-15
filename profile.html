@@ -6,589 +6,510 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>BT 8BIT — Особистий кабінет</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
-    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-    updateProfile }
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy,
     limit, getDocs, where, increment, serverTimestamp }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import { getFunctions, httpsCallable }
-    from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+  import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
   const firebaseConfig = {
-    apiKey:            "AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
-    authDomain:        "tanksbattles3d.firebaseapp.com",
-    projectId:         "tanksbattles3d",
-    storageBucket:     "tanksbattles3d.firebasestorage.app",
-    messagingSenderId: "626439210789",
-    appId:             "1:626439210789:web:3445ea49a9196e08e27ccc",
-    measurementId:     "G-XY5X9812QE"
+    apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+    authDomain:"tanksbattles3d.firebaseapp.com",
+    projectId:"tanksbattles3d",
+    storageBucket:"tanksbattles3d.firebasestorage.app",
+    messagingSenderId:"626439210789",
+    appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
   };
-
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-  const fbFunctions = getFunctions(app, 'us-central1');
-  window._fbFunctions   = fbFunctions;
-  window._httpsCallable = httpsCallable;
-  window._db   = db;
-  window._auth = auth;
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app);
+  const db=getFirestore(app);
+  const fbFunctions=getFunctions(app,'us-central1');
+  window._fbFunctions=fbFunctions;
+  window._httpsCallable=httpsCallable;
+  window._db=db; window._auth=auth;
 
   onAuthStateChanged(auth, async user => {
-    if (user) {
-      _currentUser = user;
-      showProfile(user);
-      await loadPlayerData(user.uid, user);
-    } else {
-      showLogin();
-    }
+    if(user){ _currentUser=user; showProfile(); await loadPlayerData(user.uid,user); }
+    else { showLogin(); }
   });
 
-  window.signInGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (e) { showToast('Помилка входу: ' + e.message, 'error'); }
-  };
+  window.signInGoogle=async()=>{ try{ await signInWithPopup(auth,new GoogleAuthProvider()); }catch(e){ showToast('Помилка: '+e.message,'error'); } };
+  window.signOutUser=async()=>{ await signOut(auth); showToast('Вийшли з акаунту'); };
 
-  window.signOutUser = async () => {
-    await signOut(auth);
-    showToast('Ви вийшли з акаунту');
-  };
-
-  window.registerEmail = async () => {
-    const email    = document.getElementById('email-input').value.trim();
-    const password = document.getElementById('password-input').value;
-    const nickname = document.getElementById('nickname-input').value.trim();
-    if (!email || !password || !nickname) { showToast('Заповни всі поля!', 'error'); return; }
-    if (password.length < 6) { showToast('Пароль мінімум 6 символів!', 'error'); return; }
-    if (nickname.length < 3) { showToast('Нікнейм мінімум 3 символи!', 'error'); return; }
+  window.loginEmail=async()=>{
+    const email=document.getElementById('email-input').value.trim();
+    const password=document.getElementById('password-input').value;
+    if(!email||!password){showToast('Введи email і пароль!','error');return;}
     setAuthLoading(true);
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: nickname });
+    try{ await signInWithEmailAndPassword(auth,email,password); showToast('Успішний вхід!'); }
+    catch(e){ showToast(e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'Невірний email або пароль':'Помилка: '+e.message,'error'); }
+    finally{ setAuthLoading(false); }
+  };
+
+  window.registerEmail=async()=>{
+    const email=document.getElementById('email-input').value.trim();
+    const password=document.getElementById('password-input').value;
+    const nickname=document.getElementById('nickname-input').value.trim();
+    if(!email||!password||!nickname){showToast('Заповни всі поля!','error');return;}
+    if(password.length<6){showToast('Пароль мінімум 6 символів!','error');return;}
+    setAuthLoading(true);
+    try{
+      const cred=await createUserWithEmailAndPassword(auth,email,password);
+      await updateProfile(cred.user,{displayName:nickname});
       showToast('Акаунт створено!');
-    } catch (e) {
-      const msg = e.code === 'auth/email-already-in-use' ? 'Цей email вже зареєстрований'
-        : e.code === 'auth/invalid-email' ? 'Невірний формат email'
-        : 'Помилка реєстрації: ' + e.message;
-      showToast(msg, 'error');
-    } finally { setAuthLoading(false); }
+    }catch(e){ showToast(e.code==='auth/email-already-in-use'?'Email вже зареєстровано':'Помилка: '+e.message,'error'); }
+    finally{ setAuthLoading(false); }
   };
 
-  window.loginEmail = async () => {
-    const email    = document.getElementById('email-input').value.trim();
-    const password = document.getElementById('password-input').value;
-    if (!email || !password) { showToast('Введи email і пароль!', 'error'); return; }
-    setAuthLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      showToast('Успішний вхід!');
-    } catch (e) {
-      const msg = (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password')
-        ? 'Невірний email або пароль'
-        : e.code === 'auth/invalid-email' ? 'Невірний формат email'
-        : 'Помилка входу: ' + e.message;
-      showToast(msg, 'error');
-    } finally { setAuthLoading(false); }
+  window.resetPassword=async()=>{
+    const email=document.getElementById('email-input').value.trim();
+    if(!email){showToast('Введи email!','error');return;}
+    try{ await sendPasswordResetEmail(auth,email); showToast('Лист надіслано на '+email); }
+    catch(e){ showToast('Помилка: '+e.message,'error'); }
   };
 
-  window.resetPassword = async () => {
-    const email = document.getElementById('email-input').value.trim();
-    if (!email) { showToast('Введи email для скидання паролю!', 'error'); return; }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showToast('Лист надіслано на ' + email);
-    } catch (e) { showToast('Помилка: ' + e.message, 'error'); }
-  };
-
-  function setAuthLoading(on) {
-    const b1 = document.getElementById('btn-login');
-    const b2 = document.getElementById('btn-register');
-    if (b1) b1.disabled = on;
-    if (b2) b2.disabled = on;
+  function setAuthLoading(on){
+    ['btn-login','btn-register'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=on; });
   }
 
-  async function loadPlayerData(uid, user) {
-    try {
+  async function loadPlayerData(uid,user){
+    try{
       setLoading(true);
-      const snap = await getDoc(doc(db, 'players', uid));
-      if (!snap.exists()) {
-        const newProfile = {
-          nickname: user.displayName || user.email.split('@')[0] || 'Гравець',
-          level: 1, xp: 0,
-          gold: 500, metal: 0, fuel: 100, diamonds: 10, coins: 1000,
-          battles: 0, wins: 0, losses: 0, kills: 0, totalDamage: 0,
-          role: 'user', banned: false, banReason: '', clanId: '',
-          loginDates: [],
-          createdAt: new Date(), lastLogin: new Date(),
-        };
-        await setDoc(doc(db, 'players', uid), newProfile);
-        fillProfile(newProfile);
+      const snap=await getDoc(doc(db,'players',uid));
+      let data;
+      if(!snap.exists()){
+        data={ nickname:user.displayName||user.email.split('@')[0]||'Гравець', level:1,xp:0,
+          gold:500,metal:0,fuel:100,diamonds:10,coins:1000, battles:0,wins:0,losses:0,kills:0,
+          totalDamage:0, rating:0, ratingHistory:[], battleLog:[],
+          role:'user',banned:false,clanId:'', loginDates:[],
+          seasonBest:{ damage:0,wr:0,streak:0,month:'' },
+          createdAt:new Date(),lastLogin:new Date() };
+        await setDoc(doc(db,'players',uid),data);
         showToast('Профіль створено! Зайди в гру щоб синхронізувати дані.');
-        setLoading(false);
-        return;
+      } else {
+        data=snap.data();
       }
-      const data = snap.data();
 
       // Записати сьогоднішній вхід
-      const today = new Date().toISOString().slice(0,10);
-      const loginDates = data.loginDates || [];
-      if (!loginDates.includes(today)) {
+      const today=new Date().toISOString().slice(0,10);
+      const loginDates=data.loginDates||[];
+      if(!loginDates.includes(today)){
         loginDates.push(today);
-        await updateDoc(doc(db, 'players', uid), {
-          loginDates, lastLogin: serverTimestamp()
-        });
-        data.loginDates = loginDates;
+        await updateDoc(doc(db,'players',uid),{loginDates,lastLogin:serverTimestamp()});
+        data.loginDates=loginDates;
       }
 
       fillProfile(data);
-      buildCalendar(data.loginDates || []);
-      buildLegend(data.totalDamage || 0);
-      if (data.clanId) await loadClanData(data.clanId);
+      buildCalendar(data.loginDates||[]);
+      buildLegend(data.totalDamage||0);
+      buildRatingGraph(data.ratingHistory||[]);
+      buildDNA(data);
+      buildBattleLog(data.battleLog||[]);
+      buildSeasonRecord(data.seasonBest||{});
+      if(data.clanId) await loadClanData(data.clanId);
       setLoading(false);
-    } catch (e) {
-      console.error('Load error:', e);
-      showToast('Помилка завантаження: ' + e.message, 'error');
+    }catch(e){
+      console.error(e);
+      showToast('Помилка завантаження: '+e.message,'error');
       setLoading(false);
     }
   }
 
-  async function loadClanData(clanId) {
-    try {
-      const snap = await getDoc(doc(db, 'clans', clanId));
-      if (!snap.exists()) return;
-      const clan = snap.data();
-      document.getElementById('clan-section').style.display = 'block';
-      document.getElementById('no-clan-msg').style.display  = 'none';
-      setText('clan-name',    clan.name || '—');
-      setText('clan-tag',     '[' + (clan.tag || '??') + ']');
-      setText('clan-level',   'РВ ' + (clan.level || 1));
-      setText('clan-members', (clan.members?.length || 0) + '/' + (10 + (clan.level||1)*5));
-      setText('clan-rating',  '★ ' + (clan.rating || 0));
-    } catch (e) { console.error('Clan load error:', e); }
+  async function loadClanData(clanId){
+    try{
+      const snap=await getDoc(doc(db,'clans',clanId));
+      if(!snap.exists()) return;
+      const c=snap.data();
+      document.getElementById('clan-section').style.display='block';
+      document.getElementById('no-clan-msg').style.display='none';
+      setText('clan-name',c.name||'—');
+      setText('clan-tag','['+( c.tag||'??')+']');
+      setText('clan-level','РВ '+(c.level||1));
+      setText('clan-members',(c.members?.length||0)+'/'+(10+(c.level||1)*5));
+      setText('clan-rating','★ '+(c.rating||0));
+    }catch(e){ console.error(e); }
   }
 
-  // ── PROMO CODE ─────────────────────────────────────────────
-  window.activatePromo = async () => {
-    const code = document.getElementById('promo-input').value.trim().toUpperCase();
-    if (!code) { showToast('Введи промокод!', 'error'); return; }
-    if (!_currentUser) { showToast('Потрібно увійти!', 'error'); return; }
-
-    const btn = document.getElementById('promo-btn');
-    btn.disabled = true;
-    btn.textContent = '...';
-
-    try {
-      const snap = await getDoc(doc(db, 'promocodes', code));
-      if (!snap.exists()) { showToast('Промокод не знайдено!', 'error'); return; }
-      const promo = snap.data();
-      const uid = _currentUser.uid;
-
-      if (promo.usedBy && promo.usedBy.includes(uid)) {
-        showToast('Ти вже використав цей промокод!', 'error'); return;
-      }
-      if (promo.expiresAt && promo.expiresAt.toDate() < new Date()) {
-        showToast('Термін дії промокоду вичерпано!', 'error'); return;
-      }
-
-      // Нараховуємо нагороду
-      const reward = promo.reward || {};
-      const updates = {};
-      if (reward.gold)   updates.gold   = increment(reward.gold);
-      if (reward.metal)  updates.metal  = increment(reward.metal);
-      if (reward.fuel)   updates.fuel   = increment(reward.fuel);
-      if (reward.coins)  updates.coins  = increment(reward.coins);
-
-      await updateDoc(doc(db, 'players', uid), updates);
-      await updateDoc(doc(db, 'promocodes', code), {
-        usedBy: [...(promo.usedBy || []), uid]
-      });
-
-      const rewardText = Object.entries(reward)
-        .map(([k,v]) => `+${v} ${k}`).join(', ');
-      showToast('✅ Промокод активовано! ' + rewardText);
-      document.getElementById('promo-input').value = '';
-
-      // Оновити відображення ресурсів
-      const playerSnap = await getDoc(doc(db, 'players', uid));
-      if (playerSnap.exists()) fillProfile(playerSnap.data());
-    } catch (e) {
-      showToast('Помилка: ' + e.message, 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Активувати';
-    }
+  // PROMO CODE
+  window.activatePromo=async()=>{
+    const code=document.getElementById('promo-input').value.trim().toUpperCase();
+    if(!code){showToast('Введи промокод!','error');return;}
+    if(!_currentUser){showToast('Потрібно увійти!','error');return;}
+    const btn=document.getElementById('promo-btn');
+    btn.disabled=true; btn.textContent='...';
+    try{
+      const snap=await getDoc(doc(db,'promocodes',code));
+      if(!snap.exists()){showToast('Промокод не знайдено!','error');return;}
+      const promo=snap.data(); const uid=_currentUser.uid;
+      if(promo.usedBy?.includes(uid)){showToast('Вже використано!','error');return;}
+      if(promo.expiresAt&&promo.expiresAt.toDate()<new Date()){showToast('Термін дії вичерпано!','error');return;}
+      const reward=promo.reward||{};
+      const updates={};
+      if(reward.gold) updates.gold=increment(reward.gold);
+      if(reward.metal) updates.metal=increment(reward.metal);
+      if(reward.fuel) updates.fuel=increment(reward.fuel);
+      if(reward.coins) updates.coins=increment(reward.coins);
+      await updateDoc(doc(db,'players',uid),updates);
+      await updateDoc(doc(db,'promocodes',code),{usedBy:[...(promo.usedBy||[]),uid]});
+      const rewardText=Object.entries(reward).map(([k,v])=>`+${v} ${k}`).join(', ');
+      showToast('✅ Активовано! '+rewardText);
+      document.getElementById('promo-input').value='';
+      const ps=await getDoc(doc(db,'players',uid));
+      if(ps.exists()) fillProfile(ps.data());
+    }catch(e){ showToast('Помилка: '+e.message,'error'); }
+    finally{ btn.disabled=false; btn.textContent='Активувати'; }
   };
 
-  // ── PLAYER SEARCH ───────────────────────────────────────────
-  window.searchPlayer = async () => {
-    const q = document.getElementById('search-input').value.trim();
-    if (q.length < 2) { showToast('Введи мінімум 2 символи!', 'error'); return; }
-
-    const btn = document.getElementById('search-btn');
-    btn.disabled = true;
-    const resultsEl = document.getElementById('search-results');
-    resultsEl.innerHTML = '<div class="search-loading">Пошук...</div>';
-
-    try {
-      // Пошук по nickname (Firebase не підтримує LIKE, шукаємо по prefix)
-      const qSnap = await getDocs(query(
-        collection(db, 'players'),
-        where('nickname', '>=', q),
-        where('nickname', '<=', q + '\uf8ff'),
-        orderBy('nickname'),
-        limit(10)
-      ));
-
-      if (qSnap.empty) {
-        resultsEl.innerHTML = '<div class="search-empty">Гравців не знайдено</div>';
-        return;
-      }
-
-      let html = '';
-      qSnap.forEach(d => {
-        const p = d.data();
-        const wr = p.battles > 0 ? Math.round(p.wins / p.battles * 100) : 0;
-        const dmgB = p.totalDamage ? Math.round(p.totalDamage / 1000) + 'K' : '—';
-        const legendLvl = getLegendLevel(p.totalDamage || 0);
-        html += `
-          <div class="search-result-row">
-            <div class="sr-avatar">${(p.nickname||'?')[0].toUpperCase()}</div>
-            <div class="sr-info">
-              <div class="sr-nick">${p.nickname || '—'}</div>
-              <div class="sr-meta">LVL ${p.level||1} · ${p.battles||0} боїв · ${wr}% WR</div>
-            </div>
-            <div class="sr-stats">
-              <div class="sr-dmg">🔥 ${dmgB}</div>
-              <div class="sr-legend">⚡ Легенда ${legendLvl.level}</div>
-            </div>
-          </div>`;
+  // PLAYER SEARCH
+  window.searchPlayer=async()=>{
+    const q=document.getElementById('search-input').value.trim();
+    if(q.length<2){showToast('Мінімум 2 символи!','error');return;}
+    const btn=document.getElementById('search-btn');
+    btn.disabled=true;
+    const resultsEl=document.getElementById('search-results');
+    resultsEl.innerHTML='<div class="search-loading">Пошук...</div>';
+    try{
+      const qSnap=await getDocs(query(collection(db,'players'),where('nickname','>=',q),where('nickname','<=',q+'\uf8ff'),orderBy('nickname'),limit(10)));
+      if(qSnap.empty){resultsEl.innerHTML='<div class="search-empty">Гравців не знайдено</div>';return;}
+      let html='';
+      qSnap.forEach(d=>{
+        const p=d.data();
+        const wr=p.battles>0?Math.round(p.wins/p.battles*100):0;
+        const dmgK=p.totalDamage?Math.round(p.totalDamage/1000)+'K':'—';
+        const ll=getLegendLevel(p.totalDamage||0);
+        const uid=d.id;
+        html+=`<div class="search-result-row" onclick="comparePlayer('${uid}','${(p.nickname||'').replace(/'/g,"\\'")}')">
+          <div class="sr-avatar">${(p.nickname||'?')[0].toUpperCase()}</div>
+          <div class="sr-info"><div class="sr-nick">${p.nickname||'—'}</div><div class="sr-meta">LVL ${p.level||1} · ${p.battles||0} боїв · ${wr}% WR</div></div>
+          <div class="sr-stats"><div class="sr-dmg">🔥 ${dmgK}</div><div class="sr-legend">⚡ Легенда ${ll.level}</div></div>
+          <div class="sr-compare">Порівняти →</div>
+        </div>`;
       });
-      resultsEl.innerHTML = html;
-    } catch (e) {
-      resultsEl.innerHTML = '<div class="search-empty">Помилка пошуку: ' + e.message + '</div>';
-    } finally {
-      btn.disabled = false;
-    }
+      resultsEl.innerHTML=html;
+    }catch(e){ resultsEl.innerHTML='<div class="search-empty">Помилка: '+e.message+'</div>'; }
+    finally{ btn.disabled=false; }
   };
 
-  function fillProfile(data) {
-    setText('p-nickname', data.nickname || 'Гравець');
-    setText('p-level',    'LVL ' + (data.level || 1));
-    setText('p-rating',   (data.rating || 0).toLocaleString());
-    setText('p-battles',  (data.battles || 0).toLocaleString());
-    setText('p-wins',     (data.wins || 0).toLocaleString());
-    setText('p-losses',   (data.losses || 0).toLocaleString());
-    setText('p-kills',    (data.kills || 0).toLocaleString());
-    setText('p-gold',     (data.gold || 0).toLocaleString());
-    setText('p-metal',    (data.metal || 0).toLocaleString());
-    setText('p-fuel',     (data.fuel || 0).toLocaleString());
-    setText('p-oil',      (data.oil || 0).toLocaleString());
-    setText('p-coins',    (data.coins || 0).toLocaleString());
-    setText('p-playtime', (data.totalPlaytime || 0).toFixed(1) + ' год');
-    setText('p-accountage', (data.accountAge || 0) + ' дн');
-    const wr = data.battles > 0 ? Math.round(data.wins / data.battles * 100) : 0;
-    setText('p-winrate', wr + '%');
-    const xp    = data.xp || 0;
-    const xpMax = (data.level || 1) * 1000;
-    const pct   = Math.min(100, Math.round(xp / xpMax * 100));
-    document.getElementById('xp-bar').style.width = pct + '%';
-    setText('p-xp', xp.toLocaleString() + ' / ' + xpMax.toLocaleString() + ' XP');
-    const av = document.getElementById('p-avatar');
-    if (av) av.textContent = (data.nickname || 'G')[0].toUpperCase();
-    if (data.createdAt) {
-      const d = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt * 1000);
-      setText('p-joined', 'В грі з ' + d.toLocaleDateString('uk-UA', {month:'long', year:'numeric'}));
+  // COMPARE PLAYERS
+  window.comparePlayer=async(uid2,nick2)=>{
+    if(!_currentUser){showToast('Потрібно увійти!','error');return;}
+    const [s1,s2]=await Promise.all([getDoc(doc(db,'players',_currentUser.uid)),getDoc(doc(db,'players',uid2))]);
+    const p1=s1.data()||{}; const p2=s2.data()||{};
+    showTab('compare');
+    buildCompare(p1,p2);
+  };
+
+  window._comparePlayer=window.comparePlayer;
+
+  function buildCompare(p1,p2){
+    const el=document.getElementById('compare-content');
+    const wr1=p1.battles>0?Math.round(p1.wins/p1.battles*100):0;
+    const wr2=p2.battles>0?Math.round(p2.wins/p2.battles*100):0;
+    const ll1=getLegendLevel(p1.totalDamage||0);
+    const ll2=getLegendLevel(p2.totalDamage||0);
+    const metrics=[
+      {label:'Рейтинг',  v1:p1.rating||0,      v2:p2.rating||0,      fmt:v=>v.toLocaleString()},
+      {label:'Вінрейт',  v1:wr1,                v2:wr2,               fmt:v=>v+'%'},
+      {label:'Боїв',     v1:p1.battles||0,      v2:p2.battles||0,     fmt:v=>v.toLocaleString()},
+      {label:'Перемог',  v1:p1.wins||0,         v2:p2.wins||0,        fmt:v=>v.toLocaleString()},
+      {label:'Знищено',  v1:p1.kills||0,        v2:p2.kills||0,       fmt:v=>v.toLocaleString()},
+      {label:'Урон',     v1:p1.totalDamage||0,  v2:p2.totalDamage||0, fmt:v=>Math.round(v/1000)+'K'},
+      {label:'Легенда',  v1:ll1.level,          v2:ll2.level,         fmt:v=>'⚡ '+v},
+      {label:'Рівень',   v1:p1.level||1,        v2:p2.level||1,       fmt:v=>'LVL '+v},
+    ];
+    let rows='';
+    metrics.forEach(m=>{
+      const winner=m.v1>m.v2?1:m.v2>m.v1?2:0;
+      rows+=`<tr>
+        <td class="cmp-val ${winner===1?'cmp-win':''}">${m.fmt(m.v1)}</td>
+        <td class="cmp-label">${m.label}</td>
+        <td class="cmp-val ${winner===2?'cmp-win':''}">${m.fmt(m.v2)}</td>
+      </tr>`;
+    });
+    el.innerHTML=`
+      <div class="cmp-header">
+        <div class="cmp-player"><div class="cmp-avatar">${(p1.nickname||'?')[0].toUpperCase()}</div><div class="cmp-pnick">${p1.nickname||'Ви'}</div></div>
+        <div class="cmp-vs">VS</div>
+        <div class="cmp-player"><div class="cmp-avatar">${(p2.nickname||'?')[0].toUpperCase()}</div><div class="cmp-pnick">${p2.nickname||'—'}</div></div>
+      </div>
+      <table class="cmp-table"><tbody>${rows}</tbody></table>`;
+  }
+
+  function fillProfile(data){
+    setText('p-nickname',data.nickname||'Гравець');
+    setText('p-level','LVL '+(data.level||1));
+    setText('p-rating',(data.rating||0).toLocaleString());
+    setText('p-battles',(data.battles||0).toLocaleString());
+    setText('p-wins',(data.wins||0).toLocaleString());
+    setText('p-losses',(data.losses||0).toLocaleString());
+    setText('p-kills',(data.kills||0).toLocaleString());
+    setText('p-gold',(data.gold||0).toLocaleString());
+    setText('p-metal',(data.metal||0).toLocaleString());
+    setText('p-fuel',(data.fuel||0).toLocaleString());
+    setText('p-oil',(data.oil||0).toLocaleString());
+    setText('p-coins',(data.coins||0).toLocaleString());
+    setText('p-playtime',(data.totalPlaytime||0).toFixed(1)+' год');
+    setText('p-accountage',(data.accountAge||0)+' дн');
+    const wr=data.battles>0?Math.round(data.wins/data.battles*100):0;
+    setText('p-winrate',wr+'%');
+    const xp=data.xp||0, xpMax=(data.level||1)*1000;
+    const pct=Math.min(100,Math.round(xp/xpMax*100));
+    document.getElementById('xp-bar').style.width=pct+'%';
+    setText('p-xp',xp.toLocaleString()+' / '+xpMax.toLocaleString()+' XP');
+    const av=document.getElementById('p-avatar');
+    if(av) av.textContent=(data.nickname||'G')[0].toUpperCase();
+    if(data.createdAt){
+      const d=data.createdAt.toDate?data.createdAt.toDate():new Date(data.createdAt*1000);
+      setText('p-joined','В грі з '+d.toLocaleDateString('uk-UA',{month:'long',year:'numeric'}));
     }
   }
 
-  function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  }
-
-  window._loadPlayerData = loadPlayerData;
+  function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+  window._loadPlayerData=loadPlayerData;
 </script>
 
 <style>
-  :root {
-    --bg:      #060a10;
-    --surface: #0d1520;
-    --card:    #111e2e;
-    --border:  #1a3050;
-    --gold:    #e8bc38;
-    --gold2:   #c49a20;
-    --steel:   #8eb0cc;
-    --text:    #d4cdb8;
-    --dim:     #6a7a8a;
-    --green:   #2a7a40;
-    --red:     #7a2020;
-    --font-d:  'Press Start 2P', 'Courier New', monospace;
-    --font-b:  system-ui, -apple-system, sans-serif;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font-b); min-height:100vh; }
+  :root{--bg:#060a10;--surface:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#2a7a40;--red:#7a2020;--font-d:'Press Start 2P','Courier New',monospace;--font-b:system-ui,-apple-system,sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;}
 
-  /* NAV */
-  nav {
-    position:fixed; top:0; left:0; right:0; z-index:100;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 40px; height:60px;
-    background:rgba(6,10,16,0.95);
-    backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-  }
-  .nav-logo { display:flex; align-items:center; gap:12px; text-decoration:none; }
-  .nav-logo-icon {
-    width:36px; height:36px; background:var(--gold);
-    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-d); font-size:12px; color:var(--bg);
-  }
-  .nav-logo-text { font-family:var(--font-d); font-size:16px; color:var(--gold); letter-spacing:2px; }
-  .nav-right { display:flex; gap:12px; align-items:center; }
-  .btn-nav {
-    padding:7px 18px; border:1px solid var(--border);
-    background:transparent; color:var(--dim);
-    font-size:12px; letter-spacing:1px; cursor:pointer;
-    text-decoration:none; transition:all .2s;
-  }
-  .btn-nav:hover, .btn-nav.active { border-color:var(--gold); color:var(--gold); }
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:rgba(6,10,16,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo-icon{width:36px;height:36px;background:var(--gold);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:12px;color:var(--bg);}
+  .nav-logo-text{font-family:var(--font-d);font-size:16px;color:var(--gold);letter-spacing:2px;}
+  .nav-right{display:flex;gap:12px;align-items:center;}
+  .btn-nav{padding:7px 18px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:12px;letter-spacing:1px;cursor:pointer;text-decoration:none;transition:all .2s;}
+  .btn-nav:hover,.btn-nav.active{border-color:var(--gold);color:var(--gold);}
 
-  /* LOGIN */
-  #login-screen {
-    display:flex; align-items:center; justify-content:center; min-height:100vh;
-    background:radial-gradient(ellipse 60% 50% at 50% 50%, rgba(30,60,100,0.2) 0%, transparent 70%);
-  }
-  .login-card { background:var(--card); border:1px solid var(--border); padding:48px 40px; text-align:center; max-width:400px; width:100%; }
-  .login-icon { font-size:48px; margin-bottom:20px; display:block; }
-  .login-title { font-family:var(--font-d); font-size:22px; color:#fff; margin-bottom:8px; }
-  .login-desc { color:var(--dim); font-size:13px; line-height:1.7; margin-bottom:32px; }
-  .auth-tabs { display:flex; margin-bottom:20px; border-bottom:1px solid var(--border); }
-  .auth-tab { flex:1; padding:10px; background:transparent; border:none; color:var(--dim); font-size:12px; letter-spacing:1px; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; font-family:var(--font-d); }
-  .auth-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
-  .auth-input { width:100%; padding:12px 14px; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:13px; outline:none; transition:border-color .2s; margin-bottom:10px; display:block; }
-  .auth-input:focus { border-color:var(--gold); }
-  .auth-input::placeholder { color:var(--dim); }
-  .btn-email { width:100%; padding:13px; background:var(--gold); color:var(--bg); border:none; cursor:pointer; font-family:var(--font-d); font-size:12px; letter-spacing:2px; transition:background .2s; margin-bottom:8px; }
-  .btn-email:hover { background:var(--gold2); }
-  .btn-email:disabled { opacity:.5; cursor:not-allowed; }
-  .btn-email.secondary { background:transparent; color:var(--steel); border:1px solid var(--border); }
-  .divider { display:flex; align-items:center; gap:12px; margin:16px 0; color:var(--dim); font-size:11px; }
-  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
-  .forgot-link { font-size:11px; color:var(--dim); cursor:pointer; text-decoration:underline; background:none; border:none; margin-bottom:12px; display:block; text-align:right; }
-  .forgot-link:hover { color:var(--gold); }
-  .btn-google { display:inline-flex; align-items:center; gap:12px; width:100%; padding:14px 24px; background:#fff; color:#333; border:none; cursor:pointer; font-size:14px; font-weight:500; transition:background .2s; justify-content:center; }
-  .btn-google:hover { background:#f0f0f0; }
-  .btn-google svg { width:20px; height:20px; flex-shrink:0; }
-  .login-note { margin-top:20px; font-size:11px; color:var(--dim); line-height:1.6; }
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(30,60,100,0.2) 0%,transparent 70%);}
+  .login-card{background:var(--card);border:1px solid var(--border);padding:48px 40px;text-align:center;max-width:400px;width:100%;}
+  .login-icon{font-size:48px;margin-bottom:20px;display:block;}
+  .login-title{font-family:var(--font-d);font-size:18px;color:#fff;margin-bottom:8px;}
+  .login-desc{color:var(--dim);font-size:13px;line-height:1.7;margin-bottom:32px;}
+  .auth-tabs{display:flex;margin-bottom:20px;border-bottom:1px solid var(--border);}
+  .auth-tab{flex:1;padding:10px;background:transparent;border:none;color:var(--dim);font-size:11px;letter-spacing:1px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-family:var(--font-d);}
+  .auth-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .auth-input{width:100%;padding:12px 14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;transition:border-color .2s;margin-bottom:10px;display:block;}
+  .auth-input:focus{border-color:var(--gold);}
+  .auth-input::placeholder{color:var(--dim);}
+  .btn-email{width:100%;padding:13px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--font-d);font-size:11px;letter-spacing:2px;transition:background .2s;margin-bottom:8px;}
+  .btn-email:hover{background:var(--gold2);}
+  .btn-email:disabled{opacity:.5;cursor:not-allowed;}
+  .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--dim);font-size:11px;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  .forgot-link{font-size:11px;color:var(--dim);cursor:pointer;text-decoration:underline;background:none;border:none;margin-bottom:12px;display:block;text-align:right;}
+  .forgot-link:hover{color:var(--gold);}
+  .btn-google{display:inline-flex;align-items:center;gap:12px;width:100%;padding:14px 24px;background:#fff;color:#333;border:none;cursor:pointer;font-size:14px;font-weight:500;transition:background .2s;justify-content:center;}
+  .btn-google:hover{background:#f0f0f0;}
+  .btn-google svg{width:20px;height:20px;flex-shrink:0;}
+  .login-note{margin-top:20px;font-size:11px;color:var(--dim);line-height:1.6;}
 
-  /* PROFILE LAYOUT */
-  #profile-screen { display:none; padding-top:60px; min-height:100vh; }
-  .profile-layout { max-width:1200px; margin:0 auto; padding:32px 40px; display:grid; grid-template-columns:280px 1fr; gap:20px; align-items:start; }
+  #profile-screen{display:none;padding-top:60px;min-height:100vh;}
+  .profile-layout{max-width:1240px;margin:0 auto;padding:32px 40px;display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;}
 
-  /* SIDEBAR */
-  .sidebar { display:flex; flex-direction:column; gap:12px; }
-  .profile-card { background:var(--card); border:1px solid var(--border); padding:28px 24px; text-align:center; }
-  .avatar { width:80px; height:80px; background:linear-gradient(135deg,var(--border),var(--surface)); border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:var(--font-d); font-size:32px; color:var(--gold); margin:0 auto 16px; }
-  .profile-nick { font-family:var(--font-d); font-size:18px; color:#fff; margin-bottom:4px; }
-  .profile-level { font-size:12px; color:var(--gold); letter-spacing:2px; margin-bottom:16px; }
-  .profile-joined { font-size:11px; color:var(--dim); margin-bottom:20px; }
-  .xp-section { text-align:left; }
-  .xp-label { display:flex; justify-content:space-between; font-size:10px; color:var(--dim); margin-bottom:6px; }
-  .xp-track { height:4px; background:var(--border); position:relative; }
-  .xp-fill { position:absolute; left:0; top:0; bottom:0; background:var(--gold); transition:width 1s ease; width:0%; }
+  .sidebar{display:flex;flex-direction:column;gap:12px;}
+  .profile-card{background:var(--card);border:1px solid var(--border);padding:28px 24px;text-align:center;}
+  .avatar{width:80px;height:80px;background:linear-gradient(135deg,var(--border),var(--surface));border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:32px;color:var(--gold);margin:0 auto 16px;}
+  .profile-nick{font-family:var(--font-d);font-size:16px;color:#fff;margin-bottom:4px;}
+  .profile-level{font-size:12px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;}
+  .profile-joined{font-size:11px;color:var(--dim);margin-bottom:20px;}
+  .xp-section{text-align:left;}
+  .xp-label{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:6px;}
+  .xp-track{height:4px;background:var(--border);position:relative;}
+  .xp-fill{position:absolute;left:0;top:0;bottom:0;background:var(--gold);transition:width 1s ease;width:0%;}
 
-  .side-nav { background:var(--card); border:1px solid var(--border); overflow:hidden; }
-  .side-nav-item { display:flex; align-items:center; gap:12px; padding:14px 20px; color:var(--dim); font-size:13px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .15s,color .15s; border-left:3px solid transparent; }
-  .side-nav-item:last-child { border-bottom:none; }
-  .side-nav-item:hover { background:var(--surface); color:var(--text); }
-  .side-nav-item.active { border-left-color:var(--gold); color:var(--gold); background:rgba(232,188,56,0.06); }
-  .side-nav-icon { font-size:16px; width:20px; text-align:center; }
+  .side-nav{background:var(--card);border:1px solid var(--border);overflow:hidden;}
+  .side-nav-item{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--dim);font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s,color .15s;border-left:3px solid transparent;}
+  .side-nav-item:last-child{border-bottom:none;}
+  .side-nav-item:hover{background:var(--surface);color:var(--text);}
+  .side-nav-item.active{border-left-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.06);}
+  .side-nav-icon{font-size:15px;width:20px;text-align:center;}
 
-  .resources-card { background:var(--card); border:1px solid var(--border); padding:20px 24px; }
-  .res-title { font-family:var(--font-d); font-size:10px; color:var(--gold); letter-spacing:2px; margin-bottom:16px; }
-  .res-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(26,48,80,0.5); font-size:13px; }
-  .res-row:last-child { border-bottom:none; }
-  .res-icon { font-size:16px; margin-right:8px; }
-  .res-label { color:var(--dim); }
-  .res-value { color:var(--text); font-family:var(--font-d); font-size:12px; }
+  .resources-card{background:var(--card);border:1px solid var(--border);padding:20px 24px;}
+  .res-title{font-family:var(--font-d);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;}
+  .res-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,48,80,0.5);font-size:13px;}
+  .res-row:last-child{border-bottom:none;}
+  .res-icon{font-size:16px;margin-right:8px;}
+  .res-label{color:var(--dim);}
+  .res-value{color:var(--text);font-family:var(--font-d);font-size:12px;}
+  .btn-signout{width:100%;padding:11px;background:transparent;border:1px solid var(--red);color:#a05050;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+  .btn-signout:hover{background:rgba(120,30,30,0.2);color:#c07070;}
 
-  .btn-signout { width:100%; padding:11px; background:transparent; border:1px solid var(--red); color:#a05050; font-size:12px; letter-spacing:1px; cursor:pointer; transition:all .2s; }
-  .btn-signout:hover { background:rgba(120,30,30,0.2); color:#c07070; }
+  /* AD в кабінеті — під ресурсами */
+  .sidebar-ad{background:var(--card);border:1px dashed var(--border);height:250px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .sidebar-ad-label{font-family:var(--font-d);font-size:7px;color:var(--dim);letter-spacing:1px;}
+  .sidebar-ad-tag{position:absolute;top:4px;right:6px;font-size:9px;color:var(--dim);}
 
-  /* MAIN CONTENT */
-  .main-content { display:flex; flex-direction:column; gap:16px; }
-  .content-panel { background:var(--card); border:1px solid var(--border); padding:24px 28px; }
-  .panel-title { font-family:var(--font-d); font-size:11px; color:var(--gold); letter-spacing:3px; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .main-content{display:flex;flex-direction:column;gap:16px;}
+  .content-panel{background:var(--card);border:1px solid var(--border);padding:24px 28px;}
+  .panel-title{font-family:var(--font-d);font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
 
-  /* STATS GRID */
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--border); margin-bottom:20px; }
-  .stat-box { background:var(--surface); padding:20px 16px; text-align:center; }
-  .stat-val { font-family:var(--font-d); font-size:22px; color:#fff; display:block; margin-bottom:4px; }
-  .stat-val.gold { color:var(--gold); }
-  .stat-val.green { color:#4aaa5a; }
-  .stat-lbl { font-size:10px; color:var(--dim); letter-spacing:1px; }
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);margin-bottom:20px;}
+  .stat-box{background:var(--surface);padding:20px 16px;text-align:center;}
+  .stat-val{font-family:var(--font-d);font-size:20px;color:#fff;display:block;margin-bottom:4px;}
+  .stat-val.gold{color:var(--gold);}
+  .stat-val.green{color:#4aaa5a;}
+  .stat-lbl{font-size:10px;color:var(--dim);letter-spacing:1px;}
 
-  /* ── ACTIVITY CALENDAR ─────────────────────────────────── */
-  .calendar-wrap { overflow-x:auto; padding-bottom:8px; }
-  .calendar-grid { display:flex; gap:3px; align-items:flex-start; }
-  .cal-labels { display:flex; flex-direction:column; gap:0; margin-right:6px; padding-top:22px; }
-  .cal-day-label { font-size:9px; color:var(--dim); height:14px; line-height:14px; text-align:right; }
-  .cal-months { display:flex; flex-direction:column; gap:3px; }
-  .cal-month-labels { display:flex; margin-bottom:4px; gap:3px; }
-  .cal-month-name { font-size:9px; color:var(--dim); }
-  .cal-weeks { display:flex; gap:3px; }
-  .cal-week { display:flex; flex-direction:column; gap:3px; }
-  .cal-cell {
-    width:12px; height:12px;
-    background:var(--border);
-    border-radius:2px;
-    transition:background .15s;
-    cursor:default;
-    position:relative;
-  }
-  .cal-cell.lvl1 { background:#1a4a2a; }
-  .cal-cell.lvl2 { background:#2a7040; }
-  .cal-cell.lvl3 { background:#3aaa58; }
-  .cal-cell.active { background:var(--gold); }
-  .cal-cell:hover::after {
-    content: attr(data-date);
-    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
-    background:var(--surface); border:1px solid var(--border);
-    padding:3px 6px; font-size:9px; color:var(--text); white-space:nowrap; z-index:10;
-    pointer-events:none;
-  }
-  .cal-legend { display:flex; align-items:center; gap:6px; margin-top:10px; font-size:10px; color:var(--dim); }
-  .cal-legend-cell { width:12px; height:12px; border-radius:2px; }
-  .cal-streak { display:flex; gap:20px; margin-bottom:16px; flex-wrap:wrap; }
-  .cal-streak-item { text-align:center; }
-  .cal-streak-val { font-family:var(--font-d); font-size:18px; color:var(--gold); display:block; }
-  .cal-streak-lbl { font-size:10px; color:var(--dim); display:block; margin-top:4px; }
+  /* CALENDAR */
+  .cal-streak{display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;}
+  .cal-streak-item{text-align:center;}
+  .cal-streak-val{font-family:var(--font-d);font-size:18px;color:var(--gold);display:block;}
+  .cal-streak-lbl{font-size:10px;color:var(--dim);display:block;margin-top:4px;}
+  .calendar-wrap{overflow-x:auto;padding-bottom:8px;}
+  .cal-cell{width:12px;height:12px;background:var(--border);border-radius:2px;transition:background .15s;cursor:default;}
+  .cal-cell.active{background:var(--gold);}
+  .cal-cell.semi{background:#3a6a20;}
+  .cal-legend{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:var(--dim);}
+  .cal-legend-cell{width:12px;height:12px;border-radius:2px;}
 
-  /* ── LEGEND SYSTEM ─────────────────────────────────────── */
-  .legend-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
-  .legend-level-badge { font-family:var(--font-d); font-size:14px; color:var(--gold); background:rgba(232,188,56,0.1); border:1px solid rgba(232,188,56,0.3); padding:10px 20px; }
-  .legend-dmg-total { font-size:12px; color:var(--dim); }
-  .legend-dmg-total span { color:var(--text); font-family:var(--font-d); font-size:13px; }
-  .legend-progress-wrap { margin-bottom:24px; }
-  .legend-progress-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--dim); margin-bottom:6px; }
-  .legend-track { height:8px; background:var(--border); position:relative; border-radius:2px; }
-  .legend-fill { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,var(--gold2),var(--gold)); border-radius:2px; transition:width 1.2s ease; }
-  .legend-next { font-size:11px; color:var(--dim); margin-top:6px; text-align:right; }
-  .legend-milestones { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-  .legend-milestone {
-    background:var(--surface); border:1px solid var(--border);
-    padding:14px 16px; display:flex; align-items:flex-start; gap:12px;
-    transition:border-color .2s;
-  }
-  .legend-milestone.unlocked { border-color:rgba(232,188,56,0.35); }
-  .legend-milestone.current  { border-color:var(--gold); background:rgba(232,188,56,0.05); }
-  .milestone-icon { font-size:22px; flex-shrink:0; }
-  .milestone-info { flex:1; min-width:0; }
-  .milestone-lvl { font-family:var(--font-d); font-size:9px; color:var(--dim); margin-bottom:4px; }
-  .milestone-reward { font-size:12px; color:var(--text); margin-bottom:4px; }
-  .milestone-req { font-size:10px; color:var(--dim); }
-  .milestone-check { font-size:16px; margin-left:auto; flex-shrink:0; }
+  /* LEGEND */
+  .legend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+  .legend-level-badge{font-family:var(--font-d);font-size:14px;color:var(--gold);background:rgba(232,188,56,0.1);border:1px solid rgba(232,188,56,0.3);padding:10px 20px;}
+  .legend-dmg-total{font-size:12px;color:var(--dim);}
+  .legend-dmg-total span{color:var(--text);font-family:var(--font-d);font-size:13px;}
+  .legend-progress-wrap{margin-bottom:24px;}
+  .legend-progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:6px;}
+  .legend-track{height:8px;background:var(--border);position:relative;border-radius:2px;}
+  .legend-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:2px;transition:width 1.2s ease;}
+  .legend-next{font-size:11px;color:var(--dim);margin-top:6px;text-align:right;}
+  .legend-milestones{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .legend-milestone{background:var(--surface);border:1px solid var(--border);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+  .legend-milestone.unlocked{border-color:rgba(232,188,56,0.35);}
+  .legend-milestone.current{border-color:var(--gold);background:rgba(232,188,56,0.05);}
+  .milestone-icon{font-size:22px;flex-shrink:0;}
+  .milestone-info{flex:1;min-width:0;}
+  .milestone-lvl{font-family:var(--font-d);font-size:9px;color:var(--dim);margin-bottom:4px;}
+  .milestone-reward{font-size:12px;color:var(--text);margin-bottom:4px;}
+  .milestone-req{font-size:10px;color:var(--dim);}
+  .milestone-check{font-size:16px;margin-left:auto;flex-shrink:0;}
 
-  /* ── PROMO CODE ────────────────────────────────────────── */
-  .promo-wrap { display:flex; gap:10px; align-items:stretch; }
-  .promo-input {
-    flex:1; padding:13px 16px;
-    background:var(--surface); border:1px solid var(--border);
-    color:var(--text); font-family:var(--font-d); font-size:12px;
-    letter-spacing:2px; outline:none; transition:border-color .2s;
-    text-transform:uppercase;
-  }
-  .promo-input:focus { border-color:var(--gold); }
-  .promo-input::placeholder { color:var(--dim); letter-spacing:1px; font-size:11px; font-family:var(--font-b); }
-  .promo-btn {
-    padding:13px 20px; background:var(--gold); color:var(--bg);
-    border:none; cursor:pointer; font-family:var(--font-d); font-size:11px;
-    letter-spacing:1px; transition:background .2s; white-space:nowrap;
-  }
-  .promo-btn:hover { background:var(--gold2); }
-  .promo-btn:disabled { opacity:.5; cursor:not-allowed; }
-  .promo-hint { margin-top:12px; font-size:12px; color:var(--dim); line-height:1.7; }
-  .promo-hint a { color:var(--gold); text-decoration:none; }
-  .promo-hint a:hover { text-decoration:underline; }
+  /* RATING GRAPH */
+  .graph-wrap{position:relative;height:200px;margin-bottom:16px;}
+  .graph-legend{display:flex;gap:16px;font-size:11px;color:var(--dim);}
+  .graph-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
 
-  /* ── PLAYER SEARCH ─────────────────────────────────────── */
-  .search-wrap { display:flex; gap:10px; margin-bottom:20px; }
-  .search-input {
-    flex:1; padding:12px 16px;
-    background:var(--surface); border:1px solid var(--border);
-    color:var(--text); font-size:14px; outline:none;
-    transition:border-color .2s;
-  }
-  .search-input:focus { border-color:var(--gold); }
-  .search-input::placeholder { color:var(--dim); }
-  .search-btn {
-    padding:12px 20px; background:transparent; color:var(--gold);
-    border:1px solid var(--gold); cursor:pointer; font-family:var(--font-d);
-    font-size:11px; transition:all .2s;
-  }
-  .search-btn:hover { background:var(--gold); color:var(--bg); }
-  .search-btn:disabled { opacity:.5; cursor:not-allowed; }
-  .search-results { display:flex; flex-direction:column; gap:2px; background:var(--border); }
-  .search-result-row {
-    display:flex; align-items:center; gap:14px;
-    background:var(--surface); padding:14px 16px;
-    transition:background .15s; cursor:pointer;
-  }
-  .search-result-row:hover { background:var(--card); }
-  .sr-avatar { width:40px; height:40px; background:var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--font-d); font-size:16px; color:var(--gold); flex-shrink:0; }
-  .sr-info { flex:1; min-width:0; }
-  .sr-nick { font-size:14px; color:#fff; margin-bottom:3px; }
-  .sr-meta { font-size:11px; color:var(--dim); }
-  .sr-stats { text-align:right; flex-shrink:0; }
-  .sr-dmg { font-size:12px; color:var(--text); margin-bottom:3px; }
-  .sr-legend { font-size:11px; color:var(--gold); }
-  .search-loading, .search-empty { padding:20px; text-align:center; font-size:13px; color:var(--dim); background:var(--surface); }
+  /* DNA RADAR */
+  .dna-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;}
+  .dna-canvas-wrap{position:relative;height:220px;display:flex;align-items:center;justify-content:center;}
+  .dna-stats{display:flex;flex-direction:column;gap:10px;}
+  .dna-stat-row{display:flex;align-items:center;gap:10px;}
+  .dna-stat-icon{font-size:16px;width:20px;text-align:center;}
+  .dna-stat-info{flex:1;}
+  .dna-stat-label{font-size:11px;color:var(--dim);margin-bottom:3px;}
+  .dna-stat-bar{height:4px;background:var(--border);position:relative;}
+  .dna-stat-fill{position:absolute;left:0;top:0;bottom:0;transition:width .8s ease;}
+  .dna-stat-val{font-family:var(--font-d);font-size:11px;color:var(--gold);width:30px;text-align:right;}
+
+  /* BATTLE LOG */
+  .battle-log-list{display:flex;flex-direction:column;gap:6px;}
+  .battle-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border-left:3px solid var(--border);}
+  .battle-row.win{border-left-color:#4aaa5a;}
+  .battle-row.loss{border-left-color:#aa4a4a;}
+  .battle-result{font-family:var(--font-d);font-size:10px;width:40px;flex-shrink:0;}
+  .battle-result.win{color:#4aaa5a;}
+  .battle-result.loss{color:#aa4a4a;}
+  .battle-tank{font-size:13px;color:#fff;flex:1;}
+  .battle-map{font-size:11px;color:var(--dim);flex:1;}
+  .battle-dmg{font-family:var(--font-d);font-size:11px;color:var(--gold);}
+  .battle-kills{font-size:12px;color:var(--dim);width:40px;text-align:right;}
+  .battle-time{font-size:10px;color:var(--dim);width:60px;text-align:right;}
+  .battle-empty{color:var(--dim);font-size:13px;padding:20px;text-align:center;}
+
+  /* SEASON RECORD */
+  .season-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+  .season-card{background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center;}
+  .season-card.best{border-color:rgba(232,188,56,0.4);background:rgba(232,188,56,0.04);}
+  .season-val{font-family:var(--font-d);font-size:18px;color:var(--gold);display:block;margin-bottom:6px;}
+  .season-lbl{font-size:11px;color:var(--dim);}
+  .season-month{font-size:10px;color:var(--steel);margin-top:4px;display:block;}
+
+  /* PROMO */
+  .promo-wrap{display:flex;gap:10px;align-items:stretch;}
+  .promo-input{flex:1;padding:13px 16px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-d);font-size:12px;letter-spacing:2px;outline:none;transition:border-color .2s;text-transform:uppercase;}
+  .promo-input:focus{border-color:var(--gold);}
+  .promo-input::placeholder{color:var(--dim);letter-spacing:1px;font-size:11px;font-family:var(--font-b);}
+  .promo-btn{padding:13px 20px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--font-d);font-size:11px;letter-spacing:1px;transition:background .2s;white-space:nowrap;}
+  .promo-btn:hover{background:var(--gold2);}
+  .promo-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .promo-hint{margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7;}
+  .promo-hint a{color:var(--gold);text-decoration:none;}
+
+  /* SEARCH */
+  .search-wrap{display:flex;gap:10px;margin-bottom:20px;}
+  .search-input{flex:1;padding:12px 16px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:var(--gold);}
+  .search-input::placeholder{color:var(--dim);}
+  .search-btn{padding:12px 20px;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;font-family:var(--font-d);font-size:11px;transition:all .2s;}
+  .search-btn:hover{background:var(--gold);color:var(--bg);}
+  .search-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .search-results{display:flex;flex-direction:column;gap:2px;background:var(--border);}
+  .search-result-row{display:flex;align-items:center;gap:14px;background:var(--surface);padding:12px 16px;transition:background .15s;cursor:pointer;}
+  .search-result-row:hover{background:var(--card);}
+  .sr-avatar{width:40px;height:40px;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:16px;color:var(--gold);flex-shrink:0;}
+  .sr-info{flex:1;min-width:0;}
+  .sr-nick{font-size:14px;color:#fff;margin-bottom:3px;}
+  .sr-meta{font-size:11px;color:var(--dim);}
+  .sr-stats{text-align:right;flex-shrink:0;}
+  .sr-dmg{font-size:12px;color:var(--text);margin-bottom:3px;}
+  .sr-legend{font-size:11px;color:var(--gold);}
+  .sr-compare{font-size:11px;color:var(--steel);padding:4px 8px;border:1px solid var(--border);flex-shrink:0;transition:all .2s;}
+  .search-result-row:hover .sr-compare{border-color:var(--gold);color:var(--gold);}
+  .search-loading,.search-empty{padding:20px;text-align:center;font-size:13px;color:var(--dim);background:var(--surface);}
+
+  /* COMPARE */
+  .cmp-header{display:flex;align-items:center;justify-content:center;gap:32px;margin-bottom:24px;}
+  .cmp-player{text-align:center;}
+  .cmp-avatar{width:60px;height:60px;background:var(--border);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:24px;color:var(--gold);margin:0 auto 8px;}
+  .cmp-pnick{font-family:var(--font-d);font-size:11px;color:#fff;}
+  .cmp-vs{font-family:var(--font-d);font-size:20px;color:var(--dim);}
+  .cmp-table{width:100%;border-collapse:collapse;}
+  .cmp-table tr{border-bottom:1px solid rgba(26,48,80,0.5);}
+  .cmp-val{font-family:var(--font-d);font-size:13px;color:var(--dim);padding:10px 16px;width:35%;text-align:center;}
+  .cmp-val.cmp-win{color:var(--gold);}
+  .cmp-label{font-size:11px;color:var(--dim);text-align:center;width:30%;}
 
   /* CLAN */
-  #clan-section { display:none; }
-  .clan-row { display:flex; align-items:center; gap:16px; padding:16px 0; }
-  .clan-badge { width:52px; height:52px; background:var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--font-d); font-size:14px; color:var(--gold); flex-shrink:0; }
-  .clan-info { flex:1; }
-  .clan-info-name { font-family:var(--font-d); font-size:16px; color:#fff; margin-bottom:4px; }
-  .clan-info-tag { font-size:12px; color:var(--gold); margin-right:12px; }
-  .clan-info-meta { font-size:12px; color:var(--dim); }
+  #clan-section{display:none;}
+  .clan-row{display:flex;align-items:center;gap:16px;padding:16px 0;}
+  .clan-badge{width:52px;height:52px;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:14px;color:var(--gold);flex-shrink:0;}
+  .clan-info{flex:1;}
+  .clan-info-name{font-family:var(--font-d);font-size:16px;color:#fff;margin-bottom:4px;}
+  .clan-info-meta{font-size:12px;color:var(--dim);}
 
   /* SHOP */
-  .shop-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-  .shop-item { background:var(--surface); border:1px solid var(--border); padding:20px 16px; text-align:center; transition:border-color .2s; cursor:pointer; }
-  .shop-item:hover { border-color:var(--gold); }
-  .shop-item.featured { border-color:rgba(232,188,56,0.4); }
-  .shop-amount { font-family:var(--font-d); font-size:24px; color:var(--gold); margin-bottom:4px; }
-  .shop-icon { font-size:20px; margin-bottom:8px; }
-  .shop-label { font-size:11px; color:var(--dim); margin-bottom:12px; }
-  .shop-price { font-family:var(--font-d); font-size:13px; color:#fff; background:var(--border); padding:6px 12px; display:inline-block; }
-  .shop-item.featured .shop-price { background:var(--gold); color:var(--bg); }
-  .shop-badge { font-size:9px; color:#4aaa5a; letter-spacing:1px; margin-bottom:4px; }
+  .shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .shop-item{background:var(--surface);border:1px solid var(--border);padding:20px 16px;text-align:center;transition:border-color .2s;cursor:pointer;}
+  .shop-item:hover{border-color:var(--gold);}
+  .shop-item.featured{border-color:rgba(232,188,56,0.4);}
+  .shop-amount{font-family:var(--font-d);font-size:22px;color:var(--gold);margin-bottom:4px;}
+  .shop-icon{font-size:20px;margin-bottom:8px;}
+  .shop-label{font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .shop-price{font-family:var(--font-d);font-size:13px;color:#fff;background:var(--border);padding:6px 12px;display:inline-block;}
+  .shop-item.featured .shop-price{background:var(--gold);color:var(--bg);}
+  .shop-badge{font-size:9px;color:#4aaa5a;letter-spacing:1px;margin-bottom:4px;}
 
-  /* LOADING & TOAST */
-  #loading-overlay { position:fixed; inset:0; z-index:200; background:rgba(6,10,16,0.85); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
-  .loader { font-family:var(--font-d); font-size:13px; color:var(--gold); letter-spacing:3px; animation:blink 1s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  #toast { position:fixed; bottom:24px; right:24px; z-index:300; padding:14px 20px; background:var(--card); border:1px solid var(--border); font-size:13px; color:var(--text); max-width:320px; transform:translateY(80px); opacity:0; transition:all .3s; }
-  #toast.show { transform:translateY(0); opacity:1; }
-  #toast.error { border-color:var(--red); color:#c07070; }
-  #toast.warn  { border-color:var(--gold2); color:var(--gold); }
+  #loading-overlay{position:fixed;inset:0;z-index:200;background:rgba(6,10,16,0.85);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .loader{font-family:var(--font-d);font-size:13px;color:var(--gold);letter-spacing:3px;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  #toast{position:fixed;bottom:24px;right:24px;z-index:300;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
+  #toast.show{transform:translateY(0);opacity:1;}
+  #toast.error{border-color:var(--red);color:#c07070;}
 
-  @media(max-width:768px) {
-    nav { padding:0 16px; }
-    .profile-layout { grid-template-columns:1fr; padding:16px; }
-    .stats-grid { grid-template-columns:repeat(2,1fr); }
-    .shop-grid  { grid-template-columns:repeat(2,1fr); }
-    .legend-milestones { grid-template-columns:1fr; }
-    .promo-wrap { flex-direction:column; }
+  @media(max-width:768px){
+    nav{padding:0 16px;}
+    .profile-layout{grid-template-columns:1fr;padding:16px;}
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .shop-grid{grid-template-columns:repeat(2,1fr);}
+    .legend-milestones{grid-template-columns:1fr;}
+    .promo-wrap{flex-direction:column;}
+    .dna-wrap{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -605,9 +526,7 @@
   </div>
 </nav>
 
-<div id="loading-overlay" style="display:none">
-  <div class="loader">ЗАВАНТАЖЕННЯ...</div>
-</div>
+<div id="loading-overlay" style="display:none"><div class="loader">ЗАВАНТАЖЕННЯ...</div></div>
 <div id="toast"></div>
 
 <!-- LOGIN -->
@@ -622,7 +541,7 @@
     </div>
     <div id="form-login">
       <input class="auth-input" id="email-input" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="password-input" type="password" placeholder="Пароль" autocomplete="current-password" onkeydown="if(event.key==='Enter') loginEmail()">
+      <input class="auth-input" id="password-input" type="password" placeholder="Пароль" onkeydown="if(event.key==='Enter') loginEmail()">
       <button class="forgot-link" onclick="resetPassword()">Забув пароль?</button>
       <button class="btn-email" id="btn-login" onclick="loginEmail()">Увійти</button>
       <div class="divider">або</div>
@@ -649,8 +568,6 @@
 <!-- PROFILE -->
 <div id="profile-screen">
   <div class="profile-layout">
-
-    <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="profile-card">
         <div class="avatar" id="p-avatar">G</div>
@@ -665,10 +582,15 @@
 
       <div class="side-nav">
         <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> Статистика</div>
+        <div class="side-nav-item" onclick="showTab('rating')"><span class="side-nav-icon">📈</span> Графік рейтингу</div>
+        <div class="side-nav-item" onclick="showTab('dna')"><span class="side-nav-icon">🧬</span> ДНК гравця</div>
+        <div class="side-nav-item" onclick="showTab('log')"><span class="side-nav-icon">⚔️</span> Бойовий журнал</div>
+        <div class="side-nav-item" onclick="showTab('season')"><span class="side-nav-icon">🏆</span> Сезонні рекорди</div>
         <div class="side-nav-item" onclick="showTab('calendar')"><span class="side-nav-icon">📅</span> Активність</div>
         <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> Легенда</div>
         <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> Промокод</div>
         <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> Пошук гравців</div>
+        <div class="side-nav-item" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> Порівняння</div>
         <div class="side-nav-item" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> Клан</div>
         <div class="side-nav-item" onclick="showTab('shop')"><span class="side-nav-icon">💰</span> Поповнити</div>
       </div>
@@ -682,10 +604,16 @@
         <div class="res-row"><span><span class="res-icon">🛢️</span><span class="res-label">Нафта</span></span><span class="res-value" id="p-oil">0</span></div>
       </div>
 
+      <!-- AD блок в сайдбарі -->
+      <div class="sidebar-ad">
+        <span class="sidebar-ad-label">РЕКЛАМА 300×250</span>
+        <span class="sidebar-ad-tag">Реклама</span>
+        <!-- <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-XXXX" data-ad-slot="XXXX"></ins> -->
+      </div>
+
       <button class="btn-signout" onclick="signOutUser()">↩ Вийти з акаунту</button>
     </div>
 
-    <!-- MAIN -->
     <div class="main-content">
 
       <!-- STATS -->
@@ -701,25 +629,64 @@
           <div class="stat-box"><span class="stat-val green" id="p-playtime">0</span><span class="stat-lbl">Годин</span></div>
           <div class="stat-box"><span class="stat-val" id="p-accountage">0</span><span class="stat-lbl">Днів</span></div>
         </div>
-        <div style="color:var(--dim);font-size:13px;padding:8px 0">Детальна статистика по танках буде доступна після першого бою в грі.</div>
+        <div style="color:var(--dim);font-size:13px;padding:8px 0">Детальна статистика по танках доступна після першого бою в грі.</div>
+      </div>
+
+      <!-- RATING GRAPH -->
+      <div id="tab-rating" class="content-panel" style="display:none">
+        <div class="panel-title">Графік рейтингу</div>
+        <div class="graph-wrap">
+          <canvas id="rating-chart"></canvas>
+        </div>
+        <div class="graph-legend">
+          <span><span class="graph-dot" style="background:#4aaa5a"></span>Перемога</span>
+          <span><span class="graph-dot" style="background:#aa4a4a"></span>Поразка</span>
+          <span><span class="graph-dot" style="background:var(--gold)"></span>Рейтинг</span>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7">
+          Графік відображає останні 30 боїв. Зелені зірки — перемоги, червоні — поразки. Рейтинг зараховується після кожного бою в грі.
+        </div>
+      </div>
+
+      <!-- DNA -->
+      <div id="tab-dna" class="content-panel" style="display:none">
+        <div class="panel-title">ДНК гравця</div>
+        <div class="dna-wrap">
+          <div class="dna-canvas-wrap">
+            <canvas id="dna-chart" width="220" height="220"></canvas>
+          </div>
+          <div class="dna-stats" id="dna-stats-list"></div>
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:var(--dim);line-height:1.7">
+          Радарна діаграма розраховується з реальної статистики боїв. Відображає твій унікальний стиль гри.
+        </div>
+      </div>
+
+      <!-- BATTLE LOG -->
+      <div id="tab-log" class="content-panel" style="display:none">
+        <div class="panel-title">Бойовий журнал</div>
+        <div id="battle-log-content"></div>
+      </div>
+
+      <!-- SEASON RECORDS -->
+      <div id="tab-season" class="content-panel" style="display:none">
+        <div class="panel-title">Сезонні рекорди</div>
+        <div id="season-content"></div>
       </div>
 
       <!-- CALENDAR -->
       <div id="tab-calendar" class="content-panel" style="display:none">
         <div class="panel-title">Активність за рік</div>
-        <div class="cal-streak" id="cal-streak-info">
+        <div class="cal-streak">
           <div class="cal-streak-item"><span class="cal-streak-val" id="streak-current">0</span><span class="cal-streak-lbl">🔥 Поточна серія</span></div>
           <div class="cal-streak-item"><span class="cal-streak-val" id="streak-best">0</span><span class="cal-streak-lbl">⚡ Найкраща серія</span></div>
           <div class="cal-streak-item"><span class="cal-streak-val" id="streak-total">0</span><span class="cal-streak-lbl">📅 Всього днів</span></div>
         </div>
-        <div class="calendar-wrap">
-          <div id="cal-container"></div>
-        </div>
+        <div class="calendar-wrap"><div id="cal-container"></div></div>
         <div class="cal-legend">
           <span>Менше</span>
           <div class="cal-legend-cell" style="background:var(--border)"></div>
           <div class="cal-legend-cell" style="background:#1a4a2a"></div>
-          <div class="cal-legend-cell" style="background:#2a7040"></div>
           <div class="cal-legend-cell" style="background:var(--gold)"></div>
           <span>Більше</span>
         </div>
@@ -733,10 +700,7 @@
           <div class="legend-dmg-total">Сумарний урон: <span id="legend-total-dmg">0</span></div>
         </div>
         <div class="legend-progress-wrap">
-          <div class="legend-progress-labels">
-            <span id="legend-cur-val">0</span>
-            <span id="legend-next-val">500,000</span>
-          </div>
+          <div class="legend-progress-labels"><span id="legend-cur-val">0</span><span id="legend-next-val">500,000</span></div>
           <div class="legend-track"><div class="legend-fill" id="legend-fill" style="width:0%"></div></div>
           <div class="legend-next" id="legend-next-text">До наступного рівня: 500,000 урону</div>
         </div>
@@ -754,10 +718,10 @@
           <button class="promo-btn" id="promo-btn" onclick="activatePromo()">Активувати</button>
         </div>
         <div class="promo-hint">
-          Щоденні промокоди публікуються на <a href="index.html#news" target="_blank">головній сторінці</a> в розділі новин,
-          а також в нашому <a href="https://t.me/tanks_battles_3d" target="_blank">Telegram</a> і
+          Щоденні промокоди публікуються на <a href="index.html#news">головній сторінці</a>,
+          в <a href="https://t.me/tanks_battles_3d" target="_blank">Telegram</a> і
           <a href="https://discord.gg/Rezw5FSMUC" target="_blank">Discord</a>.<br><br>
-          Кожен промокод можна використати лише один раз на акаунт. Перевір термін дії перед активацією.
+          Кожен промокод — один раз на акаунт. Перевір термін дії перед активацією.
         </div>
       </div>
 
@@ -769,6 +733,14 @@
           <button class="search-btn" id="search-btn" onclick="searchPlayer()">Знайти</button>
         </div>
         <div class="search-results" id="search-results"></div>
+      </div>
+
+      <!-- COMPARE -->
+      <div id="tab-compare" class="content-panel" style="display:none">
+        <div class="panel-title">Порівняння гравців</div>
+        <div id="compare-content" style="color:var(--dim);font-size:13px;padding:20px;text-align:center">
+          Знайди гравця у розділі «Пошук гравців» і натисни «Порівняти →»
+        </div>
       </div>
 
       <!-- CLAN -->
@@ -806,259 +778,354 @@
 </div>
 
 <script>
-// ── UI HELPERS ────────────────────────────────────────────────
-function showLogin() {
-  document.getElementById('login-screen').style.display  = 'flex';
-  document.getElementById('profile-screen').style.display = 'none';
-}
-function showProfile() {
-  document.getElementById('login-screen').style.display  = 'none';
-  document.getElementById('profile-screen').style.display = 'block';
-}
-function setLoading(on) {
-  document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
-}
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show ' + type;
-  setTimeout(() => t.className = '', 3500);
+// UI HELPERS
+function showLogin(){ document.getElementById('login-screen').style.display='flex'; document.getElementById('profile-screen').style.display='none'; }
+function showProfile(){ document.getElementById('login-screen').style.display='none'; document.getElementById('profile-screen').style.display='block'; }
+function setLoading(on){ document.getElementById('loading-overlay').style.display=on?'flex':'none'; }
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+(type||'');
+  setTimeout(()=>t.className='',3500);
 }
 
-// ── TABS ──────────────────────────────────────────────────────
-const TABS = ['stats','calendar','legend','promo','search','clan','shop'];
-function showTab(name) {
-  TABS.forEach(t => {
-    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
-  });
-  document.querySelectorAll('.side-nav-item').forEach((el, i) => {
-    el.classList.toggle('active', TABS[i] === name);
-  });
+// TABS
+const TABS=['stats','rating','dna','log','season','calendar','legend','promo','search','compare','clan','shop'];
+function showTab(name){
+  TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
+  document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
 }
 
-// ── AUTH SWITCH ───────────────────────────────────────────────
-function switchAuthTab(tab) {
-  document.getElementById('form-login').style.display    = tab==='login'    ? 'block' : 'none';
-  document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active',    tab==='login');
-  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+// AUTH TABS
+function switchAuthTab(tab){
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display=tab==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
 }
-window.registerEmailForm = async () => {
-  const nick = document.getElementById('nickname-input')?.value.trim() || '';
-  const em   = document.getElementById('email-reg-input')?.value.trim() || '';
-  const pw   = document.getElementById('password-reg-input')?.value || '';
-  document.getElementById('email-input').value    = em;
-  document.getElementById('password-input').value = pw;
-  document.getElementById('nickname-input').value = nick;
+window.registerEmailForm=async()=>{
+  const nick=document.getElementById('nickname-input')?.value.trim()||'';
+  const em=document.getElementById('email-reg-input')?.value.trim()||'';
+  const pw=document.getElementById('password-reg-input')?.value||'';
+  document.getElementById('email-input').value=em;
+  document.getElementById('password-input').value=pw;
+  document.getElementById('nickname-input').value=nick;
   await window.registerEmail();
 };
 
-// ── LEGEND SYSTEM ─────────────────────────────────────────────
-const LEGEND_MILESTONES = [
-  { level:1,  dmg:0,          reward:'Старт подорожі',           icon:'⚡', type:'start' },
-  { level:2,  dmg:500000,     reward:'+100 Кресленики',          icon:'📐', type:'resource' },
-  { level:3,  dmg:1500000,    reward:'+200 Паливо',              icon:'⛽', type:'resource' },
-  { level:5,  dmg:3000000,    reward:'Рамка аватарки «Ветеран»', icon:'🖼️', type:'cosmetic' },
-  { level:7,  dmg:6000000,    reward:'+500 Золото',              icon:'⭐', type:'resource' },
-  { level:10, dmg:10000000,   reward:'Розблок: Лабораторія рвн 4',icon:'🔬',type:'base' },
-  { level:15, dmg:20000000,   reward:'Камуфляж «Легендарний»',   icon:'🎨', type:'cosmetic' },
-  { level:20, dmg:35000000,   reward:'Розблок: Банк рвн 5',      icon:'🏦', type:'base' },
-  { level:25, dmg:55000000,   reward:'+20% ліміт палива назавжди',icon:'🛢️',type:'permanent' },
-  { level:30, dmg:80000000,   reward:'Аватарка «Командир»',      icon:'👤', type:'cosmetic' },
-  { level:40, dmg:120000000,  reward:'Розблок: Завод рвн 6',     icon:'🏭', type:'base' },
-  { level:50, dmg:200000000,  reward:'🏆 Унікальний танк',       icon:'🏆', type:'legendary' },
-  { level:60, dmg:350000000,  reward:'Легендарний камуфляж',     icon:'💎', type:'legendary' },
+// ── LEGEND ────────────────────────────────────────────────────
+const LEGEND_MILESTONES=[
+  {level:1, dmg:0,          reward:'Старт подорожі',             icon:'⚡',type:'start'},
+  {level:2, dmg:500000,     reward:'+100 Кресленики',            icon:'📐',type:'resource'},
+  {level:3, dmg:1500000,    reward:'+200 Паливо',                icon:'⛽',type:'resource'},
+  {level:5, dmg:3000000,    reward:'Рамка аватарки «Ветеран»',   icon:'🖼️',type:'cosmetic'},
+  {level:7, dmg:6000000,    reward:'+500 Золото',                icon:'⭐',type:'resource'},
+  {level:10,dmg:10000000,   reward:'Розблок: Лабораторія рвн 4', icon:'🔬',type:'base'},
+  {level:15,dmg:20000000,   reward:'Камуфляж «Легендарний»',     icon:'🎨',type:'cosmetic'},
+  {level:20,dmg:35000000,   reward:'Розблок: Банк рвн 5',        icon:'🏦',type:'base'},
+  {level:25,dmg:55000000,   reward:'+20% ліміт палива назавжди', icon:'🛢️',type:'permanent'},
+  {level:30,dmg:80000000,   reward:'Аватарка «Командир»',        icon:'👤',type:'cosmetic'},
+  {level:40,dmg:120000000,  reward:'Розблок: Завод рвн 6',       icon:'🏭',type:'base'},
+  {level:50,dmg:200000000,  reward:'🏆 Унікальний танк',         icon:'🏆',type:'legendary'},
+  {level:60,dmg:350000000,  reward:'Легендарний камуфляж',       icon:'💎',type:'legendary'},
 ];
-
-window.getLegendLevel = function(totalDmg) {
-  let current = LEGEND_MILESTONES[0];
-  for (let i = LEGEND_MILESTONES.length - 1; i >= 0; i--) {
-    if (totalDmg >= LEGEND_MILESTONES[i].dmg) { current = LEGEND_MILESTONES[i]; break; }
+window.getLegendLevel=function(totalDmg){
+  let cur=LEGEND_MILESTONES[0];
+  for(let i=LEGEND_MILESTONES.length-1;i>=0;i--){
+    if(totalDmg>=LEGEND_MILESTONES[i].dmg){cur=LEGEND_MILESTONES[i];break;}
   }
-  const idx  = LEGEND_MILESTONES.indexOf(current);
-  const next = LEGEND_MILESTONES[idx + 1] || null;
-  return { level: current.level, current, next, idx };
+  const idx=LEGEND_MILESTONES.indexOf(cur);
+  return{level:cur.level,current:cur,next:LEGEND_MILESTONES[idx+1]||null,idx};
 };
-
-window.buildLegend = function(totalDmg) {
-  const info = getLegendLevel(totalDmg);
-  const cur  = info.current;
-  const next = info.next;
-
-  document.getElementById('legend-badge').textContent     = '⚡ Легенда ' + cur.level;
-  document.getElementById('legend-total-dmg').textContent = totalDmg.toLocaleString();
-
-  if (next) {
-    const from  = cur.dmg;
-    const to    = next.dmg;
-    const pct   = Math.min(100, Math.round((totalDmg - from) / (to - from) * 100));
-    const left  = (to - totalDmg).toLocaleString();
-    document.getElementById('legend-fill').style.width      = pct + '%';
-    document.getElementById('legend-cur-val').textContent   = cur.dmg.toLocaleString();
-    document.getElementById('legend-next-val').textContent  = next.dmg.toLocaleString();
-    document.getElementById('legend-next-text').textContent = 'До рівня ' + next.level + ': ще ' + left + ' урону';
+window.buildLegend=function(totalDmg){
+  const info=getLegendLevel(totalDmg);
+  const cur=info.current,next=info.next;
+  document.getElementById('legend-badge').textContent='⚡ Легенда '+cur.level;
+  document.getElementById('legend-total-dmg').textContent=totalDmg.toLocaleString();
+  if(next){
+    const pct=Math.min(100,Math.round((totalDmg-cur.dmg)/(next.dmg-cur.dmg)*100));
+    document.getElementById('legend-fill').style.width=pct+'%';
+    document.getElementById('legend-cur-val').textContent=cur.dmg.toLocaleString();
+    document.getElementById('legend-next-val').textContent=next.dmg.toLocaleString();
+    document.getElementById('legend-next-text').textContent='До рівня '+next.level+': ще '+(next.dmg-totalDmg).toLocaleString()+' урону';
   } else {
-    document.getElementById('legend-fill').style.width     = '100%';
-    document.getElementById('legend-next-text').textContent = '🏆 Максимальний рівень досягнуто!';
+    document.getElementById('legend-fill').style.width='100%';
+    document.getElementById('legend-next-text').textContent='🏆 Максимальний рівень!';
   }
-
-  // Milestones
-  const container = document.getElementById('legend-milestones');
-  container.innerHTML = '';
-  LEGEND_MILESTONES.forEach(m => {
-    const unlocked = totalDmg >= m.dmg;
-    const isCur    = m.level === cur.level;
-    const cls      = isCur ? 'legend-milestone current' : unlocked ? 'legend-milestone unlocked' : 'legend-milestone';
-    const typeColor = { start:'var(--dim)', resource:'var(--steel)', cosmetic:'#a070cc', base:'#4aaa5a', permanent:'var(--gold)', legendary:'#e88038' };
-    container.innerHTML += `
-      <div class="${cls}">
-        <div class="milestone-icon">${m.icon}</div>
-        <div class="milestone-info">
-          <div class="milestone-lvl" style="color:${typeColor[m.type]||'var(--dim)'}">РІВЕНЬ ${m.level}</div>
-          <div class="milestone-reward">${m.reward}</div>
-          <div class="milestone-req">${m.dmg > 0 ? m.dmg.toLocaleString() + ' урону' : 'Стартова нагорода'}</div>
-        </div>
-        <div class="milestone-check">${unlocked ? '✅' : '🔒'}</div>
-      </div>`;
-  });
+  const typeColor={start:'var(--dim)',resource:'var(--steel)',cosmetic:'#a070cc',base:'#4aaa5a',permanent:'var(--gold)',legendary:'#e88038'};
+  document.getElementById('legend-milestones').innerHTML=LEGEND_MILESTONES.map(m=>{
+    const unlocked=totalDmg>=m.dmg,isCur=m.level===cur.level;
+    return`<div class="legend-milestone${isCur?' current':unlocked?' unlocked':''}">
+      <div class="milestone-icon">${m.icon}</div>
+      <div class="milestone-info">
+        <div class="milestone-lvl" style="color:${typeColor[m.type]||'var(--dim)'}">РІВЕНЬ ${m.level}</div>
+        <div class="milestone-reward">${m.reward}</div>
+        <div class="milestone-req">${m.dmg>0?m.dmg.toLocaleString()+' урону':'Стартова нагорода'}</div>
+      </div>
+      <div class="milestone-check">${unlocked?'✅':'🔒'}</div>
+    </div>`;
+  }).join('');
 };
 
-// ── ACTIVITY CALENDAR ──────────────────────────────────────────
-window.buildCalendar = function(loginDates) {
-  const dateSet = new Set(loginDates || []);
-  const today   = new Date();
-  const endDate = new Date(today);
-  const startDate = new Date(today);
-  startDate.setFullYear(startDate.getFullYear() - 1);
-  startDate.setDate(startDate.getDate() - startDate.getDay()); // start on Sunday
+// ── CALENDAR ───────────────────────────────────────────────────
+window.buildCalendar=function(loginDates){
+  const dateSet=new Set(loginDates||[]);
+  const today=new Date();
+  const startDate=new Date(today);
+  startDate.setFullYear(startDate.getFullYear()-1);
+  startDate.setDate(startDate.getDate()-startDate.getDay());
 
-  // Streak calc
-  let streak = 0, bestStreak = 0, tempStreak = 0, prevDate = null;
-  const sorted = [...dateSet].sort();
-  sorted.forEach(d => {
-    if (!prevDate) { tempStreak = 1; }
-    else {
-      const diff = (new Date(d) - new Date(prevDate)) / 86400000;
-      tempStreak = diff === 1 ? tempStreak + 1 : 1;
-    }
-    bestStreak = Math.max(bestStreak, tempStreak);
-    prevDate = d;
+  // streaks
+  let best=0,temp=0,prev=null;
+  [...dateSet].sort().forEach(d=>{
+    if(!prev){temp=1;}
+    else{ const diff=(new Date(d)-new Date(prev))/86400000; temp=diff===1?temp+1:1; }
+    best=Math.max(best,temp); prev=d;
   });
-  const todayStr = today.toISOString().slice(0,10);
-  const yest = new Date(today); yest.setDate(yest.getDate()-1);
-  const yestStr = yest.toISOString().slice(0,10);
-  if (dateSet.has(todayStr)) {
-    let s = 1, d = new Date(today);
-    while(true) { d.setDate(d.getDate()-1); const ds = d.toISOString().slice(0,10); if(dateSet.has(ds)) s++; else break; }
-    streak = s;
-  } else if (dateSet.has(yestStr)) {
-    let s = 1, d = new Date(yest);
-    while(true) { d.setDate(d.getDate()-1); const ds = d.toISOString().slice(0,10); if(dateSet.has(ds)) s++; else break; }
-    streak = s;
+  const todayStr=today.toISOString().slice(0,10);
+  let streak=0;
+  if(dateSet.has(todayStr)){
+    streak=1; let d=new Date(today);
+    while(true){d.setDate(d.getDate()-1);if(dateSet.has(d.toISOString().slice(0,10)))streak++;else break;}
   }
-  document.getElementById('streak-current').textContent = streak;
-  document.getElementById('streak-best').textContent    = bestStreak;
-  document.getElementById('streak-total').textContent   = dateSet.size;
+  document.getElementById('streak-current').textContent=streak;
+  document.getElementById('streak-best').textContent=best;
+  document.getElementById('streak-total').textContent=dateSet.size;
 
-  // Build grid
-  const MONTHS = ['Січ','Лют','Мар','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
-  const container = document.getElementById('cal-container');
-
-  // Generate weeks
-  const weeks = [];
-  let cur = new Date(startDate);
-  while (cur <= endDate) {
-    const week = [];
-    for (let d = 0; d < 7; d++) {
-      const ds = cur.toISOString().slice(0,10);
-      const inRange = cur >= startDate && cur <= endDate;
-      week.push({ date: ds, inRange, active: dateSet.has(ds) });
+  const MONTHS=['Січ','Лют','Мар','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
+  const DAYS=['П','В','С','Ч','П','С','Н'];
+  const weeks=[];
+  let cur=new Date(startDate);
+  while(cur<=today){
+    const week=[];
+    for(let d=0;d<7;d++){
+      const ds=cur.toISOString().slice(0,10);
+      week.push({date:ds,inRange:cur>=startDate&&cur<=today,active:dateSet.has(ds)});
       cur.setDate(cur.getDate()+1);
     }
     weeks.push(week);
   }
 
-  // Month labels
-  let html = '<div style="display:flex;gap:3px;align-items:flex-start">';
-  // day labels column
-  html += '<div style="display:flex;flex-direction:column;gap:3px;padding-top:22px;margin-right:4px">';
-  ['П','В','С','Ч','П','С','Н'].forEach(d => {
-    html += `<div style="font-size:9px;color:var(--dim);height:12px;line-height:12px;text-align:right;width:10px">${d}</div>`;
+  let html='<div style="display:flex;gap:3px;align-items:flex-start">';
+  html+='<div style="display:flex;flex-direction:column;gap:3px;padding-top:22px;margin-right:4px">';
+  DAYS.forEach(d=>{ html+=`<div style="font-size:9px;color:var(--dim);height:12px;line-height:12px;width:10px;text-align:right">${d}</div>`; });
+  html+='</div><div>';
+  html+='<div style="display:flex;gap:3px;margin-bottom:4px;">';
+  let lastM=-1;
+  weeks.forEach(week=>{
+    const f=week.find(c=>c.inRange);
+    if(f){const m=new Date(f.date).getMonth();if(m!==lastM){html+=`<div style="font-size:9px;color:var(--dim);width:12px;white-space:nowrap;overflow:visible">${MONTHS[m]}</div>`;lastM=m;}else{html+=`<div style="width:12px"></div>`;}}
+    else{html+=`<div style="width:12px"></div>`;}
   });
-  html += '</div>';
-
-  // Month label row + weeks
-  html += '<div>';
-
-  // Month labels
-  html += '<div style="display:flex;gap:3px;margin-bottom:4px;">';
-  let lastMonth = -1;
-  weeks.forEach((week, wi) => {
-    const firstDay = week.find(c => c.inRange);
-    if (firstDay) {
-      const m = new Date(firstDay.date).getMonth();
-      if (m !== lastMonth) {
-        html += `<div style="font-size:9px;color:var(--dim);width:${12}px;white-space:nowrap;overflow:visible">${MONTHS[m]}</div>`;
-        lastMonth = m;
-      } else {
-        html += `<div style="width:12px"></div>`;
-      }
-    } else { html += `<div style="width:12px"></div>`; }
-  });
-  html += '</div>';
-
-  // Week columns
-  html += '<div style="display:flex;gap:3px;">';
-  weeks.forEach(week => {
-    html += '<div style="display:flex;flex-direction:column;gap:3px;">';
-    week.forEach(cell => {
-      if (!cell.inRange) {
-        html += `<div style="width:12px;height:12px"></div>`;
-      } else {
-        const cls = cell.active ? 'cal-cell active' : 'cal-cell';
-        html += `<div class="${cls}" data-date="${cell.date}" title="${cell.date}"></div>`;
-      }
+  html+='</div><div style="display:flex;gap:3px;">';
+  weeks.forEach(week=>{
+    html+='<div style="display:flex;flex-direction:column;gap:3px;">';
+    week.forEach(cell=>{
+      if(!cell.inRange){html+=`<div style="width:12px;height:12px"></div>`;}
+      else{html+=`<div class="cal-cell${cell.active?' active':''}" title="${cell.date}"></div>`;}
     });
-    html += '</div>';
+    html+='</div>';
   });
-  html += '</div></div></div>';
-  container.innerHTML = html;
+  html+='</div></div></div>';
+  document.getElementById('cal-container').innerHTML=html;
 };
 
-// ── WAYFORPAY ──────────────────────────────────────────────────
-let _currentUser = null;
-async function openPayment(oil, price) {
-  if (!_currentUser) { showToast('Спочатку увійди!', 'error'); return; }
+// ── RATING GRAPH ───────────────────────────────────────────────
+let ratingChartInst=null;
+window.buildRatingGraph=function(history){
+  // Demo data якщо немає реальних
+  if(!history||history.length===0){
+    history=Array.from({length:20},(_,i)=>({
+      rating:800+Math.floor(Math.random()*400),
+      result:Math.random()>0.45?'win':'loss',
+      battle:i+1
+    }));
+  }
+  const labels=history.map((_,i)=>'Бій '+(i+1));
+  const ratings=history.map(h=>h.rating||0);
+  const pointColors=history.map(h=>h.result==='win'?'#4aaa5a':'#aa4a4a');
+  const ctx=document.getElementById('rating-chart').getContext('2d');
+  if(ratingChartInst) ratingChartInst.destroy();
+  ratingChartInst=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Рейтинг',
+        data:ratings,
+        borderColor:'#e8bc38',
+        backgroundColor:'rgba(232,188,56,0.08)',
+        borderWidth:2,
+        pointBackgroundColor:pointColors,
+        pointBorderColor:pointColors,
+        pointRadius:5,
+        tension:0.3,
+        fill:true,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#111e2e',borderColor:'#1a3050',borderWidth:1,
+        titleColor:'#e8bc38',bodyColor:'#d4cdb8',
+        callbacks:{afterLabel:(ctx)=>{const h=history[ctx.dataIndex];return h?.result==='win'?'✅ Перемога':'❌ Поразка';}}
+      }},
+      scales:{
+        x:{grid:{color:'rgba(26,48,80,0.4)'},ticks:{color:'#6a7a8a',font:{size:9},maxTicksLimit:10}},
+        y:{grid:{color:'rgba(26,48,80,0.4)'},ticks:{color:'#6a7a8a',font:{size:10}}}
+      }
+    }
+  });
+};
+
+// ── DNA RADAR ─────────────────────────────────────────────────
+let dnaChartInst=null;
+window.buildDNA=function(data){
+  const battles=data.battles||1;
+  const wins=data.wins||0;
+  const kills=data.kills||0;
+  const totalDmg=data.totalDamage||0;
+  const playtime=data.totalPlaytime||0;
+  const losses=data.losses||0;
+
+  // Нормалізовані значення 0-100
+  const attack=Math.min(100,Math.round((totalDmg/battles/500)*100)||0);
+  const defense=Math.min(100,Math.round((1-losses/(battles||1))*100)||0);
+  const survival=Math.min(100,Math.round((wins/battles)*120)||0);
+  const aggression=Math.min(100,Math.round((kills/battles/3)*100)||0);
+  const activity=Math.min(100,Math.round(((data.loginDates?.length||0)/365)*200)||0);
+
+  const dnaData=[
+    {label:'Атака',    val:attack,    icon:'⚔️', color:'#e8bc38'},
+    {label:'Захист',   val:defense,   icon:'🛡️', color:'#4aaa5a'},
+    {label:'Виживання',val:survival,  icon:'❤️', color:'#aa4a4a'},
+    {label:'Агресія',  val:aggression,icon:'💥', color:'#e88038'},
+    {label:'Активність',val:activity, icon:'📅', color:'#8eb0cc'},
+  ];
+
+  const ctx=document.getElementById('dna-chart').getContext('2d');
+  if(dnaChartInst) dnaChartInst.destroy();
+  dnaChartInst=new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:dnaData.map(d=>d.label),
+      datasets:[{
+        data:dnaData.map(d=>d.val),
+        backgroundColor:'rgba(232,188,56,0.15)',
+        borderColor:'#e8bc38',
+        borderWidth:2,
+        pointBackgroundColor:'#e8bc38',
+        pointRadius:4,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false}},
+      scales:{r:{
+        min:0,max:100,
+        grid:{color:'rgba(26,48,80,0.6)'},
+        angleLines:{color:'rgba(26,48,80,0.6)'},
+        ticks:{display:false},
+        pointLabels:{color:'#d4cdb8',font:{size:11}}
+      }}
+    }
+  });
+
+  document.getElementById('dna-stats-list').innerHTML=dnaData.map(d=>`
+    <div class="dna-stat-row">
+      <div class="dna-stat-icon">${d.icon}</div>
+      <div class="dna-stat-info">
+        <div class="dna-stat-label">${d.label}</div>
+        <div class="dna-stat-bar"><div class="dna-stat-fill" style="width:${d.val}%;background:${d.color}"></div></div>
+      </div>
+      <div class="dna-stat-val">${d.val}</div>
+    </div>`).join('');
+};
+
+// ── BATTLE LOG ─────────────────────────────────────────────────
+window.buildBattleLog=function(log){
+  const el=document.getElementById('battle-log-content');
+  if(!log||log.length===0){
+    // Demo бої
+    log=[
+      {result:'win', tank:'Tiger I',    map:'Полігон',   damage:2840,kills:3,time:'18:42'},
+      {result:'loss',tank:'T-34',       map:'Ліс',       damage:1200,kills:1,time:'14:20'},
+      {result:'win', tank:'M18 Hellcat',map:'Місто',     damage:3100,kills:4,time:'22:05'},
+      {result:'win', tank:'Panzer IV',  map:'Пустеля',   damage:1950,kills:2,time:'16:30'},
+      {result:'loss',tank:'AMX ELC',    map:'Полігон',   damage:800, kills:0,time:'11:15'},
+      {result:'win', tank:'Tiger I',    map:'Місто',     damage:3400,kills:5,time:'19:55'},
+      {result:'loss',tank:'T-34',       map:'Ліс',       damage:1600,kills:2,time:'13:40'},
+      {result:'win', tank:'Panzer IV',  map:'Пустеля',   damage:2200,kills:3,time:'20:10'},
+    ];
+  }
+  el.innerHTML='<div class="battle-log-list">'+log.slice(0,20).map(b=>`
+    <div class="battle-row ${b.result}">
+      <div class="battle-result ${b.result}">${b.result==='win'?'WIN':'LOSS'}</div>
+      <div class="battle-tank">${b.tank||'—'}</div>
+      <div class="battle-map">${b.map||'—'}</div>
+      <div class="battle-dmg">${(b.damage||0).toLocaleString()}</div>
+      <div class="battle-kills">💀 ${b.kills||0}</div>
+      <div class="battle-time">${b.time||'—'}</div>
+    </div>`).join('')+'</div>'+
+  '<div style="margin-top:12px;font-size:11px;color:var(--dim)">Бойовий журнал заповнюється автоматично з гри. Відображаються останні 20 боїв.</div>';
+};
+
+// ── SEASON RECORDS ─────────────────────────────────────────────
+window.buildSeasonRecord=function(best){
+  const el=document.getElementById('season-content');
+  const month=best.month||'Поточний місяць';
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--dim);margin-bottom:16px">Щомісяця результати зберігаються в архів. Змагайся з собою.</div>
+    <div class="season-grid">
+      <div class="season-card best">
+        <span class="season-val">${(best.damage||0).toLocaleString()}</span>
+        <span class="season-lbl">Найбільший урон за бій</span>
+        <span class="season-month">${month}</span>
+      </div>
+      <div class="season-card">
+        <span class="season-val">${best.wr||0}%</span>
+        <span class="season-lbl">Найвищий вінрейт за місяць</span>
+        <span class="season-month">${month}</span>
+      </div>
+      <div class="season-card">
+        <span class="season-val">${best.streak||0}</span>
+        <span class="season-lbl">Найдовша серія перемог</span>
+        <span class="season-month">${month}</span>
+      </div>
+      <div class="season-card">
+        <span class="season-val">${best.kills||0}</span>
+        <span class="season-lbl">Найбільше знищень за бій</span>
+        <span class="season-month">${month}</span>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--font-d);font-size:10px;color:var(--gold);margin-bottom:12px">Архів сезонів</div>
+      <div style="color:var(--dim);font-size:12px">Архів буде заповнюватися кожного місяця. Результати зберігаються назавжди.</div>
+    </div>`;
+};
+
+// PAYMENT
+let _currentUser=null;
+async function openPayment(oil,price){
+  if(!_currentUser){showToast('Спочатку увійди!','error');return;}
   showToast('Готуємо платіж...');
-  try {
-    const createPayment = window._httpsCallable(window._fbFunctions, 'createPayment');
-    const result = await createPayment({ price });
-    const fields = result.data;
-    const form = document.createElement('form');
-    form.method = 'POST'; form.action = 'https://secure.wayforpay.com/pay'; form.target = '_blank';
-    Object.entries(fields).forEach(([k,v]) => {
-      if (k==='gold') return;
-      const inp = document.createElement('input'); inp.type='hidden'; inp.name=k; inp.value=v;
-      form.appendChild(inp);
-    });
-    document.body.appendChild(form); form.submit(); document.body.removeChild(form);
-  } catch(e) { showToast('Помилка: ' + e.message, 'error'); }
+  try{
+    const createPayment=window._httpsCallable(window._fbFunctions,'createPayment');
+    const result=await createPayment({price});
+    const fields=result.data;
+    const form=document.createElement('form');
+    form.method='POST';form.action='https://secure.wayforpay.com/pay';form.target='_blank';
+    Object.entries(fields).forEach(([k,v])=>{if(k==='gold')return;const i=document.createElement('input');i.type='hidden';i.name=k;i.value=v;form.appendChild(i);});
+    document.body.appendChild(form);form.submit();document.body.removeChild(form);
+  }catch(e){showToast('Помилка: '+e.message,'error');}
 }
 
-// Demo data for testing (буде перезаписано Firebase даними)
+// Init with demo data
 buildCalendar([]);
 buildLegend(0);
-</script>
-
-<script>
-const i18nProfile = {
-  uk: { 'nav.home':'Головна' },
-  en: { 'nav.home':'Home' }
-};
-let profileLang = localStorage.getItem('bt8bit_lang') || 'uk';
-function setLang(lang) {
-  profileLang = lang; localStorage.setItem('bt8bit_lang', lang);
-}
-setLang(profileLang);
+buildRatingGraph([]);
+buildDNA({});
+buildBattleLog([]);
+buildSeasonRecord({});
 </script>
 </body>
 </html>
