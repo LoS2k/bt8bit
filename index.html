@@ -324,11 +324,11 @@
     <span class="nav-logo-text">BT 8BIT</span>
   </a>
   <ul class="nav-links">
-    <li><a href="#features">Особливості</a></li>
-    <li><a href="#tanks">Танки</a></li>
-    <li><a href="#leaderboard">Рейтинг</a></li>
-    <li><a href="#news">Новини</a></li>
-    <li><a href="#download">Завантажити</a></li>
+    <li><a href="#features" data-t="nav.features">Особливості</a></li>
+    <li><a href="#tanks" data-t="nav.tanks">Танки</a></li>
+    <li><a href="#leaderboard" data-t="nav.leaderboard">Рейтинг</a></li>
+    <li><a href="#news" data-t="nav.news">Новини</a></li>
+    <li><a href="#download" data-t="nav.download">Завантажити</a></li>
   </ul>
   <div class="nav-right">
     <div class="nav-socials">
@@ -341,12 +341,15 @@
       <a class="nav-social" href="https://discord.gg/Rezw5FSMUC" target="_blank" title="Discord">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
       </a>
+      <a class="nav-social" href="https://www.facebook.com/" target="_blank" title="Facebook">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </a>
     </div>
     <div class="lang-sw">
       <button class="lang-btn active" onclick="setLang('uk')">UA</button>
       <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <a class="btn-cab" href="profile.html">Кабінет</a>
+    <a class="btn-cab" href="profile.html" data-t="nav.cabinet">Кабінет</a>
     <button class="burger" id="burger-btn" onclick="toggleMenu()" aria-label="Меню">
       <span></span><span></span><span></span>
     </button>
@@ -355,12 +358,12 @@
 
 <!-- МОБІЛЬНЕ МЕНЮ -->
 <div class="mobile-menu" id="mobile-menu">
-  <a href="#features" onclick="toggleMenu()">Особливості</a>
-  <a href="#tanks" onclick="toggleMenu()">Танки</a>
-  <a href="#leaderboard" onclick="toggleMenu()">Рейтинг</a>
-  <a href="#news" onclick="toggleMenu()">Новини</a>
-  <a href="#download" onclick="toggleMenu()">Завантажити</a>
-  <a href="profile.html" style="color:var(--gold)">Кабінет →</a>
+  <a href="#features" onclick="toggleMenu()" data-t="nav.features">Особливості</a>
+  <a href="#tanks" onclick="toggleMenu()" data-t="nav.tanks">Танки</a>
+  <a href="#leaderboard" onclick="toggleMenu()" data-t="nav.leaderboard">Рейтинг</a>
+  <a href="#news" onclick="toggleMenu()" data-t="nav.news">Новини</a>
+  <a href="#download" onclick="toggleMenu()" data-t="nav.download">Завантажити</a>
+  <a href="profile.html" style="color:var(--gold)" data-t="nav.cabinet.arrow">Кабінет →</a>
 </div>
 
 <!-- HERO -->
@@ -368,13 +371,13 @@
   <div class="hero-bg"></div><div class="hero-grid"></div><div class="hero-scan"></div>
   <div class="hero-content">
     <img class="hero-logo" src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
-    <div class="hero-eyebrow">Відкрите бета-тестування</div>
+    <div class="hero-eyebrow" data-t="hero.eyebrow">Відкрите бета-тестування</div>
     <h1 class="hero-title">BT <span>8BIT</span></h1>
-    <div class="hero-sub">ТАНКОВІ БОЇ 3D</div>
-    <p class="hero-desc">Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.</p>
+    <div class="hero-sub" data-t="hero.sub">ТАНКОВІ БОЇ 3D</div>
+    <p class="hero-desc" data-t="hero.desc">Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.</p>
     <div class="hero-btns">
-      <a class="btn-primary" href="#download">▶ Завантажити</a>
-      <a class="btn-secondary" href="#features">Дізнатись більше</a>
+      <a class="btn-primary" href="#download" data-t="hero.btn1">▶ Завантажити</a>
+      <a class="btn-secondary" href="#features" data-t="hero.btn2">Дізнатись більше</a>
     </div>
   </div>
 </div>
@@ -472,18 +475,18 @@
 
 <!-- БЛОК 1 — ігрова статистика -->
 <div class="stats-bar">
-  <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label">Танків</span></div>
-  <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label">Командні бої</span></div>
-  <div class="stat-item"><span class="stat-value">5</span><span class="stat-label">Націй</span></div>
-  <div class="stat-item"><span class="stat-value">ЗБТ</span><span class="stat-label">Статус</span></div>
+  <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label" data-t="stat.tanks">Танків</span></div>
+  <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label" data-t="stat.battles">Командні бої</span></div>
+  <div class="stat-item"><span class="stat-value">5</span><span class="stat-label" data-t="stat.nations">Націй</span></div>
+  <div class="stat-item"><span class="stat-value" data-t="stat.beta.val">ЗБТ</span><span class="stat-label" data-t="stat.status">Статус</span></div>
 </div>
 <div class="pixel-div"></div>
 
 <!-- РЕКЛАМА #1 -->
 <div class="ad-block">
   <div class="ad-inner">
-    <span class="ad-placeholder">РЕКЛАМНИЙ БЛОК 728×90</span>
-    <span class="ad-label">Реклама</span>
+    <span class="ad-placeholder" data-t="ad.label">РЕКЛАМНИЙ БЛОК 728×90</span>
+    <span class="ad-label" data-t="ad.tag">Реклама</span>
   </div>
 </div>
 
@@ -491,19 +494,19 @@
 <div class="stats-bar" style="background:var(--bg);">
   <div class="stat-item">
     <span class="stat-value live" id="stat-total-visits">...</span>
-    <span class="stat-label">Всього відвідувань</span>
+    <span class="stat-label" data-t="stat.total">Всього відвідувань</span>
   </div>
   <div class="stat-item">
     <span class="stat-value live" id="stat-unique-visits">...</span>
-    <span class="stat-label">Унікальних гостей</span>
+    <span class="stat-label" data-t="stat.unique">Унікальних гостей</span>
   </div>
   <div class="stat-item">
     <span class="stat-value live" id="stat-today-visits">...</span>
-    <span class="stat-label"><span class="live-dot"></span>Сьогодні всього</span>
+    <span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.all">Сьогодні всього</span></span>
   </div>
   <div class="stat-item">
     <span class="stat-value live" id="stat-today-unique">...</span>
-    <span class="stat-label"><span class="live-dot"></span>Сьогодні унікальних</span>
+    <span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.unique">Сьогодні унікальних</span></span>
   </div>
 </div>
 <div class="pixel-div"></div>
@@ -514,16 +517,16 @@
 
 <!-- FEATURES -->
 <section id="features">
-  <span class="s-eye">Можливості</span>
-  <h2>Що робить BT 8BIT особливим</h2>
-  <p class="s-desc">Реалістична механіка бронювання, система кланів і глобальна карта.</p>
+  <span class="s-eye" data-t="feat.eye">Можливості</span>
+  <h2 data-t="feat.title">Що робить BT 8BIT особливим</h2>
+  <p class="s-desc" data-t="feat.desc">Реалістична механіка бронювання, система кланів і глобальна карта.</p>
   <div class="features-grid">
-    <div class="f-card"><span class="f-icon">🛡️</span><div class="f-title">Реалістична броня</div><p class="f-desc">Система пробиття з урахуванням кута нахилу, товщини і типу снаряда.</p></div>
-    <div class="f-card"><span class="f-icon">⚔️</span><div class="f-title">6 на 6 бої</div><p class="f-desc">Командні бої в реальному часі. Координація, захоплення точок і знищення баз.</p></div>
-    <div class="f-card"><span class="f-icon">🏰</span><div class="f-title">Система кланів</div><p class="f-desc">Створюй клан, будуй споруди і захоплюй регіони на глобальній карті.</p></div>
-    <div class="f-card"><span class="f-icon">⚡</span><div class="f-title">Система «Легенда»</div><p class="f-desc">Накопичуй урон за всі бої — розблоковуй апгрейди бази і унікальні нагороди.</p></div>
-    <div class="f-card"><span class="f-icon">📅</span><div class="f-title">Календар активності</div><p class="f-desc">Відстежуй серії входів, отримуй бонуси за щоденну гру.</p></div>
-    <div class="f-card"><span class="f-icon">📊</span><div class="f-title">ДНК гравця</div><p class="f-desc">Радарна діаграма стилю гри — атака, захист, виживання, підтримка, активність.</p></div>
+    <div class="f-card"><span class="f-icon">🛡️</span><div class="f-title" data-t="f1.t">Реалістична броня</div><p class="f-desc" data-t="f1.d">Система пробиття з урахуванням кута нахилу, товщини і типу снаряда.</p></div>
+    <div class="f-card"><span class="f-icon">⚔️</span><div class="f-title" data-t="f2.t">6 на 6 бої</div><p class="f-desc" data-t="f2.d">Командні бої в реальному часі. Координація, захоплення точок і знищення баз.</p></div>
+    <div class="f-card"><span class="f-icon">🏰</span><div class="f-title" data-t="f3.t">Система кланів</div><p class="f-desc" data-t="f3.d">Створюй клан, будуй споруди і захоплюй регіони на глобальній карті.</p></div>
+    <div class="f-card"><span class="f-icon">⚡</span><div class="f-title" data-t="f4.t">Система «Легенда»</div><p class="f-desc" data-t="f4.d">Накопичуй урон за всі бої — розблоковуй апгрейди бази і унікальні нагороди.</p></div>
+    <div class="f-card"><span class="f-icon">📅</span><div class="f-title" data-t="f5.t">Календар активності</div><p class="f-desc" data-t="f5.d">Відстежуй серії входів, отримуй бонуси за щоденну гру.</p></div>
+    <div class="f-card"><span class="f-icon">📊</span><div class="f-title" data-t="f6.t">ДНК гравця</div><p class="f-desc" data-t="f6.d">Радарна діаграма стилю гри — атака, захист, виживання, підтримка, активність.</p></div>
   </div>
 </section>
 <div class="pixel-div"></div>
@@ -531,9 +534,9 @@
 <!-- TANKS -->
 <div id="tanks">
   <div class="inner">
-    <span class="s-eye">Техніка</span>
-    <h2>Обирай свій танк</h2>
-    <p class="s-desc">Від легких розвідників до важких штурмових машин.</p>
+    <span class="s-eye" data-t="tanks.eye">Техніка</span>
+    <h2 data-t="tanks.title">Обирай свій танк</h2>
+    <p class="s-desc" data-t="tanks.desc">Від легких розвідників до важких штурмових машин.</p>
   </div>
   <div class="tanks-scroll">
     <div class="tank-card">
@@ -598,24 +601,28 @@
 <!-- РЕКЛАМА #2 — між танками і рейтингом -->
 <div class="ad-mid">
   <div class="ad-mid-inner">
-    <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px">РЕКЛАМНИЙ БЛОК 970×90</span>
-    <span style="position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim)">Реклама</span>
+    <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px" data-t="ad.label">РЕКЛАМНИЙ БЛОК 970×90</span>
+    <span style="position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim)" data-t="ad.tag">Реклама</span>
   </div>
 </div>
 
 <!-- LEADERBOARD -->
 <section id="leaderboard">
-  <span class="s-eye">Рейтинг</span>
-  <h2>Топ гравців</h2>
-  <p class="s-desc">Найкращі командири BT 8BIT за рейтингом. Оновлюється в реальному часі.</p>
+  <span class="s-eye" data-t="lb.eye">Рейтинг</span>
+  <h2 data-t="lb.title">Топ гравців</h2>
+  <p class="s-desc" data-t="lb.desc">Найкращі командири BT 8BIT за рейтингом. Оновлюється в реальному часі.</p>
   <table class="leaderboard-table">
     <thead>
       <tr>
-        <th>#</th><th>Гравець</th><th>Рейтинг</th><th>Вінрейт</th><th>Урон</th>
+        <th>#</th>
+        <th data-t="lb.player">Гравець</th>
+        <th data-t="lb.rating">Рейтинг</th>
+        <th data-t="lb.wr">Вінрейт</th>
+        <th data-t="lb.dmg">Урон</th>
       </tr>
     </thead>
     <tbody id="lb-body">
-      <tr><td colspan="5" style="text-align:center;color:var(--dim);padding:24px;font-size:13px">Завантаження рейтингу...</td></tr>
+      <tr><td colspan="5" style="text-align:center;color:var(--dim);padding:24px;font-size:13px" data-t="lb.loading">Завантаження рейтингу...</td></tr>
     </tbody>
   </table>
 </section>
@@ -623,20 +630,20 @@
 
 <!-- NEWS -->
 <section id="news">
-  <span class="s-eye">Новини</span>
-  <h2>Останні оновлення</h2>
+  <span class="s-eye" data-t="news.eye">Новини</span>
+  <h2 data-t="news.title">Останні оновлення</h2>
   <div class="news-grid">
     <div class="news-main">
-      <span class="news-tag">Оновлення</span>
-      <h3 class="news-title">Відкрите бета-тестування — скоро</h3>
-      <div class="news-date">Червень 2026</div>
-      <p class="news-text">Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж.</p>
+      <span class="news-tag" data-t="news.tag1">Оновлення</span>
+      <h3 class="news-title" data-t="news.main.title">Відкрите бета-тестування — скоро</h3>
+      <div class="news-date" data-t="news.main.date">Червень 2026</div>
+      <p class="news-text" data-t="news.main.text">Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж.</p>
     </div>
     <div class="news-side">
-      <div class="news-item"><div class="ni-tag">Клани</div><div class="ni-title">Система кланів — глобальна карта і клан-війни</div><div class="ni-date">05.2025</div></div>
-      <div class="news-item"><div class="ni-tag">Техніка</div><div class="ni-title">Додано 5 нових танків: Франція та США</div><div class="ni-date">04.2025</div></div>
-      <div class="news-item"><div class="ni-tag">Баланс</div><div class="ni-title">Оновлено фізику пробиття і рікошетів</div><div class="ni-date">03.2025</div></div>
-      <div class="news-item"><div class="ni-tag">Карти</div><div class="ni-title">Нова карта Полігон — міські бої</div><div class="ni-date">02.2025</div></div>
+      <div class="news-item"><div class="ni-tag" data-t="tag.clans">Клани</div><div class="ni-title" data-t="n1.title">Система кланів — глобальна карта і клан-війни</div><div class="ni-date">05.2025</div></div>
+      <div class="news-item"><div class="ni-tag" data-t="tag.tanks">Техніка</div><div class="ni-title" data-t="n2.title">Додано 5 нових танків: Франція та США</div><div class="ni-date">04.2025</div></div>
+      <div class="news-item"><div class="ni-tag" data-t="tag.balance">Баланс</div><div class="ni-title" data-t="n3.title">Оновлено фізику пробиття і рікошетів</div><div class="ni-date">03.2025</div></div>
+      <div class="news-item"><div class="ni-tag" data-t="tag.maps">Карти</div><div class="ni-title" data-t="n4.title">Нова карта Полігон — міські бої</div><div class="ni-date">02.2025</div></div>
     </div>
   </div>
 </section>
@@ -645,70 +652,167 @@
 <div id="download">
   <div class="inner">
     <div>
-      <span class="s-eye">Завантажити</span>
-      <h2>Готовий до бою?</h2>
-      <p class="s-desc">Доступно безкоштовно на Android.</p>
+      <span class="s-eye" data-t="dl.eye">Завантажити</span>
+      <h2 data-t="dl.title">Готовий до бою?</h2>
+      <p class="s-desc" data-t="dl.desc">Доступно безкоштовно на Android.</p>
     </div>
     <div class="dl-btns">
-      <a class="btn-dl" href="#"><span class="btn-dl-icon">📱</span><span><span class="btn-dl-sub">Завантажити в</span><span class="btn-dl-label">Google Play</span></span></a>
-      <a class="btn-dl" href="#"><span class="btn-dl-icon">📦</span><span><span class="btn-dl-sub">Прямий APK</span><span class="btn-dl-label">Android</span></span></a>
+      <a class="btn-dl" href="#"><span class="btn-dl-icon">📱</span><span><span class="btn-dl-sub" data-t="dl.gp.sub">Завантажити в</span><span class="btn-dl-label">Google Play</span></span></a>
+      <a class="btn-dl" href="#"><span class="btn-dl-icon">📦</span><span><span class="btn-dl-sub" data-t="dl.apk.sub">Прямий APK</span><span class="btn-dl-label">Android</span></span></a>
     </div>
   </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-
-  <!-- РЕКЛАМА #3 — у футері над копірайтом -->
+  <!-- РЕКЛАМА #3 -->
   <div class="footer-ad">
     <div class="footer-ad-inner">
-      <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px">РЕКЛАМНИЙ БЛОК 728×90</span>
-      <span style="position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim)">Реклама</span>
+      <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px" data-t="ad.label">РЕКЛАМНИЙ БЛОК 728×90</span>
+      <span style="position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim)" data-t="ad.tag">Реклама</span>
     </div>
   </div>
   <div class="footer-inner">
     <div class="footer-brand">
       <a class="nav-logo" href="#"><span class="nav-logo-text">BT 8BIT</span></a>
-      <p>Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.</p>
+      <p data-t="footer.desc">Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.</p>
     </div>
     <div class="footer-col">
-      <h4>Гра</h4>
+      <h4 data-t="footer.game">Гра</h4>
       <ul>
-        <li><a href="#features">Особливості</a></li>
-        <li><a href="#tanks">Танки</a></li>
-        <li><a href="#leaderboard">Рейтинг</a></li>
-        <li><a href="profile.html">Кабінет</a></li>
+        <li><a href="#features" data-t="nav.features">Особливості</a></li>
+        <li><a href="#tanks" data-t="nav.tanks">Танки</a></li>
+        <li><a href="#leaderboard" data-t="nav.leaderboard">Рейтинг</a></li>
+        <li><a href="profile.html" data-t="nav.cabinet">Кабінет</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Підтримка</h4>
+      <h4 data-t="footer.support">Підтримка</h4>
       <ul>
         <li><a href="https://t.me/tanks_battles_3d" target="_blank">Telegram</a></li>
         <li><a href="https://discord.gg/Rezw5FSMUC" target="_blank">Discord</a></li>
         <li><a href="https://www.youtube.com/@Los_2k" target="_blank">YouTube</a></li>
+        <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Правове</h4>
+      <h4 data-t="footer.legal">Правове</h4>
       <ul>
-        <li><a href="terms.html">Угода користувача</a></li>
-        <li><a href="privacy.html">Конфіденційність</a></li>
+        <li><a href="terms.html" data-t="footer.terms">Угода користувача</a></li>
+        <li><a href="privacy.html" data-t="footer.privacy">Конфіденційність</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
     <span>© 2025 BT 8BIT</span>
-    <span>Розроблено в 🇺🇦 Україні</span>
+    <span data-t="footer.made">Розроблено в 🇺🇦 Україні</span>
   </div>
 </footer>
 
 <script>
+const T = {
+  uk: {
+    'nav.features':'Особливості','nav.tanks':'Танки','nav.leaderboard':'Рейтинг',
+    'nav.news':'Новини','nav.download':'Завантажити','nav.cabinet':'Кабінет',
+    'nav.cabinet.arrow':'Кабінет →',
+    'hero.eyebrow':'Відкрите бета-тестування','hero.sub':'ТАНКОВІ БОЇ 3D',
+    'hero.desc':'Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.',
+    'hero.btn1':'▶ Завантажити','hero.btn2':'Дізнатись більше',
+    'stat.tanks':'Танків','stat.battles':'Командні бої','stat.nations':'Націй',
+    'stat.beta.val':'ЗБТ','stat.status':'Статус',
+    'stat.total':'Всього відвідувань','stat.unique':'Унікальних гостей',
+    'stat.today.all':'Сьогодні всього','stat.today.unique':'Сьогодні унікальних',
+    'feat.eye':'Можливості','feat.title':'Що робить BT 8BIT особливим',
+    'feat.desc':'Реалістична механіка бронювання, система кланів і глобальна карта.',
+    'f1.t':'Реалістична броня','f1.d':'Система пробиття з урахуванням кута нахилу, товщини і типу снаряда.',
+    'f2.t':'6 на 6 бої','f2.d':'Командні бої в реальному часі. Координація, захоплення точок і знищення баз.',
+    'f3.t':'Система кланів','f3.d':'Створюй клан, будуй споруди і захоплюй регіони на глобальній карті.',
+    'f4.t':'Система «Легенда»','f4.d':'Накопичуй урон за всі бої — розблоковуй апгрейди бази і нагороди.',
+    'f5.t':'Календар активності','f5.d':'Відстежуй серії входів, отримуй бонуси за щоденну гру.',
+    'f6.t':'ДНК гравця','f6.d':'Радарна діаграма стилю гри — атака, захист, виживання, підтримка, активність.',
+    'tanks.eye':'Техніка','tanks.title':'Обирай свій танк',
+    'tanks.desc':'Від легких розвідників до важких штурмових машин.',
+    'lb.eye':'Рейтинг','lb.title':'Топ гравців',
+    'lb.desc':'Найкращі командири BT 8BIT за рейтингом. Оновлюється в реальному часі.',
+    'lb.player':'Гравець','lb.rating':'Рейтинг','lb.wr':'Вінрейт','lb.dmg':'Урон',
+    'lb.loading':'Завантаження рейтингу...',
+    'news.eye':'Новини','news.title':'Останні оновлення','news.tag1':'Оновлення',
+    'news.main.title':'Відкрите бета-тестування — скоро','news.main.date':'Червень 2026',
+    'news.main.text':'Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж.',
+    'tag.clans':'Клани','tag.tanks':'Техніка','tag.balance':'Баланс','tag.maps':'Карти',
+    'n1.title':'Система кланів — глобальна карта і клан-війни',
+    'n2.title':'Додано 5 нових танків: Франція та США',
+    'n3.title':'Оновлено фізику пробиття і рікошетів',
+    'n4.title':'Нова карта Полігон — міські бої',
+    'dl.eye':'Завантажити','dl.title':'Готовий до бою?',
+    'dl.desc':'Доступно безкоштовно на Android.',
+    'dl.gp.sub':'Завантажити в','dl.apk.sub':'Прямий APK',
+    'footer.desc':'Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.',
+    'footer.game':'Гра','footer.support':'Підтримка','footer.legal':'Правове',
+    'footer.terms':'Угода користувача','footer.privacy':'Конфіденційність',
+    'footer.made':'Розроблено в 🇺🇦 Україні',
+    'ad.label':'РЕКЛАМНИЙ БЛОК','ad.tag':'Реклама',
+  },
+  en: {
+    'nav.features':'Features','nav.tanks':'Tanks','nav.leaderboard':'Leaderboard',
+    'nav.news':'News','nav.download':'Download','nav.cabinet':'Cabinet',
+    'nav.cabinet.arrow':'Cabinet →',
+    'hero.eyebrow':'Open Beta Coming Soon','hero.sub':'TANK BATTLES 3D',
+    'hero.desc':'Mobile tank game with realistic physics, clans and global battles.',
+    'hero.btn1':'▶ Download Free','hero.btn2':'Learn More',
+    'stat.tanks':'Tanks','stat.battles':'Team Battles','stat.nations':'Nations',
+    'stat.beta.val':'OBT','stat.status':'Status',
+    'stat.total':'Total Visits','stat.unique':'Unique Visitors',
+    'stat.today.all':'Today Total','stat.today.unique':'Today Unique',
+    'feat.eye':'Features','feat.title':'What makes BT 8BIT special',
+    'feat.desc':'Realistic armor mechanics, clan system and global map — all in one mobile game.',
+    'f1.t':'Realistic Armor','f1.d':'Shell penetration with angle, thickness and shell type calculation.',
+    'f2.t':'6 vs 6 Battles','f2.d':'Real-time team battles. Capture points and destroy enemy bases.',
+    'f3.t':'Clan System','f3.d':'Create a clan, build structures and capture regions on the global map.',
+    'f4.t':'"Legend" System','f4.d':'Accumulate damage across all battles — unlock base upgrades and rewards.',
+    'f5.t':'Activity Calendar','f5.d':'Track your login streaks and earn bonuses for daily play.',
+    'f6.t':'Player DNA','f6.d':'Radar chart of your playstyle — attack, defense, survival, support, activity.',
+    'tanks.eye':'Vehicles','tanks.title':'Choose Your Tank',
+    'tanks.desc':'From light scouts to heavy assault machines.',
+    'lb.eye':'Leaderboard','lb.title':'Top Players',
+    'lb.desc':'Best BT 8BIT commanders by rating. Updated in real time.',
+    'lb.player':'Player','lb.rating':'Rating','lb.wr':'Winrate','lb.dmg':'Damage',
+    'lb.loading':'Loading leaderboard...',
+    'news.eye':'News','news.title':'Latest Updates','news.tag1':'Update',
+    'news.main.title':'Open Beta — Coming Soon','news.main.date':'June 2026',
+    'news.main.text':'We are preparing for the BT 8BIT open beta. Register now to get early access and a starter bonus — 500 gold and an exclusive camouflage.',
+    'tag.clans':'Clans','tag.tanks':'Vehicles','tag.balance':'Balance','tag.maps':'Maps',
+    'n1.title':'Clan system — global map and clan wars',
+    'n2.title':'5 new tanks added: France and USA',
+    'n3.title':'Updated armor penetration and ricochet physics',
+    'n4.title':'New map Polygon — urban combat',
+    'dl.eye':'Download','dl.title':'Ready for Battle?',
+    'dl.desc':'Free on Android.',
+    'dl.gp.sub':'Get it on','dl.apk.sub':'Direct APK',
+    'footer.desc':'Mobile tank game with realistic armor mechanics and clan system. Made in Ukraine.',
+    'footer.game':'Game','footer.support':'Support','footer.legal':'Legal',
+    'footer.terms':'Terms of Service','footer.privacy':'Privacy Policy',
+    'footer.made':'Made in 🇺🇦 Ukraine',
+    'ad.label':'AD BLOCK','ad.tag':'Ad',
+  }
+};
+
 let lang = localStorage.getItem('bt8bit_lang') || 'uk';
+
 function setLang(l) {
-  lang = l; localStorage.setItem('bt8bit_lang', l);
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active',(b.textContent==='UA'&&l==='uk')||(b.textContent==='EN'&&l==='en'));
+  lang = l;
+  localStorage.setItem('bt8bit_lang', l);
+  document.documentElement.lang = l === 'uk' ? 'uk' : 'en';
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    if (T[l] && T[l][k]) el.textContent = T[l][k];
   });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active',
+      (b.textContent==='UA' && l==='uk') || (b.textContent==='EN' && l==='en'));
+  });
+  // Оновити підпис кнопки кабінету якщо є
+  document.title = l === 'en' ? 'BT 8BIT — Tank Battles 3D' : 'BT 8BIT — Танкові Бої 3D';
 }
 setLang(lang);
 
@@ -718,7 +822,6 @@ function toggleMenu(){
   btn.classList.toggle('open');
   menu.classList.toggle('open');
 }
-// Закрити меню при кліку на лінк
 document.querySelectorAll('.mobile-menu a').forEach(a=>{
   a.addEventListener('click',()=>{
     document.getElementById('burger-btn').classList.remove('open');
