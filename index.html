@@ -469,32 +469,26 @@
   </div>
 </div>
 
-<!-- STATS BAR — окремо, нижче -->
-<div class="stats-bar" style="margin-top:0;">
-  <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label">Танків</span></div>
-  <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label">Командні бої</span></div>
-  <div class="stat-item"><span class="stat-value">5</span><span class="stat-label">Націй</span></div>
-  <div class="stat-item">
-    <span class="stat-value live" id="stat-total-visits">...</span>
-    <span class="stat-label">Всього відвідувань</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-value live" id="stat-unique-visits">...</span>
-    <span class="stat-label">Унікальних гостей</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-value live" id="stat-today-visits">...</span>
-    <span class="stat-label"><span class="live-dot"></span>Сьогодні всього</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-value live" id="stat-today-unique">...</span>
-    <span class="stat-label"><span class="live-dot"></span>Сьогодні унікальних</span>
-  </div>
-</div>
+
+<!-- БЛОК 1 — ігрова статистика -->
 <div class="stats-bar">
   <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label">Танків</span></div>
   <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label">Командні бої</span></div>
   <div class="stat-item"><span class="stat-value">5</span><span class="stat-label">Націй</span></div>
+  <div class="stat-item"><span class="stat-value">ЗБТ</span><span class="stat-label">Статус</span></div>
+</div>
+<div class="pixel-div"></div>
+
+<!-- РЕКЛАМА #1 -->
+<div class="ad-block">
+  <div class="ad-inner">
+    <span class="ad-placeholder">РЕКЛАМНИЙ БЛОК 728×90</span>
+    <span class="ad-label">Реклама</span>
+  </div>
+</div>
+
+<!-- БЛОК 2 — онлайн і відвідуваність -->
+<div class="stats-bar" style="background:var(--bg);">
   <div class="stat-item">
     <span class="stat-value live" id="stat-total-visits">...</span>
     <span class="stat-label">Всього відвідувань</span>
@@ -514,12 +508,7 @@
 </div>
 <div class="pixel-div"></div>
 
-<!-- РЕКЛАМА #1 — leaderboard 728x90 між hero і features -->
-<div class="ad-block">
-  <div class="ad-inner">
-    <span class="ad-placeholder">РЕКЛАМНИЙ БЛОК 728×90</span>
-    <span class="ad-label">Реклама</span>
-    <!-- Сюди вставити AdSense або прямого рекламодавця -->
+
   </div>
 </div>
 
@@ -669,38 +658,6 @@
 
 <!-- FOOTER -->
 <footer>
-<!-- ЛІЧИЛЬНИК ВІДВІДУВАЧІВ -->
-<div style="background:var(--surf);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px;">
-  <div style="max-width:1100px;margin:0 auto;">
-    <div style="text-align:center;margin-bottom:28px;">
-      <span style="font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:10px">Статистика сайту</span>
-      <span style="font-family:var(--px);font-size:clamp(12px,2vw,18px);color:#fff">BT 8BIT у цифрах</span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px;background:var(--border);">
-      <div style="background:var(--card);padding:28px 20px;text-align:center;">
-        <span style="font-family:var(--px);font-size:clamp(18px,3vw,28px);color:var(--gold);display:block;margin-bottom:8px" id="stat-total-visits-2">...</span>
-        <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:1px">Всього відвідувань</span>
-      </div>
-      <div style="background:var(--card);padding:28px 20px;text-align:center;">
-        <span style="font-family:var(--px);font-size:clamp(18px,3vw,28px);color:#8eb0cc;display:block;margin-bottom:8px" id="stat-unique-visits-2">...</span>
-        <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:1px">Унікальних гостей</span>
-      </div>
-      <div style="background:var(--card);padding:28px 20px;text-align:center;position:relative;">
-        <span style="position:absolute;top:12px;right:12px;font-size:9px;color:#4aaa5a;font-family:var(--px)"><span class="live-dot"></span>LIVE</span>
-        <span style="font-family:var(--px);font-size:clamp(18px,3vw,28px);color:#4aaa5a;display:block;margin-bottom:8px" id="stat-today-visits-2">...</span>
-        <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:1px">Сьогодні всього</span>
-      </div>
-      <div style="background:var(--card);padding:28px 20px;text-align:center;position:relative;">
-        <span style="position:absolute;top:12px;right:12px;font-size:9px;color:#4aaa5a;font-family:var(--px)"><span class="live-dot"></span>LIVE</span>
-        <span style="font-family:var(--px);font-size:clamp(18px,3vw,28px);color:#4aaa5a;display:block;margin-bottom:8px" id="stat-today-unique-2">...</span>
-        <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:1px">Сьогодні унікальних</span>
-      </div>
-    </div>
-    <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--dim)">
-      Дані оновлюються в реальному часі · Унікальні відвідувачі рахуються один раз на день з одного браузера
-    </div>
-  </div>
-</div>
 
   <!-- РЕКЛАМА #3 — у футері над копірайтом -->
   <div class="footer-ad">
