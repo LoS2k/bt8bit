@@ -510,12 +510,62 @@
 
   @media(max-width:768px){
     nav{padding:0 16px;}
-    .profile-layout{grid-template-columns:1fr;padding:16px;}
+    .profile-layout{grid-template-columns:1fr;padding:12px;gap:12px;}
+    /* Sidebar горизонтально на мобільному */
+    .sidebar{flex-direction:column;}
+    .profile-card{padding:20px 16px;}
+    .avatar{width:60px;height:60px;font-size:24px;}
+    .profile-nick{font-size:13px;}
+    /* Side nav — горизонтальний скрол */
+    .side-nav{display:flex;overflow-x:auto;scrollbar-width:none;border:1px solid var(--border);}
+    .side-nav::-webkit-scrollbar{display:none;}
+    .side-nav-item{flex-shrink:0;border-bottom:none;border-left:none;border-bottom:2px solid transparent;padding:12px 14px;font-size:11px;white-space:nowrap;}
+    .side-nav-item.active{border-left:none;border-bottom-color:var(--gold);}
+    .side-nav-icon{display:none;}
+    /* Ресурси — 2 колонки */
+    .resources-card{padding:16px;}
+    .res-row{padding:6px 0;}
+    /* Статистика */
     .stats-grid{grid-template-columns:repeat(2,1fr);}
-    .shop-grid{grid-template-columns:repeat(2,1fr);}
+    .stat-val{font-size:16px;}
+    /* Підвкладки — скрол */
+    .subtabs{overflow-x:auto;scrollbar-width:none;}
+    .subtabs::-webkit-scrollbar{display:none;}
+    .subtab{font-size:11px;padding:10px 12px;}
+    /* Легенда */
     .legend-milestones{grid-template-columns:1fr;}
+    .legend-level-badge{font-size:11px;padding:8px 14px;}
+    /* Промокод */
     .promo-wrap{flex-direction:column;}
+    .promo-input{font-size:11px;}
+    /* Пошук */
+    .search-wrap{flex-direction:column;}
+    .search-btn,.search-input{width:100%;}
+    .search-btn{min-height:44px;}
+    .promo-btn{min-height:44px;}
+    /* Порівняння */
+    .cmp-header{gap:16px;}
+    .cmp-val{font-size:11px;padding:8px;}
+    /* DNA */
     .dna-wrap{grid-template-columns:1fr;}
+    .dna-canvas-wrap{height:180px;}
+    /* Shop */
+    .shop-grid{grid-template-columns:repeat(2,1fr);}
+    /* Sidebar ad — ховаємо на мобільному */
+    .sidebar-ad{display:none;}
+    /* Бойовий журнал */
+    .battle-map{display:none;}
+    .battle-time{display:none;}
+    /* Графік */
+    .graph-wrap{height:160px;}
+    /* Контент панель */
+    .content-panel{padding:16px;}
+    .panel-title{font-size:9px;letter-spacing:2px;}
+  }
+  @media(max-width:480px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .shop-grid{grid-template-columns:1fr;}
+    .cmp-header{flex-direction:column;align-items:center;}
   }
 </style>
 </head>
