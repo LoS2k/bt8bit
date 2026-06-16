@@ -167,6 +167,12 @@ footer a{color:var(--gold);text-decoration:none;}
     </div>
 
     <div class="field">
+      <label class="field-label">Email для відповіді <span style="color:var(--dim);font-weight:normal">(необов'язково, але рекомендуємо)</span></label>
+      <input type="email" id="reporter-email" placeholder="your@email.com">
+      <div style="margin-top:6px;font-size:11px;color:var(--dim)">💡 Вкажи email якщо хочеш отримати відповідь — особливо для проблем з акаунтом або платежем</div>
+    </div>
+
+    <div class="field">
       <label class="field-label">Тема <span>*</span></label>
       <input type="text" id="ticket-subject" placeholder="Коротко опишіть проблему">
     </div>
@@ -352,6 +358,7 @@ dropZone.addEventListener('drop', e => {
 // ── SUBMIT ────────────────────────────────────────────────────
 window.submitTicket = async function() {
   const nick    = document.getElementById('reporter-nick').value.trim();
+  const email   = document.getElementById('reporter-email').value.trim();
   const subject = document.getElementById('ticket-subject').value.trim();
   const desc    = document.getElementById('ticket-desc').value.trim();
   const priority = document.getElementById('ticket-priority').value;
@@ -388,6 +395,7 @@ window.submitTicket = async function() {
       description: desc,
       priority,
       reporterNick: nick,
+      reporterEmail: email || null,
       reporterUid: currentUser?.uid || null,
       reportedNick: reportedNick || null,
       screenshotUrl,
@@ -454,6 +462,7 @@ ${TYPE_LABELS[ticket.type] || ticket.typeLabel}
 ${priorityEmoji[ticket.priority]} Пріоритет: <b>${PRIORITY_LABELS[ticket.priority]}</b>
 
 👤 Гравець: <b>${ticket.reporterNick}</b>
+${ticket.reporterEmail ? `📧 Email: <b>${ticket.reporterEmail}</b>\n` : ''}
 ${ticket.reportedNick ? `🚨 На кого: <b>${ticket.reportedNick}</b>\n` : ''}
 📌 Тема: <b>${ticket.subject}</b>
 
