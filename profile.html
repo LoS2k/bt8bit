@@ -747,7 +747,6 @@
 
       <div class="side-nav">
         <div class="side-nav-item active" onclick="showTab('stats')"><span class="side-nav-icon">📊</span> <span data-t="nav.stats">Статистика</span></div>
-        <div class="side-nav-item" onclick="showTab('cosmetics')"><span class="side-nav-icon">🎨</span> <span data-t="nav.cosmetics">Косметика</span></div>
         <div class="side-nav-item" onclick="showTab('inventory')"><span class="side-nav-icon">📦</span> <span data-t="nav.inventory">Інвентар</span></div>
         <div class="side-nav-item" onclick="showTab('legend')"><span class="side-nav-icon">⚡</span> <span data-t="nav.legend">Легенда</span></div>
         <div class="side-nav-item" onclick="showTab('promo')"><span class="side-nav-icon">🎁</span> <span data-t="nav.promo">Промокод</span></div>
@@ -1245,20 +1244,28 @@ window.buildCalendar=function(loginDates){
 // ── RATING GRAPH ───────────────────────────────────────────────
 let ratingChartInst=null;
 window.buildRatingGraph=function(history){
-  // Demo data якщо немає реальних
-  if(!history||history.length===0){
-    history=Array.from({length:20},(_,i)=>({
-      rating:800+Math.floor(Math.random()*400),
-      result:Math.random()>0.45?'win':'loss',
-      battle:i+1
-    }));
+  const hasReal = history && history.length > 0;
+
+  // Якщо немає реальних даних — показуємо повідомлення
+  if (!hasReal) {
+    const wrap = document.getElementById('rating-chart')?.parentElement;
+    if (wrap) wrap.innerHTML = `
+      <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--surface);border:1px dashed var(--border);">
+        <div style="font-size:28px">📈</div>
+        <div style="font-size:13px;color:var(--dim)">Зіграй перший бій щоб побачити графік рейтингу</div>
+      </div>`;
+    return;
   }
-  const labels=history.map((_,i)=>'Бій '+(i+1));
-  const ratings=history.map(h=>h.rating||0);
-  const pointColors=history.map(h=>h.result==='win'?'#4aaa5a':'#aa4a4a');
-  const ctx=document.getElementById('rating-chart').getContext('2d');
-  if(ratingChartInst) ratingChartInst.destroy();
-  ratingChartInst=new Chart(ctx,{
+
+  const labels = history.map((_,i) => 'Бій '+(i+1));
+  const ratings = history.map(h => h.rating || 0);
+  const pointColors = history.map(h => h.result==='win' ? '#4aaa5a' : '#aa4a4a');
+
+  const canvas = document.getElementById('rating-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (ratingChartInst) ratingChartInst.destroy();
+  ratingChartInst = new Chart(ctx, {
     type:'line',
     data:{
       labels,
@@ -1276,15 +1283,21 @@ window.buildRatingGraph=function(history){
       }]
     },
     options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{
-        backgroundColor:'#111e2e',borderColor:'#1a3050',borderWidth:1,
-        titleColor:'#e8bc38',bodyColor:'#d4cdb8',
-        callbacks:{afterLabel:(ctx)=>{const h=history[ctx.dataIndex];return h?.result==='win'?'✅ Перемога':'❌ Поразка';}}
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{
+        backgroundColor:'#111e2e', borderColor:'#1a3050', borderWidth:1,
+        titleColor:'#e8bc38', bodyColor:'#d4cdb8',
+        callbacks:{
+          title: ctx => `Бій ${ctx[0].dataIndex+1}`,
+          afterLabel: ctx => {
+            const h = history[ctx.dataIndex];
+            return h?.result==='win' ? '✅ Перемога' : '❌ Поразка';
+          }
+        }
       }},
       scales:{
-        x:{grid:{color:'rgba(26,48,80,0.4)'},ticks:{color:'#6a7a8a',font:{size:9},maxTicksLimit:10}},
-        y:{grid:{color:'rgba(26,48,80,0.4)'},ticks:{color:'#6a7a8a',font:{size:10}}}
+        x:{grid:{color:'rgba(26,48,80,0.4)'}, ticks:{color:'#6a7a8a',font:{size:9},maxTicksLimit:10}},
+        y:{grid:{color:'rgba(26,48,80,0.4)'}, ticks:{color:'#6a7a8a',font:{size:10}}}
       }
     }
   });
@@ -1293,36 +1306,54 @@ window.buildRatingGraph=function(history){
 // ── DNA RADAR ─────────────────────────────────────────────────
 let dnaChartInst=null;
 window.buildDNA=function(data){
-  const battles=data.battles||1;
-  const wins=data.wins||0;
-  const kills=data.kills||0;
-  const totalDmg=data.totalDamage||0;
-  const playtime=data.totalPlaytime||0;
-  const losses=data.losses||0;
+  const battles  = Math.max(data.battles||0, 1);
+  const wins     = data.wins||0;
+  const kills    = data.kills||0;
+  const totalDmg = data.totalDamage||0;
+  const losses   = data.losses||0;
+  const loginDays = data.loginDates?.length||0;
+  const hasData   = (data.battles||0) > 0;
 
-  // Нормалізовані значення 0-100
-  const attack=Math.min(100,Math.round((totalDmg/battles/500)*100)||0);
-  const defense=Math.min(100,Math.round((1-losses/(battles||1))*100)||0);
-  const survival=Math.min(100,Math.round((wins/battles)*120)||0);
-  const aggression=Math.min(100,Math.round((kills/battles/3)*100)||0);
-  const activity=Math.min(100,Math.round(((data.loginDates?.length||0)/365)*200)||0);
+  // Реальні формули з реальних даних
+  // Атака: середній урон за бій (макс ~3000 = 100%)
+  const attack = Math.min(100, Math.round((totalDmg / battles / 30)));
+  // Захист: виживаємість (% боїв де не програв = wins/battles)
+  const defense = Math.min(100, Math.round((wins / battles) * 100));
+  // Виживання: вінрейт * 1.2 (бонус за стабільність)
+  const survival = Math.min(100, Math.round((wins / battles) * 120));
+  // Агресія: середній kill за бій (макс ~5 = 100%)
+  const aggression = Math.min(100, Math.round((kills / battles / 5) * 100));
+  // Активність: дні входу за останній рік
+  const activity = Math.min(100, Math.round((loginDays / 365) * 200));
 
-  const dnaData=[
-    {label:'Атака',    val:attack,    icon:'⚔️', color:'#e8bc38'},
-    {label:'Захист',   val:defense,   icon:'🛡️', color:'#4aaa5a'},
-    {label:'Виживання',val:survival,  icon:'❤️', color:'#aa4a4a'},
-    {label:'Агресія',  val:aggression,icon:'💥', color:'#e88038'},
-    {label:'Активність',val:activity, icon:'📅', color:'#8eb0cc'},
+  const dnaData = [
+    {label:'Атака',     val:hasData?attack:0,      icon:'⚔️', color:'#e8bc38'},
+    {label:'Захист',    val:hasData?defense:0,     icon:'🛡️', color:'#4aaa5a'},
+    {label:'Виживання', val:hasData?survival:0,    icon:'❤️', color:'#aa4a4a'},
+    {label:'Агресія',   val:hasData?aggression:0,  icon:'💥', color:'#e88038'},
+    {label:'Активність',val:activity,              icon:'📅', color:'#8eb0cc'},
   ];
 
-  const ctx=document.getElementById('dna-chart').getContext('2d');
-  if(dnaChartInst) dnaChartInst.destroy();
-  dnaChartInst=new Chart(ctx,{
+  if (!hasData) {
+    // Показуємо підказку
+    document.getElementById('dna-stats-list').innerHTML = `
+      <div style="color:var(--dim);font-size:12px;line-height:1.8;padding:8px 0">
+        <div style="font-size:20px;margin-bottom:8px">🧬</div>
+        Зіграй хоча б один бій щоб ДНК гравця заповнилась реальними даними.<br><br>
+        <span style="color:var(--text)">Зараз показано лише активність</span> (${loginDays} днів входу).
+      </div>`;
+  }
+
+  const canvas = document.getElementById('dna-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (dnaChartInst) dnaChartInst.destroy();
+  dnaChartInst = new Chart(ctx, {
     type:'radar',
     data:{
-      labels:dnaData.map(d=>d.label),
+      labels: dnaData.map(d=>d.label),
       datasets:[{
-        data:dnaData.map(d=>d.val),
+        data: dnaData.map(d=>d.val),
         backgroundColor:'rgba(232,188,56,0.15)',
         borderColor:'#e8bc38',
         borderWidth:2,
@@ -1331,10 +1362,10 @@ window.buildDNA=function(data){
       }]
     },
     options:{
-      responsive:true,maintainAspectRatio:true,
+      responsive:true, maintainAspectRatio:true,
       plugins:{legend:{display:false}},
       scales:{r:{
-        min:0,max:100,
+        min:0, max:100,
         grid:{color:'rgba(26,48,80,0.6)'},
         angleLines:{color:'rgba(26,48,80,0.6)'},
         ticks:{display:false},
@@ -1343,51 +1374,73 @@ window.buildDNA=function(data){
     }
   });
 
-  document.getElementById('dna-stats-list').innerHTML=dnaData.map(d=>`
-    <div class="dna-stat-row">
-      <div class="dna-stat-icon">${d.icon}</div>
-      <div class="dna-stat-info">
-        <div class="dna-stat-label">${d.label}</div>
-        <div class="dna-stat-bar"><div class="dna-stat-fill" style="width:${d.val}%;background:${d.color}"></div></div>
-      </div>
-      <div class="dna-stat-val">${d.val}</div>
-    </div>`).join('');
+  if (hasData) {
+    document.getElementById('dna-stats-list').innerHTML = dnaData.map(d=>`
+      <div class="dna-stat-row">
+        <div class="dna-stat-icon">${d.icon}</div>
+        <div class="dna-stat-info">
+          <div class="dna-stat-label">${d.label}</div>
+          <div class="dna-stat-bar"><div class="dna-stat-fill" style="width:${d.val}%;background:${d.color}"></div></div>
+        </div>
+        <div class="dna-stat-val">${d.val}</div>
+      </div>`).join('');
+  }
 };
 
 // ── BATTLE LOG ─────────────────────────────────────────────────
 window.buildBattleLog=function(log){
-  const el=document.getElementById('battle-log-content');
-  if(!log||log.length===0){
-    // Demo бої
-    log=[
-      {result:'win', tank:'Tiger I',    map:'Полігон',   damage:2840,kills:3,time:'18:42'},
-      {result:'loss',tank:'T-34',       map:'Ліс',       damage:1200,kills:1,time:'14:20'},
-      {result:'win', tank:'M18 Hellcat',map:'Місто',     damage:3100,kills:4,time:'22:05'},
-      {result:'win', tank:'Panzer IV',  map:'Пустеля',   damage:1950,kills:2,time:'16:30'},
-      {result:'loss',tank:'AMX ELC',    map:'Полігон',   damage:800, kills:0,time:'11:15'},
-      {result:'win', tank:'Tiger I',    map:'Місто',     damage:3400,kills:5,time:'19:55'},
-      {result:'loss',tank:'T-34',       map:'Ліс',       damage:1600,kills:2,time:'13:40'},
-      {result:'win', tank:'Panzer IV',  map:'Пустеля',   damage:2200,kills:3,time:'20:10'},
-    ];
+  const el = document.getElementById('battle-log-content');
+  if (!el) return;
+
+  if (!log || log.length === 0) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--dim)">
+        <div style="font-size:32px;margin-bottom:12px">⚔️</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:6px">Журнал порожній</div>
+        <div style="font-size:11px">Бойовий журнал заповнюється автоматично після кожного бою в грі</div>
+      </div>`;
+    return;
   }
-  el.innerHTML='<div class="battle-log-list">'+log.slice(0,20).map(b=>`
-    <div class="battle-row ${b.result}">
-      <div class="battle-result ${b.result}">${b.result==='win'?'WIN':'LOSS'}</div>
-      <div class="battle-tank">${b.tank||'—'}</div>
-      <div class="battle-map">${b.map||'—'}</div>
-      <div class="battle-dmg">${(b.damage||0).toLocaleString()}</div>
-      <div class="battle-kills">💀 ${b.kills||0}</div>
-      <div class="battle-time">${b.time||'—'}</div>
-    </div>`).join('')+'</div>'+
-  '<div style="margin-top:12px;font-size:11px;color:var(--dim)">Бойовий журнал заповнюється автоматично з гри. Відображаються останні 20 боїв.</div>';
+
+  el.innerHTML = '<div class="battle-log-list">' +
+    log.slice(0,20).map(b => {
+      const dmg = (b.damage||0).toLocaleString();
+      // Час — може бути timestamp або рядок
+      let time = b.time || '—';
+      if (b.timestamp?.toDate) {
+        time = b.timestamp.toDate().toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+      } else if (b.date?.toDate) {
+        const d = b.date.toDate();
+        time = d.toLocaleDateString('uk-UA',{day:'numeric',month:'short'}) + ' ' +
+               d.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+      }
+      return `<div class="battle-row ${b.result}">
+        <div class="battle-result ${b.result}">${b.result==='win'?'WIN':'LOSS'}</div>
+        <div class="battle-tank">${b.tank||b.tankName||'—'}</div>
+        <div class="battle-map">${b.map||b.mapName||'—'}</div>
+        <div class="battle-dmg">${dmg}</div>
+        <div class="battle-kills">💀 ${b.kills||0}</div>
+        <div class="battle-time">${time}</div>
+      </div>`;
+    }).join('') + '</div>' +
+    `<div style="margin-top:12px;font-size:11px;color:var(--dim)">
+      Показано останні ${Math.min(log.length,20)} з ${log.length} боїв · Дані синхронізуються з гри
+    </div>`;
 };
 
 // ── SEASON RECORDS ─────────────────────────────────────────────
 window.buildSeasonRecord=function(best){
   const el=document.getElementById('season-content');
+  if (!el) return;
   const month=best.month||'Поточний місяць';
+  const hasData = best.damage > 0 || best.wr > 0;
+
   el.innerHTML=`
     <div style="font-size:12px;color:var(--dim);margin-bottom:16px">Щомісяця результати зберігаються в архів. Змагайся з собою.</div>
+    ${!hasData ? `<div style="text-align:center;padding:20px;color:var(--dim);font-size:12px">
+      <div style="font-size:24px;margin-bottom:8px">🏆</div>
+      Грай щоб заповнити сезонні рекорди
+    </div>` : `
     <div class="season-grid">
       <div class="season-card best">
         <span class="season-val">${(best.damage||0).toLocaleString()}</span>
@@ -1409,7 +1462,7 @@ window.buildSeasonRecord=function(best){
         <span class="season-lbl">Найбільше знищень за бій</span>
         <span class="season-month">${month}</span>
       </div>
-    </div>
+    </div>`}
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
       <div style="font-family:var(--font-d);font-size:10px;color:var(--gold);margin-bottom:12px">Архів сезонів</div>
       <div style="color:var(--dim);font-size:12px">Архів буде заповнюватися кожного місяця. Результати зберігаються назавжди.</div>
