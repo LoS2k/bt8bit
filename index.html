@@ -325,12 +325,11 @@
 
   trackAndShow();
 
-  // ── ВЕРСІЯ ГРИ З FIREBASE ─────────────────────────────────
   const APK_URL_DEFAULT = 'https://github.com/LoS2k/bt8bit/releases/download/v0.2.1/TanksBattles3D_Online_v021.1.apk';
 
   async function loadAppVersion() {
     try {
-      const snap = await getDoc(doc(db,'config','app_version'));
+      const snap = await getDoc(doc(db,'config','version'));
 
       let version = '0.2.1';
       let apkUrl  = APK_URL_DEFAULT;
@@ -339,7 +338,7 @@
 
       if (snap.exists()) {
         const d = snap.data();
-        version   = d.version   || version;
+        version   = d.latest    || d.version || version;
         apkUrl    = d.apkUrl    || apkUrl;
         changelog = d.changelog || '';
         downloads = d.downloads || 0;
@@ -364,41 +363,33 @@
 
       // Changelog
       const changeEl = document.getElementById('version-changelog');
-      if (changeEl && changelog) {
-        changeEl.innerHTML = '📋 ' + changelog;
-      }
+      if (changeEl && changelog) changeEl.innerHTML = '📋 ' + changelog;
+
     } catch(e) {
-      // Fallback — показуємо кнопку навіть без Firebase
       const apkBtn = document.getElementById('btn-apk');
-      if (apkBtn) {
-        apkBtn.href = APK_URL_DEFAULT;
-        apkBtn.onclick = () => trackDownload();
-      }
+      if (apkBtn) { apkBtn.href = APK_URL_DEFAULT; apkBtn.onclick = () => trackDownload(); }
       const verEl = document.getElementById('app-version');
       if (verEl) verEl.textContent = 'v0.2.1';
     }
   }
 
-  // ── ЛІЧИЛЬНИК ЗАВАНТАЖЕНЬ ─────────────────────────────────
   async function trackDownload() {
     try {
-      const ref = doc(db,'config','app_version');
+      const ref = doc(db,'config','version');
       const snap = await getDoc(ref);
       if (snap.exists()) {
         await updateDoc(ref, { downloads: increment(1) });
       } else {
         await setDoc(ref, {
-          version: '0.2.1',
+          latest: '0.2.1', minimum: '0.1.0',
           apkUrl: APK_URL_DEFAULT,
           changelog: 'Перший публічний реліз',
-          downloads: 1,
-          forceUpdate: false
+          downloads: 1
         });
       }
-      // Оновити лічильник на сторінці
       const dlCount = document.getElementById('dl-count');
       if (dlCount) {
-        const cur = parseInt(dlCount.textContent.replace(/\s/g,''))||0;
+        const cur = parseInt(dlCount.textContent.replace(/\D/g,''))||0;
         dlCount.textContent = (cur+1).toLocaleString('uk-UA');
       }
     } catch(e) { console.warn('Download track error:', e); }
