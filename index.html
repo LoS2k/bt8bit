@@ -148,6 +148,9 @@
   .dl-btns{display:flex;gap:16px;flex-wrap:wrap;}
   .btn-dl{display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:all .2s;min-width:190px;}
   .btn-dl:hover{border-color:var(--gold);background:rgba(232,188,56,.06);}
+  .btn-dl-apk{border-color:rgba(74,170,90,0.4)!important;}
+  .btn-dl-apk:hover{border-color:#4aaa5a!important;background:rgba(74,170,90,0.06)!important;}
+  #version-info{border-radius:2px;}
   .btn-dl-icon{font-size:28px;}
   .btn-dl-sub{font-family:var(--px);font-size:7px;color:var(--dim);display:block;margin-bottom:4px;}
   .btn-dl-label{font-family:var(--px);font-size:11px;color:#fff;}
@@ -321,6 +324,87 @@
   }
 
   trackAndShow();
+
+  // ── ВЕРСІЯ ГРИ З FIREBASE ─────────────────────────────────
+  const APK_URL_DEFAULT = 'https://github.com/LoS2k/bt8bit/releases/download/v0.2.1/TanksBattles3D_Online_v021.1.apk';
+
+  async function loadAppVersion() {
+    try {
+      const snap = await getDoc(doc(db,'config','app_version'));
+
+      let version = '0.2.1';
+      let apkUrl  = APK_URL_DEFAULT;
+      let changelog = '';
+      let downloads = 0;
+
+      if (snap.exists()) {
+        const d = snap.data();
+        version   = d.version   || version;
+        apkUrl    = d.apkUrl    || apkUrl;
+        changelog = d.changelog || '';
+        downloads = d.downloads || 0;
+      }
+
+      // Версія
+      const verEl = document.getElementById('app-version');
+      if (verEl) verEl.textContent = 'v' + version;
+
+      // APK кнопка
+      const apkBtn = document.getElementById('btn-apk');
+      if (apkBtn) {
+        apkBtn.href = apkUrl;
+        apkBtn.onclick = () => trackDownload();
+      }
+      const apkVer = document.getElementById('btn-apk-ver');
+      if (apkVer) apkVer.textContent = 'v' + version;
+
+      // Лічильник завантажень
+      const dlCount = document.getElementById('dl-count');
+      if (dlCount) dlCount.textContent = downloads.toLocaleString('uk-UA');
+
+      // Changelog
+      const changeEl = document.getElementById('version-changelog');
+      if (changeEl && changelog) {
+        changeEl.innerHTML = '📋 ' + changelog;
+      }
+    } catch(e) {
+      // Fallback — показуємо кнопку навіть без Firebase
+      const apkBtn = document.getElementById('btn-apk');
+      if (apkBtn) {
+        apkBtn.href = APK_URL_DEFAULT;
+        apkBtn.onclick = () => trackDownload();
+      }
+      const verEl = document.getElementById('app-version');
+      if (verEl) verEl.textContent = 'v0.2.1';
+    }
+  }
+
+  // ── ЛІЧИЛЬНИК ЗАВАНТАЖЕНЬ ─────────────────────────────────
+  async function trackDownload() {
+    try {
+      const ref = doc(db,'config','app_version');
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        await updateDoc(ref, { downloads: increment(1) });
+      } else {
+        await setDoc(ref, {
+          version: '0.2.1',
+          apkUrl: APK_URL_DEFAULT,
+          changelog: 'Перший публічний реліз',
+          downloads: 1,
+          forceUpdate: false
+        });
+      }
+      // Оновити лічильник на сторінці
+      const dlCount = document.getElementById('dl-count');
+      if (dlCount) {
+        const cur = parseInt(dlCount.textContent.replace(/\s/g,''))||0;
+        dlCount.textContent = (cur+1).toLocaleString('uk-UA');
+      }
+    } catch(e) { console.warn('Download track error:', e); }
+  }
+
+  loadAppVersion();
 </script>
 
 <nav>
@@ -662,10 +746,37 @@
       <span class="s-eye" data-t="dl.eye">Завантажити</span>
       <h2 data-t="dl.title">Готовий до бою?</h2>
       <p class="s-desc" data-t="dl.desc">Доступно безкоштовно на Android.</p>
+      <!-- Версія — підвантажується з Firebase -->
+      <div id="version-info" style="margin-top:16px;display:inline-flex;align-items:center;gap:10px;background:rgba(74,170,90,0.1);border:1px solid rgba(74,170,90,0.3);padding:8px 16px;">
+        <span style="font-size:11px;color:var(--dim)" data-t="dl.version">Остання версія:</span>
+        <span style="font-family:var(--px);font-size:11px;color:#4aaa5a" id="app-version">...</span>
+      </div>
+      <div id="version-changelog" style="margin-top:10px;font-size:12px;color:var(--dim);line-height:1.6;max-width:400px"></div>
     </div>
     <div class="dl-btns">
-      <a class="btn-dl" href="#"><span class="btn-dl-icon">📱</span><span><span class="btn-dl-sub" data-t="dl.gp.sub">Завантажити в</span><span class="btn-dl-label">Google Play</span></span></a>
-      <a class="btn-dl" href="#"><span class="btn-dl-icon">📦</span><span><span class="btn-dl-sub" data-t="dl.apk.sub">Прямий APK</span><span class="btn-dl-label">Android</span></span></a>
+      <!-- Google Play -->
+      <a class="btn-dl" id="btn-play" href="https://play.google.com/store/apps/details?id=com.bt8bit.tanksbattles3d" target="_blank">
+        <span class="btn-dl-icon">📱</span>
+        <span>
+          <span class="btn-dl-sub" data-t="dl.gp.sub">Завантажити в</span>
+          <span class="btn-dl-label">Google Play</span>
+        </span>
+      </a>
+      <!-- Прямий APK -->
+      <a class="btn-dl btn-dl-apk" id="btn-apk" href="https://github.com/LoS2k/bt8bit/releases/download/v0.2.1/TanksBattles3D_Online_v021.1.apk" target="_blank">
+        <span class="btn-dl-icon">📦</span>
+        <span>
+          <span class="btn-dl-sub" data-t="dl.apk.sub">Прямий APK</span>
+          <span class="btn-dl-label" id="btn-apk-ver">v0.2.1</span>
+        </span>
+      </a>
+    </div>
+    <!-- Лічильник завантажень -->
+    <div style="margin-top:16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)">
+      <span style="font-size:16px">📥</span>
+      <span data-t="dl.downloads">Завантажено:</span>
+      <span style="font-family:var(--px);font-size:11px;color:#4aaa5a" id="dl-count">0</span>
+      <span data-t="dl.times">разів</span>
     </div>
   </div>
 </div>
@@ -754,6 +865,7 @@ const T = {
     'dl.eye':'Завантажити','dl.title':'Готовий до бою?',
     'dl.desc':'Доступно безкоштовно на Android.',
     'dl.gp.sub':'Завантажити в','dl.apk.sub':'Прямий APK',
+    'dl.downloads':'Завантажено:','dl.times':'разів','dl.version':'Остання версія:',
     'footer.desc':'Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.',
     'footer.game':'Гра','footer.support':'Підтримка','footer.legal':'Правове',
     'footer.terms':'Угода користувача','footer.privacy':'Конфіденційність',
@@ -796,6 +908,7 @@ const T = {
     'dl.eye':'Download','dl.title':'Ready for Battle?',
     'dl.desc':'Free on Android.',
     'dl.gp.sub':'Get it on','dl.apk.sub':'Direct APK',
+    'dl.downloads':'Downloaded:','dl.times':'times','dl.version':'Latest version:',
     'footer.desc':'Mobile tank game with realistic armor mechanics and clan system. Made in Ukraine.',
     'footer.game':'Game','footer.support':'Support','footer.legal':'Legal',
     'footer.terms':'Terms of Service','footer.privacy':'Privacy Policy',
