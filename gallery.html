@@ -589,9 +589,35 @@ window.setGalleryLang = function(l) {
   renderGallery();
 };
 
-// Apply on load
-setGalleryLang(galleryLang);
+// Apply lang on load - без renderGallery (дані ще не завантажені)
+const _savedLang = localStorage.getItem('bt8bit_lang') || 'uk';
+galleryLang = _savedLang;
+// Тільки текстові елементи — без renderGallery
+document.querySelectorAll('[data-t]').forEach(el => {
+  const k = el.getAttribute('data-t');
+  if (GT[_savedLang]?.[k]) el.textContent = GT[_savedLang][k];
+});
+document.querySelectorAll('option[data-t]').forEach(opt => {
+  const k = opt.getAttribute('data-t');
+  if (GT[_savedLang]?.[k]) opt.textContent = GT[_savedLang][k];
+});
+// Lang buttons
+const glUk = document.getElementById('gl-uk');
+const glEn = document.getElementById('gl-en');
+if (glUk) glUk.style.borderColor = _savedLang==='uk' ? 'var(--gold)' : 'var(--border)';
+if (glUk) glUk.style.color = _savedLang==='uk' ? 'var(--gold)' : 'var(--dim)';
+if (glEn) glEn.style.borderColor = _savedLang==='en' ? 'var(--gold)' : 'var(--border)';
+if (glEn) glEn.style.color = _savedLang==='en' ? 'var(--gold)' : 'var(--dim)';
+// Update TAG_LABELS
+if (GT[_savedLang]) {
+  TAG_LABELS.battle = GT[_savedLang]['tag.battle'];
+  TAG_LABELS.win    = GT[_savedLang]['tag.win'];
+  TAG_LABELS.clan   = GT[_savedLang]['tag.clan'];
+  TAG_LABELS.funny  = GT[_savedLang]['tag.funny'];
+  TAG_LABELS.tank   = GT[_savedLang]['tag.tank'];
+}
 
+// Завантажуємо галерею один раз
 loadGallery();
 </script>
 </body>
