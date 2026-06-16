@@ -38,78 +38,179 @@ onAuthStateChanged(auth, u => {
   if (btn) btn.href = u ? 'profile.html' : 'profile.html';
 });
 
-// ── DEMO LISTINGS (поки Firebase порожній) ─────────────────────
-const DEMO = [
-  { id:'d1', type:'tank',  name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',     price:2400,  currency:'gold',  seller:'TankMaster',  views:142, image:'tiger' },
-  { id:'d2', type:'tank',  name:'T-34-85',    nation:'🛡',  tier:4, rarity:'common',   price:850,   currency:'coins', seller:'SovietAce',   views:87,  image:'t34' },
-  { id:'d3', type:'camo',  name:'Пустеля Pro',nation:'',    tier:0, rarity:'rare',     price:320,   currency:'oil',   seller:'CamoKing',    views:203, image:'camo_desert' },
-  { id:'d4', type:'tank',  name:'M18 Hellcat',nation:'🇺🇸', tier:5, rarity:'epic',     price:5800,  currency:'gold',  currency2:'oil', price2:290, seller:'SpeedDemon',  views:318, image:'hellcat' },
-  { id:'d5', type:'camo',  name:'Арктичний',  nation:'',    tier:0, rarity:'epic',     price:680,   currency:'oil',   seller:'IceHunter',   views:95,  image:'camo_arctic' },
-  { id:'d6', type:'tank',  name:'Panzer IV',  nation:'🇩🇪', tier:3, rarity:'common',   price:400,   currency:'coins', seller:'PanzerKlaus', views:54,  image:'panzer4' },
-  { id:'d7', type:'rent',  name:'KV-2',       nation:'🛡',  tier:6, rarity:'legendary',price:180,   currency:'oil',   seller:'BigGunner',   views:421, rentDays:3, image:'kv2' },
-  { id:'d8', type:'camo',  name:'Лісовий',    nation:'',    tier:0, rarity:'common',   price:120,   currency:'coins', seller:'ForestRun',   views:33,  image:'camo_forest' },
-  { id:'d9', type:'tank',  name:'AMX ELC',    nation:'🇫🇷', tier:5, rarity:'rare',     price:3100,  currency:'gold',  seller:'FrenchSpeed', views:177, image:'amx' },
-  { id:'d10',type:'rent',  name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',     price:90,    currency:'gold',  seller:'TigerRent',   views:88,  rentDays:7, image:'tiger' },
-  { id:'d11',type:'camo',  name:'Нічний',     nation:'',    tier:0, rarity:'epic',     price:500,   currency:'oil',   seller:'NightOps',    views:267, image:'camo_night' },
-  { id:'d12',type:'tank',  name:'M4 Sherman', nation:'🇺🇸', tier:4, rarity:'common',   price:600,   currency:'coins', seller:'AllyForce',   views:41,  image:'sherman' },
-];
-
+// ── КОНСТАНТИ ─────────────────────────────────────────────────
 const RARITY_COLOR = { common:'#8eb0cc', rare:'#4a90d9', epic:'#a070cc', legendary:'#e88038' };
 const RARITY_LABEL = { common:'Звичайний', rare:'Рідкісний', epic:'Епічний', legendary:'Легендарний' };
 const CURRENCY_ICON = { gold:'⭐', coins:'🪙', oil:'🛢️' };
 const CURRENCY_LABEL = { gold:'Золото', coins:'Монети', oil:'Нафта' };
 const TYPE_LABEL = { tank:'Танк', camo:'Камуфляж', rent:'Оренда' };
 
-// SVG tank silhouettes as colored shapes
 const TANK_SVG = {
-  tiger:       `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><rect x="8" y="32" width="12" height="16" rx="2" fill="#2a3a1a"/><rect x="100" y="32" width="12" height="16" rx="2" fill="#2a3a1a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
-  t34:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
-  hellcat:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="42" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="86" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
-  panzer4:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
-  kv2:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="28" width="104" height="24" rx="4" fill="#2a3a2a"/><rect x="18" y="14" width="64" height="20" rx="3" fill="#1a2a1a"/><rect x="42" y="4" width="36" height="13" rx="2" fill="#3a4a3a"/><circle cx="20" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="42" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="64" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="86" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="105" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/></svg>`,
-  amx:         `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="33" width="96" height="19" rx="3" fill="#3a4a5a"/><rect x="24" y="23" width="58" height="15" rx="3" fill="#2a3a4a"/><rect x="58" y="15" width="46" height="9" rx="2" fill="#4a5a6a"/><circle cx="22" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="42" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="62" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="82" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
-  sherman:     `<svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a4a"/><rect x="20" y="19" width="64" height="17" rx="3" fill="#3a4a3a"/><rect x="52" y="11" width="44" height="10" rx="2" fill="#5a6a5a"/><circle cx="20" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
+  tiger:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  t34:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
+  hellcat:`<svg viewBox="0 0 120 60" fill="none"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="42" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="86" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  panzer4:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
+  kv2:`<svg viewBox="0 0 120 60" fill="none"><rect x="8" y="28" width="104" height="24" rx="4" fill="#2a3a2a"/><rect x="18" y="14" width="64" height="20" rx="3" fill="#1a2a1a"/><rect x="42" y="4" width="36" height="13" rx="2" fill="#3a4a3a"/><circle cx="20" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="42" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="64" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="86" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/><circle cx="105" cy="50" r="8" fill="#0a0a0a" stroke="#4aaa5a" stroke-width="2"/></svg>`,
+  amx:`<svg viewBox="0 0 120 60" fill="none"><rect x="12" y="33" width="96" height="19" rx="3" fill="#3a4a5a"/><rect x="24" y="23" width="58" height="15" rx="3" fill="#2a3a4a"/><rect x="58" y="15" width="46" height="9" rx="2" fill="#4a5a6a"/><circle cx="22" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="42" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="62" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="82" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="6" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
+  sherman:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a4a"/><rect x="20" y="19" width="64" height="17" rx="3" fill="#3a4a3a"/><rect x="52" y="11" width="44" height="10" rx="2" fill="#5a6a5a"/><circle cx="20" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a2a1a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
+  default:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a3a4a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#1a2a3a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#3a4a5a"/><circle cx="20" cy="48" r="7" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a2a" stroke="#8eb0cc" stroke-width="1.5"/></svg>`,
 };
 const CAMO_SVG = {
-  camo_desert: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#8a6020" opacity=".8"/><ellipse cx="45" cy="65" rx="16" ry="10" fill="#a07a30" opacity=".5"/><ellipse cx="90" cy="70" rx="12" ry="8" fill="#c8a55a" opacity=".9"/></svg>`,
-  camo_arctic: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#e8f0f8" opacity=".9"/><ellipse cx="15" cy="65" rx="12" ry="8" fill="#b8ccdc" opacity=".5"/></svg>`,
-  camo_night:  `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#1a1a2a"/><ellipse cx="25" cy="25" rx="20" ry="13" fill="#2a2a3a" opacity=".8"/><ellipse cx="75" cy="55" rx="24" ry="15" fill="#141420" opacity=".9"/><ellipse cx="105" cy="25" rx="14" ry="9" fill="#222232" opacity=".7"/><ellipse cx="50" cy="68" rx="18" ry="11" fill="#0a0a18" opacity=".8"/></svg>`,
-  camo_forest: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="80" fill="#2d4a1e"/><ellipse cx="20" cy="20" rx="18" ry="12" fill="#1a3010" opacity=".8"/><ellipse cx="65" cy="50" rx="22" ry="14" fill="#3a5a2a" opacity=".7"/><ellipse cx="100" cy="25" rx="16" ry="10" fill="#4a6a3a" opacity=".6"/><ellipse cx="40" cy="68" rx="14" ry="9" fill="#1a3010" opacity=".9"/></svg>`,
+  camo_desert:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#8a6020" opacity=".8"/></svg>`,
+  camo_arctic:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/></svg>`,
+  camo_night:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#1a1a2a"/><ellipse cx="25" cy="25" rx="20" ry="13" fill="#2a2a3a" opacity=".8"/><ellipse cx="75" cy="55" rx="24" ry="15" fill="#141420" opacity=".9"/></svg>`,
+  camo_forest:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#2d4a1e"/><ellipse cx="20" cy="20" rx="18" ry="12" fill="#1a3010" opacity=".8"/><ellipse cx="65" cy="50" rx="22" ry="14" fill="#3a5a2a" opacity=".7"/></svg>`,
+  default:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#1a2a3a"/><ellipse cx="40" cy="30" rx="30" ry="18" fill="#2a3a4a" opacity=".8"/><ellipse cx="80" cy="55" rx="25" ry="16" fill="#0a1a2a" opacity=".7"/></svg>`,
 };
 
 function getTankSVG(item) {
-  if (item.type === 'camo') return CAMO_SVG[item.image] || CAMO_SVG.camo_forest;
-  return TANK_SVG[item.image] || TANK_SVG.tiger;
+  if (item.itemType === 'camo' || item.type === 'camo')
+    return CAMO_SVG[item.itemImage||item.image] || CAMO_SVG.default;
+  return TANK_SVG[item.itemImage||item.image] || TANK_SVG.default;
+}
+
+// ── FIREBASE MARKETPLACE ──────────────────────────────────────
+let allListings = [];
+let activeFilters = { type:'all', currency:'all', rarity:'all', sort:'newest', search:'' };
+let isLoading = false;
+
+async function loadMarketplace() {
+  if (isLoading) return;
+  isLoading = true;
+  const grid = document.getElementById('market-grid');
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div style="font-size:24px;margin-bottom:12px">⏳</div>Завантаження лотів...</div>';
+
+  try {
+    // Базовий запит — тільки активні лоти
+    const q = query(
+      collection(db, 'marketplace'),
+      where('status', '==', 'active'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      // Показуємо заглушку якщо Firebase порожній
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <div style="font-size:36px;margin-bottom:16px">🏪</div>
+        <div style="font-size:14px;color:var(--text);margin-bottom:8px">Ринок поки порожній</div>
+        <div style="font-size:12px;color:var(--dim)">Будь першим хто виставить товар!</div>
+        <a href="profile.html" style="display:inline-block;margin-top:16px;padding:10px 20px;background:var(--gold);color:var(--bg);text-decoration:none;font-family:var(--px);font-size:9px">Відкрити інвентар →</a>
+      </div>`;
+      document.getElementById('result-count').textContent = '0 лотів';
+
+      // Оновити статистику шапки
+      setText('ms-listings', '0');
+      setText('ms-today', '0');
+      setText('ms-sellers', '0');
+      return;
+    }
+
+    allListings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Оновити статистику шапки
+    const today = new Date().toISOString().slice(0,10);
+    const todayCount = allListings.filter(l => {
+      const d = l.createdAt?.toDate ? l.createdAt.toDate().toISOString().slice(0,10) : '';
+      return d === today;
+    }).length;
+    const sellers = new Set(allListings.map(l => l.sellerId)).size;
+
+    setText('ms-listings', allListings.length.toLocaleString());
+    setText('ms-today', todayCount.toLocaleString());
+    setText('ms-sellers', sellers.toLocaleString());
+
+    renderGrid();
+  } catch(e) {
+    console.error('Market load error:', e);
+    // Якщо індекс ще будується — спрощений запит
+    if (e.code === 'failed-precondition' || e.message.includes('index')) {
+      try {
+        const q2 = query(collection(db,'marketplace'), where('status','==','active'), limit(50));
+        const snap2 = await getDocs(q2);
+        allListings = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderGrid();
+      } catch(e2) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">⚠️ Індекси будуються. Зачекай кілька хвилин і оновни сторінку.</div>`;
+      }
+    } else {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">⚠️ Помилка завантаження: ${e.message}</div>`;
+    }
+  } finally {
+    isLoading = false;
+  }
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function getFiltered() {
+  return allListings.filter(item => {
+    const type = item.itemType || item.type || '';
+    const curr = item.currency || '';
+    const rar  = item.itemRarity || item.rarity || '';
+    const name = (item.itemName || item.name || '').toLowerCase();
+    const seller = (item.sellerNick || item.seller || '').toLowerCase();
+
+    if (activeFilters.type !== 'all' && type !== activeFilters.type) return false;
+    if (activeFilters.currency !== 'all' && curr !== activeFilters.currency) return false;
+    if (activeFilters.rarity !== 'all' && rar !== activeFilters.rarity) return false;
+    if (activeFilters.search) {
+      const s = activeFilters.search.toLowerCase();
+      if (!name.includes(s) && !seller.includes(s)) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    if (activeFilters.sort === 'price_asc')  return (a.price||0) - (b.price||0);
+    if (activeFilters.sort === 'price_desc') return (b.price||0) - (a.price||0);
+    if (activeFilters.sort === 'popular')    return (b.views||0) - (a.views||0);
+    // newest — по createdAt
+    const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+    const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+    return tb - ta;
+  });
 }
 
 function renderCard(item) {
-  const rc = RARITY_COLOR[item.rarity] || '#888';
-  const rl = RARITY_LABEL[item.rarity] || item.rarity;
+  const type   = item.itemType || item.type || 'tank';
+  const name   = item.itemName || item.name || '—';
+  const nation = item.itemNation || item.nation || '';
+  const tier   = item.itemTier || item.tier || 0;
+  const rarity = item.itemRarity || item.rarity || 'common';
+  const seller = item.sellerNick || item.seller || '—';
+  const isRent = item.isRent || type === 'rent';
+  const rentDays = item.rentDays || 0;
+
+  const rc = RARITY_COLOR[rarity] || '#888';
+  const rl = RARITY_LABEL[rarity] || rarity;
   const ci = CURRENCY_ICON[item.currency] || '💰';
-  const isRent = item.type === 'rent';
+  const views = item.views || 0;
+
   const typeTag = isRent
-    ? `<span class="tag-rent">ОРЕНДА · ${item.rentDays}д</span>`
-    : item.type === 'camo'
+    ? `<span class="tag-rent">ОРЕНДА · ${rentDays}д</span>`
+    : type === 'camo'
     ? `<span class="tag-camo">КАМУФЛЯЖ</span>`
     : `<span class="tag-tank">ТАНК</span>`;
 
   const altPrice = (item.currency2 && item.price2)
-    ? `<div class="card-alt-price">${CURRENCY_ICON[item.currency2]} ${item.price2.toLocaleString()} ${CURRENCY_LABEL[item.currency2]}</div>`
-    : '';
+    ? `<div class="card-alt-price">${CURRENCY_ICON[item.currency2]||'💰'} ${Number(item.price2).toLocaleString()} ${CURRENCY_LABEL[item.currency2]||''}</div>` : '';
 
   return `<div class="market-card" onclick="openItem('${item.id}')">
     <div class="card-img" style="border-color:${rc}20">
       ${getTankSVG(item)}
       <div class="card-rarity" style="color:${rc}">${rl}</div>
       ${typeTag}
-      ${isRent ? '' : `<div class="card-views">👁 ${item.views}</div>`}
+      ${!isRent ? `<div class="card-views">👁 ${views}</div>` : ''}
     </div>
     <div class="card-body">
-      <div class="card-name">${item.nation ? item.nation+' ' : ''}${item.name}</div>
-      ${item.tier ? `<div class="card-tier">Рівень ${item.tier}</div>` : ''}
-      <div class="card-seller">Продавець: <span>${item.seller}</span></div>
+      <div class="card-name">${nation ? nation+' ' : ''}${name}</div>
+      ${tier ? `<div class="card-tier">Рівень ${tier}</div>` : ''}
+      <div class="card-seller">Продавець: <span>${seller}</span></div>
       <div class="card-price-row">
-        <div class="card-price">${ci} ${item.price.toLocaleString()} <span>${CURRENCY_LABEL[item.currency]}</span></div>
+        <div class="card-price">${ci} ${Number(item.price||0).toLocaleString()} <span>${CURRENCY_LABEL[item.currency]||''}</span></div>
         ${altPrice}
       </div>
       <button class="card-buy-btn" onclick="event.stopPropagation();buyItem('${item.id}')">
@@ -119,28 +220,13 @@ function renderCard(item) {
   </div>`;
 }
 
-function getFiltered() {
-  return DEMO.filter(item => {
-    if (activeFilters.type !== 'all' && item.type !== activeFilters.type) return false;
-    if (activeFilters.currency !== 'all' && item.currency !== activeFilters.currency) return false;
-    if (activeFilters.search && !item.name.toLowerCase().includes(activeFilters.search.toLowerCase())
-        && !item.seller.toLowerCase().includes(activeFilters.search.toLowerCase())) return false;
-    return true;
-  }).sort((a,b) => {
-    if (activeFilters.sort === 'price_asc')  return a.price - b.price;
-    if (activeFilters.sort === 'price_desc') return b.price - a.price;
-    if (activeFilters.sort === 'popular')    return b.views - a.views;
-    return b.id.localeCompare(a.id); // newest
-  });
-}
-
 function renderGrid() {
   const items = getFiltered();
-  const grid = document.getElementById('market-grid');
+  const grid  = document.getElementById('market-grid');
   const count = document.getElementById('result-count');
   if (count) count.textContent = items.length + ' лотів';
   if (!items.length) {
-    grid.innerHTML = '<div class="empty-state">😔 Нічого не знайдено за вашими фільтрами</div>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">😔 Нічого не знайдено за вашими фільтрами</div>';
     return;
   }
   grid.innerHTML = items.map(renderCard).join('');
@@ -148,25 +234,39 @@ function renderGrid() {
 
 window.applyFilter = function(key, val) {
   activeFilters[key] = val;
-  // update active button states
   document.querySelectorAll(`.filter-btn[data-key="${key}"]`).forEach(b => {
     b.classList.toggle('active', b.dataset.val === val);
   });
+  // Для сортування — змінюємо select
+  if (key === 'sort') {
+    const sel = document.querySelector('.sort-select');
+    if (sel) sel.value = val;
+  }
   renderGrid();
 };
 
 window.applySearch = function() {
-  activeFilters.search = document.getElementById('search-box').value;
+  activeFilters.search = document.getElementById('search-box').value.trim();
   renderGrid();
 };
 
 window.openItem = function(id) {
-  const item = DEMO.find(d => d.id === id);
+  const item = allListings.find(d => d.id === id);
   if (!item) return;
-  const rc = RARITY_COLOR[item.rarity];
-  const rl = RARITY_LABEL[item.rarity];
-  const ci = CURRENCY_ICON[item.currency];
-  const isRent = item.type === 'rent';
+
+  const type   = item.itemType || item.type || 'tank';
+  const name   = item.itemName || item.name || '—';
+  const nation = item.itemNation || item.nation || '';
+  const tier   = item.itemTier || item.tier || 0;
+  const rarity = item.itemRarity || item.rarity || 'common';
+  const seller = item.sellerNick || item.seller || '—';
+  const isRent = item.isRent || type === 'rent';
+  const rc = RARITY_COLOR[rarity] || '#888';
+  const rl = RARITY_LABEL[rarity] || rarity;
+  const ci = CURRENCY_ICON[item.currency] || '💰';
+  const views = item.views || 0;
+  const created = item.createdAt?.toDate
+    ? item.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
 
   document.getElementById('modal-item-content').innerHTML = `
     <div class="item-modal-grid">
@@ -175,19 +275,20 @@ window.openItem = function(id) {
         <div style="text-align:center;margin-top:8px;font-size:11px;color:${rc}">${rl}</div>
       </div>
       <div class="item-modal-info">
-        <div class="item-modal-name">${item.nation?item.nation+' ':''} ${item.name}</div>
-        ${item.tier ? `<div class="item-modal-meta">Рівень ${item.tier} · ${item.nation||'—'}</div>` : ''}
-        <div class="item-modal-seller">Продавець: <a href="profile.html" style="color:var(--gold)">${item.seller}</a></div>
+        <div class="item-modal-name">${nation ? nation+' ' : ''}${name}</div>
+        ${tier ? `<div class="item-modal-meta">Рівень ${tier}</div>` : ''}
+        <div class="item-modal-seller">Продавець: <span style="color:var(--gold)">${seller}</span></div>
         <div class="item-modal-stats">
-          <div class="modal-stat"><span>Тип</span><b>${TYPE_LABEL[item.type]||item.type}</b></div>
-          <div class="modal-stat"><span>Переглядів</span><b>${item.views}</b></div>
-          ${isRent ? `<div class="modal-stat"><span>Термін</span><b>${item.rentDays} днів</b></div>` : ''}
+          <div class="modal-stat"><span>Тип</span><b>${TYPE_LABEL[type]||type}</b></div>
+          <div class="modal-stat"><span>Переглядів</span><b>${views}</b></div>
+          ${isRent ? `<div class="modal-stat"><span>Термін</span><b>${item.rentDays||0} днів</b></div>` : ''}
           <div class="modal-stat"><span>Рідкість</span><b style="color:${rc}">${rl}</b></div>
+          <div class="modal-stat"><span>Додано</span><b>${created}</b></div>
         </div>
-        <div class="item-modal-price">${ci} ${item.price.toLocaleString()} ${CURRENCY_LABEL[item.currency]}</div>
-        ${item.currency2 ? `<div style="font-size:12px;color:var(--dim);margin-bottom:12px">або ${CURRENCY_ICON[item.currency2]} ${item.price2?.toLocaleString()} ${CURRENCY_LABEL[item.currency2]}</div>` : ''}
+        <div class="item-modal-price">${ci} ${Number(item.price||0).toLocaleString()} ${CURRENCY_LABEL[item.currency]||''}</div>
+        ${item.currency2 ? `<div style="font-size:12px;color:var(--dim);margin-bottom:12px">або ${CURRENCY_ICON[item.currency2]||''} ${Number(item.price2||0).toLocaleString()} ${CURRENCY_LABEL[item.currency2]||''}</div>` : ''}
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="modal-buy-btn" onclick="buyItem('${item.id}');closeModal()">${isRent?'Орендувати':'Купити зараз'}</button>
+          <button class="modal-buy-btn" onclick="buyItem('${id}');closeModal()">${isRent ? 'Орендувати' : 'Купити зараз'}</button>
           <button class="modal-wish-btn" onclick="showToast('Додано до улюблених','')">♥ Зберегти</button>
         </div>
         <div style="margin-top:12px;font-size:11px;color:var(--dim);line-height:1.7">
@@ -195,6 +296,10 @@ window.openItem = function(id) {
         </div>
       </div>
     </div>`;
+
+  // Increment views
+  updateDoc(doc(db,'marketplace',id), { views: increment(1) }).catch(()=>{});
+
   document.getElementById('item-modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
@@ -204,26 +309,43 @@ window.closeModal = function() {
   document.body.style.overflow = '';
 };
 
-window.buyItem = function(id) {
+window.buyItem = async function(id) {
   if (!window._currentUser) {
     showToast('Спочатку увійди в кабінет!','error');
-    setTimeout(()=>{ window.location.href='profile.html'; },1500);
+    setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
     return;
   }
-  const item = DEMO.find(d => d.id === id);
+  const item = allListings.find(d => d.id === id);
   if (!item) return;
-  showToast(`✅ Угода підтверджена! ${item.name} додано в інвентар.`,'');
+
+  const name = item.itemName || item.name || '—';
+
+  try {
+    // Позначити як продано
+    await updateDoc(doc(db,'marketplace',id), {
+      status: 'sold',
+      buyerId: window._currentUser.uid,
+      soldAt: new Date()
+    });
+    // Оновити список
+    allListings = allListings.filter(l => l.id !== id);
+    showToast(`✅ Куплено! ${name} додано в інвентар.`, '');
+    renderGrid();
+  } catch(e) {
+    showToast('Помилка покупки: ' + e.message, 'error');
+  }
 };
 
 function showToast(msg, type) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show'+(type?' '+type:'');
-  setTimeout(()=>t.className='',3000);
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = '', 3000);
 }
 window.showToast = showToast;
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderGrid();
+  loadMarketplace();
 });
 </script>
 
