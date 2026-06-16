@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BT 8BIT — Підтримка</title>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--rb);min-height:100vh;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(6,10,16,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);letter-spacing:2px;}
+.btn-nav{padding:8px 18px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--px);font-size:10px;text-decoration:none;transition:all .2s;}
+.btn-nav:hover{border-color:var(--gold);color:var(--gold);}
+
+.hero{padding:120px 40px 48px;text-align:center;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(30,60,100,.3) 0%,transparent 70%);border-bottom:1px solid var(--border);}
+.hero-eye{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:16px;}
+.hero-title{font-family:var(--px);font-size:clamp(14px,3vw,22px);color:#fff;margin-bottom:12px;}
+.hero-desc{font-size:14px;color:var(--dim);max-width:500px;margin:0 auto;}
+
+.page{max-width:860px;margin:0 auto;padding:48px 40px;}
+
+/* ТИПИ ЗАЯВОК */
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:32px;}
+.type-card{padding:16px;background:var(--card);border:2px solid var(--border);cursor:pointer;transition:all .15s;text-align:center;position:relative;}
+.type-card:hover{border-color:var(--steel);}
+.type-card.active{border-color:var(--gold);background:rgba(232,188,56,0.06);}
+.type-card.active::after{content:'✓';position:absolute;top:8px;right:8px;font-size:12px;color:var(--gold);}
+.type-icon{font-size:28px;display:block;margin-bottom:8px;}
+.type-label{font-family:var(--px);font-size:8px;color:var(--text);letter-spacing:1px;line-height:1.6;}
+
+/* ФОРМА */
+.form-card{background:var(--card);border:1px solid var(--border);padding:32px;}
+.form-title{font-family:var(--px);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:24px;}
+.field{margin-bottom:20px;}
+.field-label{font-size:12px;color:var(--dim);display:block;margin-bottom:8px;letter-spacing:.5px;}
+.field-label span{color:var(--gold);}
+.field input,.field textarea,.field select{width:100%;padding:12px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:14px;font-family:var(--rb);outline:none;transition:border-color .2s;resize:vertical;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim);}
+.field select option{background:var(--card);}
+.field textarea{min-height:120px;}
+
+/* СКРІНШОТ */
+.screenshot-drop{border:2px dashed var(--border);padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--surf);}
+.screenshot-drop:hover,.screenshot-drop.drag{border-color:var(--gold);background:rgba(232,188,56,0.04);}
+.screenshot-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.screenshot-icon{font-size:32px;display:block;margin-bottom:10px;}
+.screenshot-hint{font-size:12px;color:var(--dim);line-height:1.7;}
+.screenshot-preview{display:none;position:relative;}
+.screenshot-preview img{width:100%;max-height:300px;object-fit:contain;border:1px solid var(--border);}
+.screenshot-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid var(--border);color:var(--dim);width:28px;height:28px;font-size:14px;cursor:pointer;transition:all .2s;}
+.screenshot-remove:hover{border-color:var(--red);color:#c07070;}
+
+/* ПРОГРЕС */
+.progress-wrap{display:none;margin-bottom:20px;}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;}
+.progress-text{font-size:11px;color:var(--dim);margin-top:6px;}
+
+/* SUBMIT */
+.submit-btn{width:100%;padding:16px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:11px;letter-spacing:2px;transition:all .2s;margin-top:8px;}
+.submit-btn:hover:not(:disabled){background:#c49a20;}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* SUCCESS */
+.success-card{display:none;background:rgba(74,170,90,0.08);border:1px solid rgba(74,170,90,0.3);padding:40px;text-align:center;}
+.success-icon{font-size:48px;display:block;margin-bottom:16px;}
+.success-title{font-family:var(--px);font-size:12px;color:var(--green);margin-bottom:12px;}
+.success-id{font-family:var(--px);font-size:9px;color:var(--dim);}
+
+/* RECENT */
+.recent-section{margin-top:48px;}
+.recent-title{font-family:var(--px);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.ticket-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--border);margin-bottom:8px;transition:border-color .15s;}
+.ticket-row:hover{border-color:var(--steel);}
+.ticket-type-badge{font-family:var(--px);font-size:7px;padding:4px 8px;border:1px solid;flex-shrink:0;}
+.ticket-info{flex:1;}
+.ticket-desc{font-size:13px;color:var(--text);margin-bottom:3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:400px;}
+.ticket-meta{font-size:11px;color:var(--dim);}
+.ticket-status{font-family:var(--px);font-size:7px;padding:4px 8px;flex-shrink:0;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.error{border-color:var(--red);color:#c07070;}
+
+footer{background:var(--surf);border-top:1px solid var(--border);padding:24px 40px;text-align:center;font-family:var(--px);font-size:8px;color:var(--dim);margin-top:60px;}
+footer a{color:var(--gold);text-decoration:none;}
+
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .hero{padding:100px 20px 32px;}
+  .page{padding:32px 16px;}
+  .type-grid{grid-template-columns:repeat(2,1fr);}
+  .form-card{padding:20px;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <a class="btn-nav" href="index.html">← Головна</a>
+</nav>
+
+<div class="hero">
+  <span class="hero-eye">Підтримка</span>
+  <h1 class="hero-title">Центр підтримки</h1>
+  <p class="hero-desc">Знайшов баг? Скарга на гравця? Є ідея? Напиши нам — відповідаємо протягом 24 годин.</p>
+</div>
+
+<div class="page">
+
+  <!-- ТИП ЗАЯВКИ -->
+  <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;">Оберіть тип заявки</div>
+  <div class="type-grid" id="type-grid">
+    <div class="type-card active" data-type="bug" onclick="selectType(this)">
+      <span class="type-icon">🐛</span>
+      <span class="type-label">Баг / Помилка</span>
+    </div>
+    <div class="type-card" data-type="report" onclick="selectType(this)">
+      <span class="type-icon">🚨</span>
+      <span class="type-label">Скарга на гравця</span>
+    </div>
+    <div class="type-card" data-type="idea" onclick="selectType(this)">
+      <span class="type-icon">💡</span>
+      <span class="type-label">Пропозиція / Ідея</span>
+    </div>
+    <div class="type-card" data-type="payment" onclick="selectType(this)">
+      <span class="type-icon">💳</span>
+      <span class="type-label">Проблема з платежем</span>
+    </div>
+    <div class="type-card" data-type="account" onclick="selectType(this)">
+      <span class="type-icon">👤</span>
+      <span class="type-label">Проблема з акаунтом</span>
+    </div>
+    <div class="type-card" data-type="other" onclick="selectType(this)">
+      <span class="type-icon">📝</span>
+      <span class="type-label">Інше</span>
+    </div>
+  </div>
+
+  <!-- ФОРМА -->
+  <div class="form-card" id="form-card">
+    <div class="form-title">Деталі заявки</div>
+
+    <div class="field" id="field-nickname-report" style="display:none">
+      <label class="field-label">Нікнейм гравця (на кого скаржитесь) <span>*</span></label>
+      <input type="text" id="reported-nick" placeholder="Нікнейм порушника">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Ваш нікнейм <span>*</span></label>
+      <input type="text" id="reporter-nick" placeholder="Ваш нік в грі">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Тема <span>*</span></label>
+      <input type="text" id="ticket-subject" placeholder="Коротко опишіть проблему">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Опис <span>*</span></label>
+      <textarea id="ticket-desc" placeholder="Детально опишіть проблему. Якщо баг — коли виникає, як відтворити, на якому пристрої."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Пріоритет</label>
+      <select id="ticket-priority">
+        <option value="low">🟢 Низький — незначна проблема</option>
+        <option value="medium" selected>🟡 Середній — заважає грі</option>
+        <option value="high">🔴 Високий — критична помилка</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Скріншот (необов'язково)</label>
+      <div class="screenshot-drop" id="screenshot-drop">
+        <input type="file" id="screenshot-input" accept="image/*" onchange="previewScreenshot(this)">
+        <span class="screenshot-icon">🖼️</span>
+        <div class="screenshot-hint">
+          Перетягни або натисни для вибору<br>
+          <span style="color:var(--dim);font-size:11px">PNG, JPG, WEBP — до 5MB</span>
+        </div>
+      </div>
+      <div class="screenshot-preview" id="screenshot-preview">
+        <img id="screenshot-img" src="" alt="Скріншот">
+        <button class="screenshot-remove" onclick="removeScreenshot()">✕</button>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">Завантаження скріншоту...</div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitTicket()">
+      📨 НАДІСЛАТИ ЗАЯВКУ
+    </button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-card" id="success-card">
+    <span class="success-icon">✅</span>
+    <div class="success-title">Заявку прийнято!</div>
+    <div style="font-size:13px;color:var(--dim);margin-bottom:16px;line-height:1.7">
+      Ми отримали твоє повідомлення і відповімо протягом 24 годин<br>у Telegram або Discord.
+    </div>
+    <div class="success-id" id="ticket-id-display"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+      <button onclick="resetForm()" style="padding:10px 24px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--px);font-size:9px;cursor:pointer;">Нова заявка</button>
+      <a href="https://t.me/tanks_battles_3d" target="_blank" style="padding:10px 24px;background:var(--gold);color:var(--bg);font-family:var(--px);font-size:9px;text-decoration:none;">Telegram</a>
+    </div>
+  </div>
+
+  <!-- МОЇ ЗАЯВКИ -->
+  <div class="recent-section" id="recent-section" style="display:none">
+    <div class="recent-title">Мої заявки</div>
+    <div id="tickets-list"></div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 BT 8BIT · <a href="terms.html">Угода</a> · <a href="privacy.html">Конфіденційність</a> · <a href="index.html">Головна</a></p>
+</footer>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+  authDomain:"tanksbattles3d.firebaseapp.com",
+  projectId:"tanksbattles3d",
+  storageBucket:"tanksbattles3d.firebasestorage.app",
+  messagingSenderId:"626439210789",
+  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
+});
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+// ── НАЛАШТУВАННЯ TELEGRAM ─────────────────────────────────────
+// Замінити на свої після створення бота через @BotFather
+const TG_TOKEN   = 'ВАШ_BOT_TOKEN';   // @BotFather → /newbot
+const TG_CHAT_ID = 'ВАШ_CHAT_ID';     // Надішли /start боту і відкрий:
+                                        // https://api.telegram.org/bot{TOKEN}/getUpdates
+
+const TYPE_LABELS = {
+  bug:'🐛 Баг/Помилка', report:'🚨 Скарга на гравця',
+  idea:'💡 Пропозиція', payment:'💳 Проблема з платежем',
+  account:'👤 Акаунт', other:'📝 Інше'
+};
+const TYPE_COLORS = {
+  bug:'#e84040', report:'#e88038', idea:'#4aaa5a',
+  payment:'#e8bc38', account:'#8eb0cc', other:'#a070cc'
+};
+const PRIORITY_LABELS = { low:'🟢 Низький', medium:'🟡 Середній', high:'🔴 Високий' };
+
+let currentUser   = null;
+let selectedType  = 'bug';
+let screenshotFile = null;
+
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if (user) {
+    const nickInput = document.getElementById('reporter-nick');
+    if (nickInput && !nickInput.value) {
+      nickInput.value = user.displayName || '';
+    }
+    loadMyTickets(user.uid);
+  }
+});
+
+// ── ВИБІР ТИПУ ────────────────────────────────────────────────
+window.selectType = function(el) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedType = el.dataset.type;
+  // Показати поле нікнейму порушника тільки для скарг
+  const reportField = document.getElementById('field-nickname-report');
+  if (reportField) reportField.style.display = selectedType === 'report' ? 'block' : 'none';
+};
+
+// ── СКРІНШОТ ──────────────────────────────────────────────────
+window.previewScreenshot = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Файл занадто великий (макс. 5MB)', 'error'); return;
+  }
+  screenshotFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('screenshot-img').src = e.target.result;
+    document.getElementById('screenshot-drop').style.display = 'none';
+    document.getElementById('screenshot-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeScreenshot = function() {
+  screenshotFile = null;
+  document.getElementById('screenshot-input').value = '';
+  document.getElementById('screenshot-img').src = '';
+  document.getElementById('screenshot-drop').style.display = 'block';
+  document.getElementById('screenshot-preview').style.display = 'none';
+};
+
+// Drag & drop
+const dropZone = document.getElementById('screenshot-drop');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    document.getElementById('screenshot-input').files = e.dataTransfer.files;
+    previewScreenshot(document.getElementById('screenshot-input'));
+  }
+});
+
+// ── SUBMIT ────────────────────────────────────────────────────
+window.submitTicket = async function() {
+  const nick    = document.getElementById('reporter-nick').value.trim();
+  const subject = document.getElementById('ticket-subject').value.trim();
+  const desc    = document.getElementById('ticket-desc').value.trim();
+  const priority = document.getElementById('ticket-priority').value;
+  const reportedNick = document.getElementById('reported-nick').value.trim();
+
+  if (!nick)    { showToast('Вкажи свій нікнейм', 'error'); return; }
+  if (!subject) { showToast('Вкажи тему заявки', 'error'); return; }
+  if (!desc)    { showToast('Опиши проблему', 'error'); return; }
+  if (selectedType === 'report' && !reportedNick) {
+    showToast('Вкажи нікнейм гравця', 'error'); return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Надсилання...';
+
+  try {
+    let screenshotUrl = null;
+
+    // Завантажуємо скріншот якщо є
+    if (screenshotFile) {
+      screenshotUrl = await uploadScreenshot(screenshotFile);
+    }
+
+    // Генеруємо ID заявки
+    const ticketId = 'TK-' + Date.now().toString(36).toUpperCase();
+    const now = new Date();
+
+    // Зберігаємо в Firestore
+    const ticketData = {
+      ticketId,
+      type: selectedType,
+      typeLabel: TYPE_LABELS[selectedType],
+      subject,
+      description: desc,
+      priority,
+      reporterNick: nick,
+      reporterUid: currentUser?.uid || null,
+      reportedNick: reportedNick || null,
+      screenshotUrl,
+      status: 'open',
+      createdAt: now,
+    };
+
+    await addDoc(collection(db, 'support_tickets'), ticketData);
+
+    // Надсилаємо в Telegram
+    await sendToTelegram(ticketData);
+
+    // Показуємо успіх
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('success-card').style.display = 'block';
+    document.getElementById('ticket-id-display').textContent = '🎫 ID заявки: ' + ticketId;
+
+    // Оновлюємо список заявок
+    if (currentUser) loadMyTickets(currentUser.uid);
+
+  } catch(e) {
+    showToast('Помилка: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = '📨 НАДІСЛАТИ ЗАЯВКУ';
+  }
+};
+
+// ── UPLOAD SCREENSHOT ─────────────────────────────────────────
+function uploadScreenshot(file) {
+  return new Promise((resolve, reject) => {
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    progressWrap.style.display = 'block';
+
+    const fileName = `support/${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      snap => {
+        const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        progressFill.style.width = pct + '%';
+        progressText.textContent = `Завантаження скріншоту... ${pct}%`;
+      },
+      err => { progressWrap.style.display = 'none'; reject(err); },
+      async () => {
+        progressWrap.style.display = 'none';
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve(url);
+      }
+    );
+  });
+}
+
+// ── TELEGRAM ──────────────────────────────────────────────────
+async function sendToTelegram(ticket) {
+  if (!TG_TOKEN || TG_TOKEN === 'ВАШ_BOT_TOKEN') return;
+
+  const priorityEmoji = { low:'🟢', medium:'🟡', high:'🔴' };
+  const text = `
+🎫 <b>Нова заявка ${ticket.ticketId}</b>
+
+${TYPE_LABELS[ticket.type] || ticket.typeLabel}
+${priorityEmoji[ticket.priority]} Пріоритет: <b>${PRIORITY_LABELS[ticket.priority]}</b>
+
+👤 Гравець: <b>${ticket.reporterNick}</b>
+${ticket.reportedNick ? `🚨 На кого: <b>${ticket.reportedNick}</b>\n` : ''}
+📌 Тема: <b>${ticket.subject}</b>
+
+📝 Опис:
+<i>${ticket.description.slice(0, 500)}${ticket.description.length > 500 ? '...' : ''}</i>
+
+${ticket.screenshotUrl ? '🖼️ Скріншот додано' : ''}
+🕒 ${new Date().toLocaleString('uk-UA')}
+  `.trim();
+
+  try {
+    // Якщо є скріншот — відправляємо фото з підписом
+    if (ticket.screenshotUrl) {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TG_CHAT_ID,
+          photo: ticket.screenshotUrl,
+          caption: text.slice(0, 1024),
+          parse_mode: 'HTML'
+        })
+      });
+    } else {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TG_CHAT_ID,
+          text,
+          parse_mode: 'HTML'
+        })
+      });
+    }
+  } catch(e) { console.warn('Telegram error:', e); }
+}
+
+// ── МОЇ ЗАЯВКИ ────────────────────────────────────────────────
+async function loadMyTickets(uid) {
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'support_tickets'),
+      where('reporterUid', '==', uid),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    ));
+    if (snap.empty) return;
+
+    const section = document.getElementById('recent-section');
+    const list = document.getElementById('tickets-list');
+    section.style.display = 'block';
+
+    const STATUS_LABELS = { open:'🟡 Відкрита', inprogress:'🔵 В роботі', resolved:'✅ Вирішено', closed:'⬜ Закрита' };
+    const STATUS_COLORS = { open:'#e8bc38', inprogress:'#8eb0cc', resolved:'#4aaa5a', closed:'#6a7a8a' };
+
+    list.innerHTML = snap.docs.map(d => {
+      const t = d.data();
+      const color = TYPE_COLORS[t.type] || '#888';
+      const statusColor = STATUS_COLORS[t.status] || '#888';
+      const date = t.createdAt?.toDate
+        ? t.createdAt.toDate().toLocaleDateString('uk-UA')
+        : '—';
+      return `<div class="ticket-row">
+        <div class="ticket-type-badge" style="color:${color};border-color:${color}44">${TYPE_LABELS[t.type]||t.type}</div>
+        <div class="ticket-info">
+          <div class="ticket-desc">${t.subject}</div>
+          <div class="ticket-meta">${t.ticketId} · ${date}</div>
+        </div>
+        <div class="ticket-status" style="color:${statusColor};border:1px solid ${statusColor}44;background:${statusColor}11;padding:4px 8px">
+          ${STATUS_LABELS[t.status]||t.status}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.warn('Tickets load error:', e); }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+window.resetForm = function() {
+  document.getElementById('form-card').style.display = 'block';
+  document.getElementById('success-card').style.display = 'none';
+  document.getElementById('reporter-nick').value = currentUser?.displayName || '';
+  document.getElementById('ticket-subject').value = '';
+  document.getElementById('ticket-desc').value = '';
+  removeScreenshot();
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').textContent = '📨 НАДІСЛАТИ ЗАЯВКУ';
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  document.querySelector('.type-card[data-type="bug"]').classList.add('active');
+  selectedType = 'bug';
+  window.scrollTo(0, 0);
+};
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = '', 3000);
+}
+</script>
+</body>
+</html>
