@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#060a10">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<meta name="description" content="BT 8BIT — Галерея скріншотів гравців. Найкращі моменти танкових боїв.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<title>BT 8BIT — Галерея</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--rb);min-height:100vh;}
+
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(6,10,16,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.btn-upload{padding:8px 16px;background:var(--gold);color:var(--bg);border:none;font-family:var(--px);font-size:9px;cursor:pointer;transition:background .2s;text-decoration:none;display:inline-block;}
+.btn-upload:hover{background:#c49a20;}
+.btn-back{padding:8px 16px;border:1px solid var(--border);color:var(--dim);font-size:11px;text-decoration:none;transition:all .2s;}
+.btn-back:hover{border-color:var(--gold);color:var(--gold);}
+
+/* HERO */
+.gallery-hero{padding:40px;text-align:center;border-bottom:1px solid var(--border);background:radial-gradient(ellipse 60% 80% at 50% 0%,rgba(30,60,100,.2) 0%,transparent 70%);}
+.gallery-eye{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:12px;}
+.gallery-title{font-family:var(--px);font-size:clamp(14px,3vw,22px);color:#fff;margin-bottom:8px;}
+.gallery-stats{display:flex;gap:24px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.gallery-stat{font-size:12px;color:var(--dim);}
+.gallery-stat span{color:var(--gold);font-family:var(--px);font-size:13px;display:block;margin-bottom:2px;}
+
+/* FILTERS */
+.filters-bar{padding:16px 40px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surf);}
+.filter-tag{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;border-radius:0;}
+.filter-tag:hover{border-color:var(--steel);color:var(--text);}
+.filter-tag.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.07);}
+.sort-select{padding:6px 12px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;margin-left:auto;}
+
+/* GRID */
+.gallery-wrap{max-width:1200px;margin:0 auto;padding:24px 40px;}
+.gallery-grid{columns:3;column-gap:12px;}
+.gallery-item{break-inside:avoid;margin-bottom:12px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.gallery-item:hover{border-color:var(--gold);transform:translateY(-2px);}
+.gallery-item img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:var(--surf);}
+.gallery-item-info{padding:10px 12px;}
+.gallery-item-nick{font-size:12px;color:var(--steel);margin-bottom:4px;}
+.gallery-item-caption{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.gallery-item-footer{display:flex;align-items:center;justify-content:space-between;}
+.gallery-item-tag{font-family:var(--px);font-size:7px;padding:3px 7px;border:1px solid;}
+.gallery-item-likes{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--dim);cursor:pointer;transition:color .15s;border:none;background:transparent;padding:0;}
+.gallery-item-likes:hover{color:#e84040;}
+.gallery-item-likes.liked{color:#e84040;}
+.gallery-item-date{font-size:10px;color:var(--dim);}
+
+/* UPLOAD MODAL */
+#upload-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.upload-box{background:var(--card);border:1px solid var(--border);width:min(520px,95vw);max-height:90vh;overflow-y:auto;}
+.upload-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.upload-title{font-family:var(--px);font-size:10px;color:var(--gold);}
+.upload-close{background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer;}
+.upload-close:hover{border-color:var(--gold);color:var(--gold);}
+.upload-body{padding:24px;}
+.upload-drop{border:2px dashed var(--border);padding:40px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--surf);margin-bottom:16px;}
+.upload-drop:hover,.upload-drop.drag{border-color:var(--gold);background:rgba(232,188,56,0.04);}
+.upload-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-preview{display:none;margin-bottom:16px;}
+.upload-preview img{width:100%;max-height:260px;object-fit:contain;border:1px solid var(--border);}
+.upload-field{margin-bottom:14px;}
+.upload-label{font-size:12px;color:var(--dim);display:block;margin-bottom:6px;}
+.upload-input{width:100%;padding:10px 12px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;font-family:var(--rb);}
+.upload-input:focus{border-color:var(--gold);}
+.upload-input::placeholder{color:var(--dim);}
+.tag-select{display:flex;gap:6px;flex-wrap:wrap;}
+.tag-btn{padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;}
+.tag-btn.active{border-color:var(--gold);color:var(--gold);}
+.upload-submit{width:100%;padding:13px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;margin-top:8px;transition:background .2s;}
+.upload-submit:hover:not(:disabled){background:#c49a20;}
+.upload-submit:disabled{opacity:.5;cursor:not-allowed;}
+.progress-bar{height:4px;background:var(--border);margin-bottom:10px;display:none;}
+.progress-fill{height:100%;background:var(--gold);transition:width .3s;width:0;}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:600;align-items:center;justify-content:center;}
+.lb-content{max-width:900px;width:95%;position:relative;}
+.lb-img{width:100%;max-height:70vh;object-fit:contain;display:block;}
+.lb-info{background:var(--card);border:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.lb-close{position:fixed;top:20px;right:20px;background:transparent;border:1px solid var(--border);color:#fff;width:40px;height:40px;font-size:20px;cursor:pointer;z-index:10;}
+.lb-nick{font-size:13px;color:var(--steel);}
+.lb-caption{font-size:14px;color:var(--text);flex:1;}
+.lb-likes{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;border:none;background:transparent;color:var(--dim);transition:color .15s;}
+.lb-likes:hover,.lb-likes.liked{color:#e84040;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:80px 20px;color:var(--dim);}
+.empty-icon{font-size:48px;display:block;margin-bottom:16px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:700;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.error{border-color:var(--red);color:#c07070;}
+
+@media(max-width:900px){.gallery-grid{columns:2;}}
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .gallery-hero{padding:24px 16px;}
+  .filters-bar{padding:12px 16px;}
+  .gallery-wrap{padding:16px;}
+  .gallery-grid{columns:1;}
+  .gallery-stats{gap:16px;}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <div class="nav-right">
+    <a class="btn-back" href="index.html">← Головна</a>
+    <button class="btn-upload" onclick="openUpload()">+ Додати фото</button>
+  </div>
+</nav>
+
+<div class="gallery-hero">
+  <span class="gallery-eye">Спільнота</span>
+  <h1 class="gallery-title">Галерея гравців</h1>
+  <div class="gallery-stats">
+    <div class="gallery-stat"><span id="stat-photos">0</span>Скріншотів</div>
+    <div class="gallery-stat"><span id="stat-likes">0</span>Лайків</div>
+    <div class="gallery-stat"><span id="stat-authors">0</span>Авторів</div>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <button class="filter-tag active" data-tag="all" onclick="filterGallery('all')">Всі</button>
+  <button class="filter-tag" data-tag="battle" onclick="filterGallery('battle')">⚔️ Бій</button>
+  <button class="filter-tag" data-tag="win" onclick="filterGallery('win')">🏆 Перемога</button>
+  <button class="filter-tag" data-tag="clan" onclick="filterGallery('clan')">🏰 Клан</button>
+  <button class="filter-tag" data-tag="funny" onclick="filterGallery('funny')">😂 Прикол</button>
+  <button class="filter-tag" data-tag="tank" onclick="filterGallery('tank')">🚀 Техніка</button>
+  <select class="sort-select" id="sort-select" onchange="sortGallery(this.value)">
+    <option value="newest">Новіші</option>
+    <option value="popular">Популярні</option>
+  </select>
+</div>
+
+<div class="gallery-wrap">
+  <div class="gallery-grid" id="gallery-grid">
+    <div class="empty-state" style="column-span:all">
+      <span class="empty-icon">⏳</span>
+      <div>Завантаження...</div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div id="upload-modal" onclick="if(event.target===this)closeUpload()">
+  <div class="upload-box">
+    <div class="upload-header">
+      <span class="upload-title">📸 Додати скріншот</span>
+      <button class="upload-close" onclick="closeUpload()">✕</button>
+    </div>
+    <div class="upload-body">
+      <div class="upload-drop" id="upload-drop">
+        <input type="file" id="upload-input" accept="image/*" onchange="previewUpload(this)">
+        <div style="font-size:36px;margin-bottom:10px">🖼️</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:6px">Перетягни або натисни для вибору</div>
+        <div style="font-size:11px;color:var(--dim)">PNG, JPG, WEBP — до 10MB</div>
+      </div>
+      <div class="upload-preview" id="upload-preview">
+        <img id="upload-preview-img" src="" alt="">
+        <button onclick="resetUpload()" style="width:100%;padding:8px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;margin-top:6px">✕ Змінити фото</button>
+      </div>
+
+      <div class="upload-field">
+        <label class="upload-label">Підпис</label>
+        <input class="upload-input" id="upload-caption" type="text" placeholder="Опиши момент..." maxlength="200">
+      </div>
+
+      <div class="upload-field">
+        <label class="upload-label">Тег</label>
+        <div class="tag-select" id="tag-select">
+          <button class="tag-btn active" data-tag="battle" onclick="selectTag(this)">⚔️ Бій</button>
+          <button class="tag-btn" data-tag="win" onclick="selectTag(this)">🏆 Перемога</button>
+          <button class="tag-btn" data-tag="clan" onclick="selectTag(this)">🏰 Клан</button>
+          <button class="tag-btn" data-tag="funny" onclick="selectTag(this)">😂 Прикол</button>
+          <button class="tag-btn" data-tag="tank" onclick="selectTag(this)">🚀 Техніка</button>
+        </div>
+      </div>
+
+      <div class="progress-bar" id="upload-progress">
+        <div class="progress-fill" id="upload-progress-fill"></div>
+      </div>
+
+      <button class="upload-submit" id="upload-submit" onclick="uploadPhoto()">📤 Опублікувати</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="if(event.target===this||event.target.id==='lightbox')closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <div class="lb-content">
+    <img class="lb-img" id="lb-img" src="" alt="">
+    <div class="lb-info">
+      <div>
+        <div class="lb-nick" id="lb-nick">—</div>
+        <div class="lb-caption" id="lb-caption">—</div>
+      </div>
+      <button class="lb-likes" id="lb-likes-btn" onclick="toggleLike(currentLbId)">
+        ♥ <span id="lb-likes-count">0</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+  query, orderBy, limit, where, increment, getDoc }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+  authDomain:"tanksbattles3d.firebaseapp.com",
+  projectId:"tanksbattles3d",
+  storageBucket:"tanksbattles3d.firebasestorage.app",
+  messagingSenderId:"626439210789",
+  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
+});
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+const TAG_COLORS = {
+  battle:'#e84040', win:'#e8bc38', clan:'#a070cc',
+  funny:'#4aaa5a', tank:'#8eb0cc'
+};
+const TAG_LABELS = {
+  battle:'⚔️ Бій', win:'🏆 Перемога', clan:'🏰 Клан',
+  funny:'😂 Прикол', tank:'🚀 Техніка'
+};
+
+let currentUser = null;
+let allPhotos   = [];
+let activeTag   = 'all';
+let activeSort  = 'newest';
+let uploadFile  = null;
+let selectedTag = 'battle';
+window.currentLbId = null;
+
+// Лайки з localStorage
+const likedSet = new Set(JSON.parse(localStorage.getItem('bt8bit_liked')||'[]'));
+
+onAuthStateChanged(auth, u => { currentUser = u; });
+
+// ── ЗАВАНТАЖЕННЯ ФОТО ─────────────────────────────────────────
+async function loadGallery() {
+  try {
+    const snap = await getDocs(query(
+      collection(db,'gallery'),
+      orderBy('createdAt','desc'),
+      limit(100)
+    ));
+    allPhotos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Статистика
+    const authors = new Set(allPhotos.map(p => p.authorUid)).size;
+    const totalLikes = allPhotos.reduce((s,p) => s+(p.likes||0), 0);
+    document.getElementById('stat-photos').textContent = allPhotos.length;
+    document.getElementById('stat-likes').textContent  = totalLikes;
+    document.getElementById('stat-authors').textContent = authors;
+
+    renderGallery();
+  } catch(e) {
+    document.getElementById('gallery-grid').innerHTML =
+      `<div class="empty-state" style="column-span:all"><span class="empty-icon">⚠️</span><div>${e.message}</div></div>`;
+  }
+}
+
+function renderGallery() {
+  let photos = activeTag === 'all'
+    ? [...allPhotos]
+    : allPhotos.filter(p => p.tag === activeTag);
+
+  if (activeSort === 'popular') photos.sort((a,b) => (b.likes||0)-(a.likes||0));
+
+  const grid = document.getElementById('gallery-grid');
+  if (!photos.length) {
+    grid.innerHTML = `<div class="empty-state" style="column-span:all">
+      <span class="empty-icon">📸</span>
+      <div style="font-size:14px;color:var(--text);margin-bottom:8px">Ще немає скріншотів</div>
+      <div>Будь першим — натисни "+ Додати фото"</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = photos.map(p => {
+    const color = TAG_COLORS[p.tag] || '#888';
+    const label = TAG_LABELS[p.tag] || p.tag;
+    const liked = likedSet.has(p.id);
+    const date  = p.createdAt?.toDate
+      ? p.createdAt.toDate().toLocaleDateString('uk-UA')
+      : '—';
+    return `<div class="gallery-item" onclick="openLightbox('${p.id}')">
+      <img src="${p.imageUrl}" alt="${p.caption||''}" loading="lazy"
+           onerror="this.style.background='var(--surf)';this.style.minHeight='160px'">
+      <div class="gallery-item-info">
+        <div class="gallery-item-nick">👤 ${p.authorNick||'Гравець'}</div>
+        ${p.caption ? `<div class="gallery-item-caption">${p.caption}</div>` : ''}
+        <div class="gallery-item-footer">
+          <span class="gallery-item-tag" style="color:${color};border-color:${color}44">${label}</span>
+          <button class="gallery-item-likes ${liked?'liked':''}"
+            onclick="event.stopPropagation();toggleLike('${p.id}')">
+            ♥ <span id="likes-${p.id}">${p.likes||0}</span>
+          </button>
+        </div>
+        <div class="gallery-item-date">${date}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ФІЛЬТРИ ───────────────────────────────────────────────────
+window.filterGallery = function(tag) {
+  activeTag = tag;
+  document.querySelectorAll('.filter-tag').forEach(b =>
+    b.classList.toggle('active', b.dataset.tag === tag));
+  renderGallery();
+};
+
+window.sortGallery = function(val) {
+  activeSort = val;
+  renderGallery();
+};
+
+// ── ЛАЙКИ ────────────────────────────────────────────────────
+window.toggleLike = async function(id) {
+  const photo = allPhotos.find(p => p.id === id);
+  if (!photo) return;
+
+  const wasLiked = likedSet.has(id);
+  const delta = wasLiked ? -1 : 1;
+
+  if (wasLiked) likedSet.delete(id);
+  else likedSet.add(id);
+
+  localStorage.setItem('bt8bit_liked', JSON.stringify([...likedSet]));
+  photo.likes = Math.max(0, (photo.likes||0) + delta);
+
+  // Оновити UI
+  const countEl = document.getElementById('likes-'+id);
+  if (countEl) countEl.textContent = photo.likes;
+  const lbCount = document.getElementById('lb-likes-count');
+  if (lbCount && window.currentLbId === id) lbCount.textContent = photo.likes;
+  document.querySelectorAll(`.gallery-item-likes,.lb-likes`).forEach(b => {
+    if (b.onclick?.toString().includes(id)) b.classList.toggle('liked', !wasLiked);
+  });
+  document.getElementById('lb-likes-btn')?.classList.toggle('liked', likedSet.has(id));
+
+  try {
+    await updateDoc(doc(db,'gallery',id), { likes: increment(delta) });
+  } catch(e) {}
+};
+
+// ── LIGHTBOX ──────────────────────────────────────────────────
+window.openLightbox = function(id) {
+  const photo = allPhotos.find(p => p.id === id);
+  if (!photo) return;
+  window.currentLbId = id;
+  document.getElementById('lb-img').src = photo.imageUrl;
+  document.getElementById('lb-nick').textContent = '👤 ' + (photo.authorNick||'Гравець');
+  document.getElementById('lb-caption').textContent = photo.caption || '';
+  document.getElementById('lb-likes-count').textContent = photo.likes || 0;
+  document.getElementById('lb-likes-btn').className = 'lb-likes' + (likedSet.has(id)?' liked':'');
+  document.getElementById('lightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+window.closeLightbox = function() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+  window.currentLbId = null;
+};
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeLightbox(); });
+
+// ── UPLOAD ────────────────────────────────────────────────────
+window.openUpload = function() {
+  if (!currentUser) {
+    showToast('Увійди в кабінет щоб додавати фото','error');
+    setTimeout(()=>window.location.href='profile.html',1500);
+    return;
+  }
+  document.getElementById('upload-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+window.closeUpload = function() {
+  document.getElementById('upload-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.previewUpload = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('Файл занадто великий (макс. 10MB)','error'); return; }
+  uploadFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('upload-preview-img').src = e.target.result;
+    document.getElementById('upload-drop').style.display = 'none';
+    document.getElementById('upload-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.resetUpload = function() {
+  uploadFile = null;
+  document.getElementById('upload-input').value = '';
+  document.getElementById('upload-drop').style.display = 'block';
+  document.getElementById('upload-preview').style.display = 'none';
+};
+
+window.selectTag = function(btn) {
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTag = btn.dataset.tag;
+};
+
+// Drag & drop
+const dropZone = document.getElementById('upload-drop');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file?.type.startsWith('image/')) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('upload-input').files = dt.files;
+    previewUpload(document.getElementById('upload-input'));
+  }
+});
+
+window.uploadPhoto = async function() {
+  if (!uploadFile) { showToast('Обери фото','error'); return; }
+  const caption = document.getElementById('upload-caption').value.trim();
+
+  const btn = document.getElementById('upload-submit');
+  btn.disabled = true; btn.textContent = '⏳ Завантаження...';
+
+  const progressBar  = document.getElementById('upload-progress');
+  const progressFill = document.getElementById('upload-progress-fill');
+  progressBar.style.display = 'block';
+
+  try {
+    // Upload to Storage
+    const fileName = `gallery/${currentUser.uid}_${Date.now()}_${uploadFile.name}`;
+    const storageRef = ref(storage, fileName);
+    const task = uploadBytesResumable(storageRef, uploadFile);
+
+    const imageUrl = await new Promise((resolve, reject) => {
+      task.on('state_changed',
+        snap => {
+          const pct = Math.round(snap.bytesTransferred/snap.totalBytes*100);
+          progressFill.style.width = pct+'%';
+        },
+        reject,
+        async () => resolve(await getDownloadURL(task.snapshot.ref))
+      );
+    });
+
+    // Get author nick from Firebase
+    let authorNick = currentUser.displayName || 'Гравець';
+    try {
+      const pSnap = await getDoc(doc(db,'players',currentUser.uid));
+      if (pSnap.exists()) authorNick = pSnap.data().nickname || authorNick;
+    } catch(e){}
+
+    // Save to Firestore
+    const newPhoto = await addDoc(collection(db,'gallery'), {
+      imageUrl, caption, tag: selectedTag,
+      authorUid: currentUser.uid, authorNick,
+      likes: 0, createdAt: new Date()
+    });
+
+    allPhotos.unshift({ id: newPhoto.id, imageUrl, caption, tag: selectedTag,
+      authorUid: currentUser.uid, authorNick, likes: 0, createdAt: { toDate:()=>new Date() } });
+
+    renderGallery();
+    closeUpload();
+    showToast('✅ Фото опубліковано!');
+    resetUpload();
+    document.getElementById('upload-caption').value = '';
+    document.getElementById('stat-photos').textContent = allPhotos.length;
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+  finally {
+    btn.disabled = false; btn.textContent = '📤 Опублікувати';
+    progressBar.style.display = 'none';
+  }
+};
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show'+(type?' '+type:'');
+  setTimeout(()=>t.className='',3000);
+}
+window.showToast = showToast;
+
+loadGallery();
+</script>
+</body>
+</html>
