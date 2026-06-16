@@ -928,6 +928,7 @@
           <button class="inv-filter active" onclick="filterInv('all')" data-inv="all">Всі</button>
           <button class="inv-filter" onclick="filterInv('tank')" data-inv="tank">🚀 Танки</button>
           <button class="inv-filter" onclick="filterInv('camo')" data-inv="camo">🎨 Камуфляжі</button>
+          <button class="inv-filter" onclick="filterInv('special')" data-inv="special">⭐ Спеціальні</button>
           <button class="inv-filter" onclick="filterInv('listed')" data-inv="listed">📋 На продажу</button>
           <button class="inv-filter" onclick="filterInv('rented')" data-inv="rented">⏱ В оренді</button>
         </div>
@@ -1440,31 +1441,75 @@ buildBattleLog([]);
 buildSeasonRecord({});
 
 // ── INVENTORY ──────────────────────────────────────────────────
-const INV_DEMO = [
-  { id:'i1', type:'tank', name:'Tiger I',    nation:'🇩🇪', tier:5, rarity:'rare',    image:'tiger',    listed:false, rented:false },
-  { id:'i2', type:'tank', name:'T-34',       nation:'🛡',  tier:3, rarity:'common',  image:'t34',      listed:true,  rented:false, listPrice:850, listCurr:'coins' },
-  { id:'i3', type:'camo', name:'Пустеля',    nation:'',    tier:0, rarity:'rare',    image:'camo_desert', listed:false, rented:false },
-  { id:'i4', type:'tank', name:'M18 Hellcat',nation:'🇺🇸', tier:5, rarity:'epic',    image:'hellcat',  listed:false, rented:true,  rentedTo:'PlayerXYZ', rentExpires:'22.06.2026' },
-  { id:'i5', type:'camo', name:'Арктичний',  nation:'',    tier:0, rarity:'epic',    image:'camo_arctic', listed:false, rented:false },
-  { id:'i6', type:'tank', name:'Panzer IV',  nation:'🇩🇪', tier:3, rarity:'common',  image:'panzer4',  listed:false, rented:false },
-];
-
+// ── КОНСТАНТИ ІНВЕНТАРЮ ───────────────────────────────────────
 const RARITY_COLOR_P = { common:'#8eb0cc', rare:'#4a90d9', epic:'#a070cc', legendary:'#e88038' };
 const RARITY_LABEL_P = { common:'Звичайний', rare:'Рідкісний', epic:'Епічний', legendary:'Легендарний' };
+
 const TANK_SVG_P = {
-  tiger:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
-  t34:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="40" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="80" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
-  hellcat:`<svg viewBox="0 0 120 60" fill="none"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="42" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="86" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
-  panzer4:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="40" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="80" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
-  camo_desert:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#8a6020" opacity=".8"/></svg>`,
-  camo_arctic:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/><ellipse cx="100" cy="20" rx="14" ry="9" fill="#e8f0f8" opacity=".9"/></svg>`,
+  tiger:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#4a5a3a"/><rect x="20" y="18" width="65" height="18" rx="3" fill="#3a4a2a"/><rect x="55" y="10" width="48" height="10" rx="2" fill="#5a6a4a"/><circle cx="20" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#1a2a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  t34:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="30" width="100" height="22" rx="4" fill="#2a4a2a"/><rect x="22" y="19" width="60" height="17" rx="3" fill="#1a3a1a"/><rect x="52" y="11" width="42" height="10" rx="2" fill="#3a5a3a"/><circle cx="20" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="60" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/><circle cx="100" cy="48" r="7" fill="#0a1a0a" stroke="#4aaa5a" stroke-width="1.5"/></svg>`,
+  hellcat:`<svg viewBox="0 0 120 60" fill="none"><rect x="8" y="32" width="104" height="20" rx="3" fill="#4a4a2a"/><rect x="18" y="21" width="70" height="16" rx="3" fill="#3a3a1a"/><rect x="60" y="13" width="52" height="9" rx="2" fill="#5a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="64" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/><circle cx="105" cy="49" r="7" fill="#1a1a0a" stroke="#e8bc38" stroke-width="1.5"/></svg>`,
+  panzer4:`<svg viewBox="0 0 120 60" fill="none"><rect x="10" y="31" width="100" height="21" rx="4" fill="#5a4a2a"/><rect x="20" y="20" width="62" height="17" rx="3" fill="#4a3a1a"/><rect x="54" y="12" width="44" height="10" rx="2" fill="#6a5a3a"/><circle cx="20" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="60" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/><circle cx="100" cy="49" r="7" fill="#1a0a0a" stroke="#c49a20" stroke-width="1.5"/></svg>`,
+  camo_desert:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#c8a55a"/><ellipse cx="20" cy="25" rx="18" ry="12" fill="#a07a30" opacity=".7"/><ellipse cx="70" cy="55" rx="22" ry="14" fill="#b08840" opacity=".6"/></svg>`,
+  camo_arctic:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#dde8f0"/><ellipse cx="30" cy="30" rx="22" ry="14" fill="#c0d4e4" opacity=".7"/><ellipse cx="80" cy="60" rx="18" ry="12" fill="#a8c4d8" opacity=".6"/></svg>`,
+  camo_night:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#1a1a2a"/><ellipse cx="25" cy="25" rx="20" ry="13" fill="#2a2a3a" opacity=".8"/><ellipse cx="75" cy="55" rx="24" ry="15" fill="#141420" opacity=".9"/></svg>`,
+  camo_forest:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#2d4a1e"/><ellipse cx="20" cy="20" rx="18" ry="12" fill="#1a3010" opacity=".8"/><ellipse cx="65" cy="50" rx="22" ry="14" fill="#3a5a2a" opacity=".7"/></svg>`,
+  // Спеціальні айтеми
+  nickname_change:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#0a1020"/><rect x="10" y="25" width="100" height="30" rx="6" fill="#1a3050" stroke="#e8bc38" stroke-width="2"/><text x="60" y="46" font-size="16" font-family="monospace" text-anchor="middle" fill="#e8bc38">✏️ NICK</text></svg>`,
+  default:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#1a2a3a"/><text x="60" y="46" font-size="28" text-anchor="middle">📦</text></svg>`,
 };
 
+// Іконки для спеціальних айтемів
+const SPECIAL_ITEMS = {
+  nickname_change: { icon:'✏️', label:'Зміна нікнейму', color:'#e8bc38', canSell:true, canRent:false },
+  premium_camo:    { icon:'🎨', label:'Преміум камуфляж', color:'#a070cc', canSell:true, canRent:true },
+  exp_boost:       { icon:'⚡', label:'Буст досвіду x2', color:'#4aaa5a', canSell:true, canRent:false },
+  fuel_refill:     { icon:'⛽', label:'Заправка палива', color:'#8eb0cc', canSell:true, canRent:false },
+};
+
+// ── FIREBASE ІНВЕНТАР ─────────────────────────────────────────
+let invItems = [];
 let invFilter = 'all';
 let selectedItem = null;
 let sellType = 'sell';
 let sellCurr = 'gold';
 let rentDays = 1;
+
+async function loadInventoryFromFirebase() {
+  if (!_currentUser) return;
+  const grid = document.getElementById('inv-grid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--dim)">⏳ Завантаження...</div>';
+
+  try {
+    const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const db = window._db;
+
+    // Завантажуємо з inventory/{uid}/items
+    const snap = await getDocs(collection(db, 'inventory', _currentUser.uid, 'items'));
+
+    if (snap.empty) {
+      invItems = [];
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim)">
+        <div style="font-size:32px;margin-bottom:12px">📦</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:6px">Інвентар порожній</div>
+        <div style="font-size:11px">Отримуй предмети в грі або купуй на Ринку</div>
+      </div>`;
+      return;
+    }
+
+    invItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderInv();
+  } catch(e) {
+    console.error('Inventory load error:', e);
+    // Якщо колекція не існує — показуємо порожній інвентар
+    invItems = [];
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim)">
+      <div style="font-size:32px;margin-bottom:12px">📦</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px">Інвентар порожній</div>
+      <div style="font-size:11px">Отримуй предмети в грі або купуй на Ринку</div>
+    </div>`;
+  }
+}
 
 window.filterInv = function(f) {
   invFilter = f;
@@ -1472,61 +1517,116 @@ window.filterInv = function(f) {
   renderInv();
 };
 
+function getItemSVG(item) {
+  const type = item.itemType || item.type || '';
+  const image = item.itemImage || item.image || '';
+  if (SPECIAL_ITEMS[type]) return TANK_SVG_P[type] || TANK_SVG_P.default;
+  return TANK_SVG_P[image] || TANK_SVG_P.default;
+}
+
+function getItemIcon(item) {
+  const type = item.itemType || item.type || '';
+  if (SPECIAL_ITEMS[type]) return SPECIAL_ITEMS[type].icon + ' ' + SPECIAL_ITEMS[type].label;
+  return item.itemName || item.name || '—';
+}
+
 function renderInv() {
-  const items = INV_DEMO.filter(item => {
-    if (invFilter === 'tank')   return item.type === 'tank';
-    if (invFilter === 'camo')   return item.type === 'camo';
-    if (invFilter === 'listed') return item.listed;
-    if (invFilter === 'rented') return item.rented;
+  const filtered = invItems.filter(item => {
+    const type = item.itemType || item.type || '';
+    if (invFilter === 'tank')    return type === 'tank';
+    if (invFilter === 'camo')    return type === 'camo';
+    if (invFilter === 'special') return SPECIAL_ITEMS[type] !== undefined;
+    if (invFilter === 'listed')  return item.isListed;
+    if (invFilter === 'rented')  return item.isRented;
     return true;
   });
-  const rc = (r) => RARITY_COLOR_P[r] || '#888';
-  const rl = (r) => RARITY_LABEL_P[r] || r;
 
-  document.getElementById('inv-grid').innerHTML = items.length === 0
+  const rc = r => RARITY_COLOR_P[r] || '#8eb0cc';
+  const rl = r => RARITY_LABEL_P[r] || 'Звичайний';
+
+  document.getElementById('inv-grid').innerHTML = filtered.length === 0
     ? '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim);font-size:13px">Тут порожньо</div>'
-    : items.map(item => {
-      const svg = TANK_SVG_P[item.image] || TANK_SVG_P.t34;
-      const badge = item.listed
+    : filtered.map(item => {
+      const type     = item.itemType || item.type || '';
+      const rarity   = item.itemRarity || item.rarity || 'common';
+      const isListed = item.isListed || false;
+      const isRented = item.isRented || false;
+      const isSpecial = !!SPECIAL_ITEMS[type];
+      const specColor = isSpecial ? SPECIAL_ITEMS[type].color : rc(rarity);
+
+      const badge = isListed
         ? `<div class="inv-badge on-sale">ПРОДАЖ</div>`
-        : item.rented
+        : isRented
         ? `<div class="inv-badge on-rent">ОРЕНДА</div>` : '';
-      const btnTxt = item.listed ? '✕ Зняти з продажу'
-        : item.rented ? `⏱ Орендовано до ${item.rentExpires}`
-        : '+ Виставити';
-      const btnCls = item.listed ? 'inv-sell-btn cancel'
-        : item.rented ? 'inv-sell-btn cancel' : 'inv-sell-btn';
-      const disabled = item.rented ? 'disabled style="opacity:.5;cursor:not-allowed"' : '';
-      const listInfo = item.listed
-        ? `<div style="font-size:10px;color:var(--green);margin-bottom:4px">На продажу: ${item.listPrice} ${item.listCurr}</div>` : '';
-      return `<div class="inv-card ${item.listed?'listed':item.rented?'rented':''}">
+
+      const btnTxt = isListed ? '✕ Зняти з продажу'
+        : isRented ? `⏱ В оренді до ${item.rentExpires||'—'}`
+        : '+ Виставити на ринок';
+      const btnCls = isListed || isRented ? 'inv-sell-btn cancel' : 'inv-sell-btn';
+      const disabled = isRented ? 'disabled style="opacity:.5;cursor:not-allowed"' : '';
+
+      const listInfo = isListed
+        ? `<div style="font-size:10px;color:var(--green);margin-bottom:4px">На продажу: ${item.listPrice||0} ${item.listCurr||''}</div>` : '';
+
+      return `<div class="inv-card ${isListed?'listed':isRented?'rented':''}">
         ${badge}
-        ${svg}
-        <div class="inv-card-name">${item.nation?item.nation+' ':''}${item.name}</div>
-        <div class="inv-card-meta" style="color:${rc(item.rarity)}">${rl(item.rarity)}${item.tier?' · Рвн '+item.tier:''}</div>
+        ${getItemSVG(item)}
+        <div class="inv-card-name" style="${isSpecial?'color:'+specColor:''}">${getItemIcon(item)}</div>
+        <div class="inv-card-meta" style="color:${specColor}">${isSpecial ? SPECIAL_ITEMS[type].label : rl(rarity)+((item.itemTier||item.tier)?' · Рвн '+(item.itemTier||item.tier):'')}</div>
         ${listInfo}
         <button class="${btnCls}" ${disabled} onclick="openSellModal('${item.id}')">${btnTxt}</button>
       </div>`;
     }).join('');
 }
 
-window.openSellModal = function(id) {
-  const item = INV_DEMO.find(i => i.id === id);
-  if (!item || item.rented) return;
-  if (item.listed) {
-    item.listed = false; item.listPrice = 0; item.listCurr = '';
-    showToast('Знято з продажу',''); renderInv(); return;
+window.openSellModal = async function(id) {
+  const item = invItems.find(i => i.id === id);
+  if (!item || item.isRented) return;
+
+  // Зняти з продажу
+  if (item.isListed) {
+    try {
+      const { doc, updateDoc, deleteDoc, getDocs, query, collection, where, limit } =
+        await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+      const db = window._db;
+      // Знайти лот на ринку і видалити
+      const q = query(collection(db,'marketplace'),
+        where('sellerId','==',_currentUser.uid),
+        where('itemId','==',id),
+        where('status','==','active'),
+        limit(1));
+      const snap = await getDocs(q);
+      if (!snap.empty) await deleteDoc(snap.docs[0].ref);
+      // Оновити в інвентарі
+      await updateDoc(doc(db,'inventory',_currentUser.uid,'items',id), { isListed:false, listPrice:0, listCurr:'' });
+      item.isListed = false; item.listPrice = 0; item.listCurr = '';
+      showToast('Знято з продажу','');
+      renderInv();
+    } catch(e) { showToast('Помилка: '+e.message,'error'); }
+    return;
   }
+
   selectedItem = item;
-  const rc = RARITY_COLOR_P[item.rarity];
-  const rl = RARITY_LABEL_P[item.rarity];
-  document.getElementById('sell-modal-title').textContent = 'Виставити: ' + item.name;
-  document.getElementById('sell-item-svg').innerHTML = TANK_SVG_P[item.image] || '';
-  document.getElementById('sell-item-name').textContent = (item.nation?item.nation+' ':'')+item.name;
-  document.getElementById('sell-item-rarity').textContent = rl;
-  document.getElementById('sell-item-rarity').style.color = rc;
+  const type    = item.itemType || item.type || '';
+  const name    = item.itemName || item.name || '—';
+  const rarity  = item.itemRarity || item.rarity || 'common';
+  const isSpecial = !!SPECIAL_ITEMS[type];
+
+  document.getElementById('sell-modal-title').textContent = 'Виставити: ' + (isSpecial ? SPECIAL_ITEMS[type].label : name);
+  document.getElementById('sell-item-svg').innerHTML = getItemSVG(item);
+  document.getElementById('sell-item-name').textContent = isSpecial ? SPECIAL_ITEMS[type].icon+' '+SPECIAL_ITEMS[type].label : name;
+  document.getElementById('sell-item-rarity').textContent = isSpecial ? 'Спеціальний предмет' : RARITY_LABEL_P[rarity]||rarity;
+  document.getElementById('sell-item-rarity').style.color = isSpecial ? SPECIAL_ITEMS[type].color : RARITY_COLOR_P[rarity]||'#888';
   document.getElementById('sell-price').value = '';
   document.getElementById('sell-after-fee').textContent = '0';
+
+  // Для спеціальних предметів — тільки продаж (не оренда якщо canRent:false)
+  if (isSpecial && !SPECIAL_ITEMS[type].canRent) {
+    document.getElementById('st-rent').style.display = 'none';
+  } else {
+    document.getElementById('st-rent').style.display = '';
+  }
+
   document.getElementById('sell-modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
@@ -1568,16 +1668,64 @@ function updateFee() {
   if (el) el.textContent = after.toLocaleString() + ' ' + sellCurr;
 }
 
-window.confirmListing = function() {
+window.confirmListing = async function() {
   if (!selectedItem) return;
   const price = parseInt(document.getElementById('sell-price').value);
   if (!price || price < 1) { showToast('Введи ціну!','error'); return; }
-  selectedItem.listed = true;
-  selectedItem.listPrice = price;
-  selectedItem.listCurr = sellCurr;
-  closeSellModal();
-  showToast(`✅ ${selectedItem.name} виставлено на Ринок за ${price} ${sellCurr}`,'');
-  renderInv();
+  if (!_currentUser) { showToast('Потрібно увійти!','error'); return; }
+
+  const btn = document.querySelector('#sell-modal button[onclick="confirmListing()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  try {
+    const { doc, updateDoc, addDoc, collection } =
+      await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const db = window._db;
+    const type   = selectedItem.itemType || selectedItem.type || '';
+    const name   = selectedItem.itemName || selectedItem.name || '—';
+    const rarity = selectedItem.itemRarity || selectedItem.rarity || 'common';
+    const nick   = window._currentAdmin?.nickname ||
+      document.getElementById('p-nickname')?.textContent || 'Гравець';
+
+    // Створити лот на ринку
+    await addDoc(collection(db,'marketplace'), {
+      sellerId:   _currentUser.uid,
+      sellerNick: nick,
+      itemId:     selectedItem.id,
+      itemName:   name,
+      itemType:   sellType === 'rent' ? 'rent' : type,
+      itemRarity: rarity,
+      itemTier:   selectedItem.itemTier || selectedItem.tier || 0,
+      itemNation: selectedItem.itemNation || selectedItem.nation || '',
+      itemImage:  selectedItem.itemImage || selectedItem.image || type,
+      price,
+      currency:   sellCurr,
+      status:     'active',
+      views:      0,
+      isRent:     sellType === 'rent',
+      rentDays:   sellType === 'rent' ? rentDays : null,
+      createdAt:  new Date(),
+    });
+
+    // Оновити статус в інвентарі
+    await updateDoc(doc(db,'inventory',_currentUser.uid,'items',selectedItem.id), {
+      isListed:  true,
+      listPrice: price,
+      listCurr:  sellCurr,
+    });
+
+    selectedItem.isListed  = true;
+    selectedItem.listPrice = price;
+    selectedItem.listCurr  = sellCurr;
+
+    closeSellModal();
+    showToast(`✅ ${name} виставлено на Ринок за ${price} ${sellCurr}`, '');
+    renderInv();
+  } catch(e) {
+    showToast('Помилка: '+e.message,'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Виставити'; }
+  }
 };
 
 // ── COSMETICS SYSTEM ──────────────────────────────────────────
@@ -1985,7 +2133,7 @@ setProfileLang(profileLang);
 const _prevShowTab = window.showTab;
 window.showTab = function(name) {
   _prevShowTab(name);
-  if (name === 'inventory') renderInv();
+  if (name === 'inventory') loadInventoryFromFirebase();
   if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); syncSidebarAvatar(); }, 50); }
 };
 </script>
