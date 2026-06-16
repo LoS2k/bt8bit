@@ -2,6 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
+<meta name="theme-color" content="#060a10">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BT 8BIT — Адмін панель</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -436,7 +437,11 @@ window.openTicket = async function(docId) {
         <span style="font-size:11px;color:var(--dim)">📅 ${date}</span>
       </div>
       <div style="font-size:16px;color:#fff;font-weight:500;margin-bottom:8px">${t.subject||'—'}</div>
-      <div style="font-size:13px;color:var(--dim);margin-bottom:4px">Від: <span style="color:var(--text)">${t.reporterNick||'—'}</span>${t.reportedNick?` · На: <span style="color:#e88038">${t.reportedNick}</span>`:''}</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:4px">
+        Від: <span style="color:var(--text)">${t.reporterNick||'—'}</span>
+        ${t.reporterEmail ? `· 📧 <a href="mailto:${t.reporterEmail}" style="color:var(--gold)">${t.reporterEmail}</a>` : ''}
+        ${t.reportedNick?` · На: <span style="color:#e88038">${t.reportedNick}</span>`:''}
+      </div>
       <div style="margin:16px 0;padding:16px;background:var(--surf);border:1px solid var(--border);font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap">${t.description||'—'}</div>
       ${t.screenshotUrl ? `<div style="margin-bottom:16px"><img src="${t.screenshotUrl}" style="max-width:100%;border:1px solid var(--border)" alt="Скріншот"><br><a href="${t.screenshotUrl}" target="_blank" style="font-size:11px;color:var(--gold)">Відкрити повний розмір →</a></div>` : ''}
       <div style="margin-bottom:16px">
