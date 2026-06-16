@@ -174,7 +174,10 @@
   .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
   .footer-col a{font-family:var(--rb);color:var(--dim);text-decoration:none;font-size:13px;transition:color .2s;}
   .footer-col a:hover{color:var(--text);}
-  .footer-bottom{max-width:1100px;margin:0 auto;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--px);font-size:7px;color:var(--dim);}
+  .footer-bottom{max-width:1100px;margin:0 auto;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:var(--px);font-size:7px;color:var(--dim);}
+  .footer-social{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);color:var(--dim);text-decoration:none;font-size:12px;transition:all .2s;}
+  .footer-social:hover{border-color:var(--gold);color:var(--gold);}
+  .footer-col a{display:flex;align-items:center;gap:6px;}
 
   /* AD у футері */
   .footer-ad{max-width:1100px;margin:0 auto 32px;padding:0;}
@@ -820,36 +823,54 @@
     <div class="footer-brand">
       <a class="nav-logo" href="#"><span class="nav-logo-text">BT 8BIT</span></a>
       <p data-t="footer.desc">Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.</p>
+      <!-- Соціальні мережі -->
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <a href="https://t.me/tanks_battles_3d" target="_blank" class="footer-social" title="Telegram">
+          <span>✈️</span> Telegram
+        </a>
+        <a href="https://discord.gg/Rezw5FSMUC" target="_blank" class="footer-social" title="Discord">
+          <span>🎮</span> Discord
+        </a>
+        <a href="https://www.youtube.com/@Los_2k" target="_blank" class="footer-social" title="YouTube">
+          <span>▶️</span> YouTube
+        </a>
+      </div>
     </div>
     <div class="footer-col">
-      <h4 data-t="footer.game">Гра</h4>
+      <h4 data-t="footer.game">🎯 Гра</h4>
       <ul>
-        <li><a href="#features" data-t="nav.features">Особливості</a></li>
-        <li><a href="#tanks" data-t="nav.tanks">Танки</a></li>
-        <li><a href="#leaderboard" data-t="nav.leaderboard">Рейтинг</a></li>
-        <li><a href="profile.html" data-t="nav.cabinet">Кабінет</a></li>
+        <li><a href="#features" data-t="nav.features">⚙️ Особливості</a></li>
+        <li><a href="#tanks" data-t="nav.tanks">🚀 Танки</a></li>
+        <li><a href="#leaderboard" data-t="nav.leaderboard">🏆 Рейтинг</a></li>
+        <li><a href="market.html" data-t="nav.market">🏪 Ринок</a></li>
+        <li><a href="gallery.html" data-t="nav.gallery">📸 Галерея</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4 data-t="footer.support">Підтримка</h4>
+      <h4 data-t="footer.support">🎫 Підтримка</h4>
       <ul>
-        <li><a href="https://t.me/tanks_battles_3d" target="_blank">Telegram</a></li>
-        <li><a href="https://discord.gg/Rezw5FSMUC" target="_blank">Discord</a></li>
-        <li><a href="https://www.youtube.com/@Los_2k" target="_blank">YouTube</a></li>
-        <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
+        <li><a href="support.html" data-t="nav.support">🎫 Центр підтримки</a></li>
+        <li><a href="https://t.me/tanks_battles_3d" target="_blank">✈️ Telegram</a></li>
+        <li><a href="https://discord.gg/Rezw5FSMUC" target="_blank">🎮 Discord</a></li>
+        <li><a href="mailto:tanksbattles3d@gmail.com">📧 Email</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4 data-t="footer.legal">Правове</h4>
+      <h4 data-t="footer.legal">📋 Правове</h4>
       <ul>
-        <li><a href="terms.html" data-t="footer.terms">Угода користувача</a></li>
-        <li><a href="privacy.html" data-t="footer.privacy">Конфіденційність</a></li>
+        <li><a href="terms.html" data-t="footer.terms">📄 Угода користувача</a></li>
+        <li><a href="privacy.html" data-t="footer.privacy">🔒 Конфіденційність</a></li>
+        <li><a href="profile.html" data-t="nav.cabinet">👤 Кабінет</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2025 BT 8BIT</span>
-    <span data-t="footer.made">Розроблено в 🇺🇦 Україні</span>
+    <span>© 2026 BT 8BIT · 🇺🇦 <span data-t="footer.made">Розроблено в Україні</span></span>
+    <span style="display:flex;gap:12px">
+      <a href="https://t.me/tanks_battles_3d" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="Telegram">✈️</a>
+      <a href="https://discord.gg/Rezw5FSMUC" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="Discord">🎮</a>
+      <a href="https://www.youtube.com/@Los_2k" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="YouTube">▶️</a>
+    </span>
   </div>
 </footer>
 
@@ -893,9 +914,9 @@ const T = {
     'dl.gp.sub':'Завантажити в','dl.apk.sub':'Прямий APK',
     'dl.downloads':'Завантажено:','dl.times':'разів','dl.version':'Остання версія:',
     'footer.desc':'Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.',
-    'footer.game':'Гра','footer.support':'Підтримка','footer.legal':'Правове',
-    'footer.terms':'Угода користувача','footer.privacy':'Конфіденційність',
-    'footer.made':'Розроблено в 🇺🇦 Україні',
+    'footer.game':'🎯 Гра','footer.support':'🎫 Підтримка','footer.legal':'📋 Правове',
+    'footer.terms':'📄 Угода користувача','footer.privacy':'🔒 Конфіденційність',
+    'footer.made':'Розроблено в Україні','nav.gallery':'📸 Галерея',
     'ad.label':'РЕКЛАМНИЙ БЛОК','ad.tag':'Реклама',
     'tourn.title':'Турніри','tourn.register':'Реєстрація',
     'tourn.more':'Детальніше','tourn.join':'Взяти участь',
@@ -938,9 +959,9 @@ const T = {
     'dl.gp.sub':'Get it on','dl.apk.sub':'Direct APK',
     'dl.downloads':'Downloaded:','dl.times':'times','dl.version':'Latest version:',
     'footer.desc':'Mobile tank game with realistic armor mechanics and clan system. Made in Ukraine.',
-    'footer.game':'Game','footer.support':'Support','footer.legal':'Legal',
-    'footer.terms':'Terms of Service','footer.privacy':'Privacy Policy',
-    'footer.made':'Made in 🇺🇦 Ukraine',
+    'footer.game':'🎯 Game','footer.support':'🎫 Support','footer.legal':'📋 Legal',
+    'footer.terms':'📄 Terms of Service','footer.privacy':'🔒 Privacy Policy',
+    'footer.made':'Made in Ukraine','nav.gallery':'📸 Gallery',
     'ad.label':'AD BLOCK','ad.tag':'Ad',
     'tourn.title':'Tournaments','tourn.register':'Registration',
     'tourn.more':'Learn More','tourn.join':'Join Now',
