@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BT 8BIT — Адмін панель</title>
+<script defer src="/_vercel/insights/script.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <script type="module">
@@ -357,10 +358,46 @@ function showToast(msg,type=''){
 }
 window.showToast=showToast;
 window.adminSignOut = () => signOut(auth).then(()=>window.location.href='profile.html');
+
+// ── SHOW SECTION ──────────────────────────────────────────────
+window.showSection = function(name) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('section-'+name);
+  if (el) el.classList.add('active');
+  // Підсвічуємо активну кнопку по data-section атрибуту
+  const activeBtn = document.querySelector(`.sidebar-item[data-section="${name}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+  if (name === 'logs') loadLogs();
+  if (name === 'give-items') loadItemHistory();
+  if (name === 'bans') loadBans();
+};
+
+// ── LOGS ──────────────────────────────────────────────────────
+async function loadLogs() {
+  const list = document.getElementById('logs-list');
+  try {
+    const snap = await getDocs(query(collection(db,'moderation_log'), orderBy('createdAt','desc'), limit(50)));
+    if (snap.empty) { list.innerHTML = '<div class="loading-row">Логів немає</div>'; return; }
+    list.innerHTML = '<table><thead><tr><th>Час</th><th>Адмін</th><th>Дія</th><th>Ціль</th><th>Деталі</th></tr></thead><tbody>' +
+      snap.docs.map(d => {
+        const l = d.data();
+        const t = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('uk-UA') : '—';
+        const actionColor = l.action?.includes('ban') ? '#c07070' : l.action?.includes('give') ? '#4aaa5a' : 'var(--gold)';
+        return `<tr>
+          <td style="font-size:11px;color:var(--dim)">${t}</td>
+          <td style="font-size:12px">${l.adminNick||'—'}</td>
+          <td style="color:${actionColor};font-size:11px">${l.action||'—'}</td>
+          <td style="font-size:12px">${l.targetNick||l.target||'—'}</td>
+          <td style="font-size:11px;color:var(--dim)">${l.details||l.reason||'—'}</td>
+        </tr>`;
+      }).join('') + '</tbody></table>';
+  } catch(e) { list.innerHTML = '<div class="loading-row" style="color:#c07070">'+e.message+'</div>'; }
+}
 </script>
 
 <style>
-:root{--bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
+:root{--bg:#060a10;--surf:#0d1520;--surface:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--font-d:'Press Start 2P',monospace;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--rb);min-height:100vh;}
 
@@ -511,31 +548,31 @@ select.admin-input{cursor:pointer;}
     <!-- SIDEBAR -->
     <div class="admin-sidebar">
       <div class="sidebar-section">Головне</div>
-      <div class="sidebar-item active" onclick="showSection('dashboard')">
+      <div class="sidebar-item active" data-section="dashboard" onclick="showSection('dashboard')">
         <span class="sidebar-icon">📊</span> Дашборд
       </div>
-      <div class="sidebar-item" onclick="showSection('players');loadPlayers()">
+      <div class="sidebar-item" data-section="players" onclick="showSection('players');loadPlayers()">
         <span class="sidebar-icon">👥</span> Гравці
       </div>
-      <div class="sidebar-item" onclick="showSection('bans');loadBans()">
+      <div class="sidebar-item" data-section="bans" onclick="showSection('bans');loadBans()">
         <span class="sidebar-icon">🚫</span> Бани
       </div>
       <div class="sidebar-section">Інструменти</div>
-      <div class="sidebar-item" onclick="showSection('give-resources')">
+      <div class="sidebar-item" data-section="give-resources" onclick="showSection('give-resources')">
         <span class="sidebar-icon">💰</span> Видача ресурсів
       </div>
-      <div class="sidebar-item" onclick="showSection('give-items')">
+      <div class="sidebar-item" data-section="give-items" onclick="showSection('give-items')">
         <span class="sidebar-icon">📦</span> Видача айтемів
       </div>
       <div class="sidebar-section">Контент</div>
-      <div class="sidebar-item" onclick="showSection('promocodes');loadPromocodes()">
+      <div class="sidebar-item" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()">
         <span class="sidebar-icon">🎁</span> Промокоди
       </div>
-      <div class="sidebar-item" onclick="showSection('news');loadNews()">
+      <div class="sidebar-item" data-section="news" onclick="showSection('news');loadNews()">
         <span class="sidebar-icon">📰</span> Новини
       </div>
       <div class="sidebar-section">Інше</div>
-      <div class="sidebar-item" onclick="showSection('logs')">
+      <div class="sidebar-item" data-section="logs" onclick="showSection('logs')">
         <span class="sidebar-icon">📋</span> Логи
       </div>
       <div class="sidebar-item" onclick="window.open('index.html','_blank')">
@@ -918,303 +955,5 @@ select.admin-input{cursor:pointer;}
   </div>
 </div>
 
-<script>
-function showSection(name) {
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-  document.getElementById('section-'+name).classList.add('active');
-  const names = ['dashboard','players','bans','give-resources','give-items','promocodes','news','logs'];
-  const items = document.querySelectorAll('.sidebar-item');
-  const idx = names.indexOf(name);
-  if (idx >= 0 && items[idx]) items[idx].classList.add('active');
-  if (name === 'logs') loadLogs();
-  if (name === 'give-items') loadItemHistory();
-}
-
-// ── BANS ──────────────────────────────────────────────────────
-window.loadBans = async function() {
-  const list = document.getElementById('bans-list');
-  list.innerHTML = '<tr><td colspan="4" class="loading-row">Завантаження...</td></tr>';
-  try {
-    const snap = await getDocs(query(
-      collection(db,'players'),
-      where('banned','==',true),
-      limit(100)
-    ));
-    if (snap.empty) {
-      list.innerHTML = '<tr><td colspan="4" class="loading-row" style="color:#4aaa5a">✅ Немає заблокованих гравців</td></tr>';
-      return;
-    }
-    list.innerHTML = snap.docs.map(d => {
-      const p = d.data();
-      const uid = d.id;
-      const banDate = p.bannedAt?.toDate
-        ? p.bannedAt.toDate().toLocaleDateString('uk-UA') : '—';
-      return `<tr>
-        <td><span class="player-nick">${p.nickname||'—'}</span><br><span style="font-size:10px;color:var(--dim)">${uid.slice(0,12)}...</span></td>
-        <td style="color:#c07070;max-width:200px">${p.banReason||'Причина не вказана'}</td>
-        <td style="font-size:11px;color:var(--dim)">${banDate}</td>
-        <td>
-          <button class="tbl-btn" onclick="unbanPlayer('${uid}','${(p.nickname||'').replace(/'/g,"\\'")}')">✅ Розблокувати</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    list.innerHTML = `<tr><td colspan="4" class="loading-row" style="color:#c07070">${e.message}</td></tr>`;
-  }
-};
-
-window.unbanPlayer = async function(uid, nick) {
-  if (!confirm(`Розблокувати ${nick}?`)) return;
-  try {
-    await updateDoc(doc(db,'players',uid), { banned:false, banReason:'' });
-    // Лог
-    await addDoc(collection(db,'moderation_log'), {
-      action: 'unban', adminId: currentAdmin?.uid,
-      adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick,
-      createdAt: new Date()
-    });
-    showToast('✅ '+nick+' розблоковано');
-    loadBans();
-    // Оновити дашборд
-    loadDashboard();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── GIVE RESOURCES / ITEMS — спільний пошук гравця ────────────
-let giveTargetUID = { gr: null, gi: null };
-
-window.searchForGive = async function(prefix) {
-  const q = document.getElementById(prefix+'-search').value.trim();
-  if (!q) { showToast('Введи нікнейм або UID','error'); return; }
-
-  try {
-    let playerData = null, playerUID = null;
-
-    // Спочатку пробуємо як UID (довга строка)
-    if (q.length > 20) {
-      const snap = await getDoc(doc(db,'players',q));
-      if (snap.exists()) { playerUID = q; playerData = snap.data(); }
-    }
-
-    // Потім як нікнейм
-    if (!playerData) {
-      const snap = await getDocs(query(
-        collection(db,'players'),
-        where('nickname','>=',q),
-        where('nickname','<=',q+'\uf8ff'),
-        limit(1)
-      ));
-      if (!snap.empty) { playerUID = snap.docs[0].id; playerData = snap.docs[0].data(); }
-    }
-
-    if (!playerData) { showToast('Гравця не знайдено','error'); return; }
-
-    giveTargetUID[prefix] = playerUID;
-    const nick = playerData.nickname || '—';
-    const av   = nick[0].toUpperCase();
-
-    setText(prefix+'-avatar', av);
-    setText(prefix+'-nick',   nick);
-    setText(prefix+'-uid-show', playerUID);
-
-    if (prefix === 'gr') {
-      setText('gr-cur-gold',  (playerData.gold||0).toLocaleString());
-      setText('gr-cur-coins', (playerData.coins||0).toLocaleString());
-      setText('gr-cur-oil',   (playerData.oil||0).toLocaleString());
-      document.getElementById('gr-player-found').style.display = 'block';
-      document.getElementById('gr-btn').disabled = false;
-    } else {
-      document.getElementById('gi-player-found').style.display = 'block';
-      document.getElementById('gi-btn').disabled = false;
-    }
-    showToast('Знайдено: '+nick);
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── GIVE RESOURCES ────────────────────────────────────────────
-window.giveResources = async function() {
-  const uid = giveTargetUID['gr'];
-  if (!uid) { showToast('Спочатку знайди гравця','error'); return; }
-
-  const gold     = parseInt(document.getElementById('gr-gold').value)||0;
-  const coins    = parseInt(document.getElementById('gr-coins').value)||0;
-  const fuel     = parseInt(document.getElementById('gr-fuel').value)||0;
-  const oil      = parseInt(document.getElementById('gr-oil').value)||0;
-  const metal    = parseInt(document.getElementById('gr-metal').value)||0;
-  const diamonds = parseInt(document.getElementById('gr-diamonds').value)||0;
-  const reason   = document.getElementById('gr-reason').value.trim() || 'Видача адміном';
-
-  if (!gold && !coins && !fuel && !oil && !metal && !diamonds) {
-    showToast('Вкажи хоча б один ресурс','error'); return;
-  }
-
-  const btn = document.getElementById('gr-btn');
-  btn.disabled = true; btn.textContent = '...';
-
-  try {
-    const updates = {};
-    if (gold)     updates.gold     = increment(gold);
-    if (coins)    updates.coins    = increment(coins);
-    if (fuel)     updates.fuel     = increment(fuel);
-    if (oil)      updates.oil      = increment(oil);
-    if (metal)    updates.metal    = increment(metal);
-    if (diamonds) updates.diamonds = increment(diamonds);
-
-    await updateDoc(doc(db,'players',uid), updates);
-
-    // Лог
-    const nick = document.getElementById('gr-nick').textContent;
-    const resText = [
-      gold?`+${gold} золото`:'',
-      coins?`+${coins} монети`:'',
-      fuel?`+${fuel} паливо`:'',
-      oil?`+${oil} нафта`:'',
-      metal?`+${metal} метал`:'',
-      diamonds?`+${diamonds} діаманти`:'',
-    ].filter(Boolean).join(', ');
-
-    await addDoc(collection(db,'moderation_log'), {
-      action: 'give_resources', adminId: currentAdmin?.uid,
-      adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick,
-      details: resText, reason,
-      createdAt: new Date()
-    });
-
-    showToast(`✅ ${nick} отримав: ${resText}`);
-    // Очистити поля
-    ['gr-gold','gr-coins','gr-fuel','gr-oil','gr-metal','gr-diamonds'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    // Оновити поточний баланс
-    const fresh = await getDoc(doc(db,'players',uid));
-    if (fresh.exists()) {
-      const d = fresh.data();
-      setText('gr-cur-gold',  (d.gold||0).toLocaleString());
-      setText('gr-cur-coins', (d.coins||0).toLocaleString());
-      setText('gr-cur-oil',   (d.oil||0).toLocaleString());
-    }
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-  finally { btn.disabled = false; btn.textContent = '💰 Видати ресурси'; }
-};
-
-// ── GIVE ITEMS ────────────────────────────────────────────────
-window.updateItemFields = function() {
-  const type = document.getElementById('gi-type').value;
-  const isSpecial = ['nickname_change','exp_boost','fuel_refill'].includes(type);
-  document.getElementById('gi-name-wrap').style.display   = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-rarity-wrap').style.display = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-tier-wrap').style.display   = type === 'tank' ? 'block' : 'none';
-  document.getElementById('gi-image-wrap').style.display  = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-nation-wrap').style.display = type === 'tank' ? 'block' : 'none';
-};
-
-window.giveItem = async function() {
-  const uid = giveTargetUID['gi'];
-  if (!uid) { showToast('Спочатку знайди гравця','error'); return; }
-
-  const type   = document.getElementById('gi-type').value;
-  const name   = document.getElementById('gi-name').value.trim();
-  const rarity = document.getElementById('gi-rarity').value;
-  const tier   = parseInt(document.getElementById('gi-tier').value)||0;
-  const image  = document.getElementById('gi-image').value.trim() || type;
-  const nation = document.getElementById('gi-nation').value;
-  const reason = document.getElementById('gi-reason').value.trim() || 'Видача адміном';
-  const nick   = document.getElementById('gi-nick').textContent;
-
-  const isSpecial = ['nickname_change','exp_boost','fuel_refill'].includes(type);
-  if (!isSpecial && !name) { showToast('Введи назву айтему','error'); return; }
-
-  const SPECIAL_NAMES = {
-    nickname_change: 'Зміна нікнейму',
-    exp_boost:       'Буст досвіду x2',
-    fuel_refill:     'Заправка палива',
-    premium_camo:    'Преміум камуфляж',
-  };
-
-  const btn = document.getElementById('gi-btn');
-  btn.disabled = true; btn.textContent = '...';
-
-  try {
-    const itemData = {
-      itemType:   type,
-      itemName:   isSpecial ? SPECIAL_NAMES[type] : name,
-      itemRarity: isSpecial ? 'epic' : rarity,
-      itemTier:   tier||0,
-      itemImage:  image,
-      itemNation: nation||'',
-      isListed:   false,
-      isRented:   false,
-      acquiredBy: 'admin',
-      acquiredReason: reason,
-      acquiredAt: new Date(),
-    };
-
-    // Генеруємо унікальний ID для айтему
-    const itemId = type + '_' + Date.now();
-    await setDoc(doc(db,'inventory',uid,'items',itemId), itemData);
-
-    // Лог
-    await addDoc(collection(db,'moderation_log'), {
-      action: 'give_item', adminId: currentAdmin?.uid,
-      adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick,
-      details: itemData.itemName, reason,
-      createdAt: new Date()
-    });
-
-    showToast(`✅ ${nick} отримав: ${itemData.itemName}`);
-    loadItemHistory();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-  finally { btn.disabled = false; btn.textContent = '📦 Видати айтем'; }
-};
-
-async function loadItemHistory() {
-  const el = document.getElementById('gi-history');
-  if (!el) return;
-  try {
-    const snap = await getDocs(query(
-      collection(db,'moderation_log'),
-      where('action','==','give_item'),
-      orderBy('createdAt','desc'),
-      limit(10)
-    ));
-    if (snap.empty) { el.innerHTML = '<div style="color:var(--dim);font-size:12px">Ще не було видач</div>'; return; }
-    el.innerHTML = '<table style="width:100%;border-collapse:collapse">' +
-      '<thead><tr><th style="font-family:var(--font-d);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Час</th>' +
-      '<th style="font-family:var(--font-d);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Гравець</th>' +
-      '<th style="font-family:var(--font-d);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Айтем</th>' +
-      '<th style="font-family:var(--font-d);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Причина</th></tr></thead><tbody>' +
-      snap.docs.map(d => {
-        const l = d.data();
-        const t = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('uk-UA') : '—';
-        return `<tr>
-          <td style="font-size:11px;color:var(--dim);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${t}</td>
-          <td style="font-size:12px;color:#fff;padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.targetNick||'—'}</td>
-          <td style="font-size:12px;color:var(--gold);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.details||'—'}</td>
-          <td style="font-size:11px;color:var(--dim);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.reason||'—'}</td>
-        </tr>`;
-      }).join('') + '</tbody></table>';
-  } catch(e) { el.innerHTML = '<div style="color:#c07070;font-size:12px">'+e.message+'</div>'; }
-}
-}
-
-async function loadLogs() {
-  const list = document.getElementById('logs-list');
-  try {
-    const { getDocs, query, collection, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const snap = await getDocs(query(collection(window._db,'moderation_log'), orderBy('createdAt','desc'), limit(50)));
-    if (snap.empty) { list.innerHTML = '<div class="loading-row">Логів немає</div>'; return; }
-    list.innerHTML = '<table><thead><tr><th>Час</th><th>Адмін</th><th>Дія</th><th>Ціль</th></tr></thead><tbody>' +
-      snap.docs.map(d => {
-        const l = d.data();
-        const t = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('uk-UA') : '—';
-        return `<tr><td style="font-size:11px;color:var(--dim)">${t}</td><td>${l.adminNick||'—'}</td><td style="color:var(--gold)">${l.action||'—'}</td><td>${l.targetNick||l.target||'—'}</td></tr>`;
-      }).join('') + '</tbody></table>';
-  } catch(e) { list.innerHTML = '<div class="loading-row" style="color:#c07070">'+e.message+'</div>'; }
-}
-</script>
 </body>
 </html>
