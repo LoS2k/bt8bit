@@ -363,6 +363,117 @@ function showToast(msg,type=''){
 window.showToast=showToast;
 window.adminSignOut = () => signOut(auth).then(()=>window.location.href='profile.html');
 
+// ── SUPPORT TICKETS ───────────────────────────────────────────
+const TYPE_LABELS_A = {
+  bug:'🐛 Баг', report:'🚨 Скарга', idea:'💡 Ідея',
+  payment:'💳 Платіж', account:'👤 Акаунт', other:'📝 Інше'
+};
+const TYPE_COLORS_A = {
+  bug:'#e84040', report:'#e88038', idea:'#4aaa5a',
+  payment:'#e8bc38', account:'#8eb0cc', other:'#a070cc'
+};
+const STATUS_LABELS_A = {
+  open:'🟡 Відкрита', inprogress:'🔵 В роботі',
+  resolved:'✅ Вирішено', closed:'⬜ Закрита'
+};
+
+window.loadTickets = async function() {
+  const list = document.getElementById('tickets-list');
+  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
+
+  const statusFilter = document.getElementById('tickets-filter')?.value || 'all';
+  const typeFilter   = document.getElementById('tickets-type')?.value   || 'all';
+
+  try {
+    let q = query(collection(db,'support_tickets'), orderBy('createdAt','desc'), limit(50));
+    if (statusFilter !== 'all') q = query(collection(db,'support_tickets'), where('status','==',statusFilter), orderBy('createdAt','desc'), limit(50));
+    const snap = await getDocs(q);
+
+    if (snap.empty) { list.innerHTML = '<div class="loading-row">Заявок немає</div>'; return; }
+
+    let tickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeFilter !== 'all') tickets = tickets.filter(t => t.type === typeFilter);
+
+    list.innerHTML = `<table><thead><tr>
+      <th>ID</th><th>Тип</th><th>Гравець</th><th>Тема</th><th>Пріоритет</th><th>Дата</th><th>Статус</th><th>Дія</th>
+    </tr></thead><tbody>` +
+    tickets.map(t => {
+      const color = TYPE_COLORS_A[t.type] || '#888';
+      const date  = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
+      const prio  = t.priority === 'high' ? '🔴' : t.priority === 'medium' ? '🟡' : '🟢';
+      const statusColor = t.status === 'resolved' ? '#4aaa5a' : t.status === 'inprogress' ? '#8eb0cc' : t.status === 'closed' ? '#6a7a8a' : '#e8bc38';
+      return `<tr>
+        <td style="font-family:var(--px);font-size:9px;color:var(--dim)">${t.ticketId||t.id.slice(0,8)}</td>
+        <td><span style="font-size:10px;color:${color}">${TYPE_LABELS_A[t.type]||t.type}</span></td>
+        <td style="font-size:13px">${t.reporterNick||'—'}</td>
+        <td style="font-size:12px;max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${t.subject||'—'}</td>
+        <td style="text-align:center">${prio}</td>
+        <td style="font-size:11px;color:var(--dim)">${date}</td>
+        <td><span style="font-size:10px;color:${statusColor}">${STATUS_LABELS_A[t.status]||t.status}</span></td>
+        <td><button class="tbl-btn" onclick="openTicket('${t.id}')">Відкрити</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  } catch(e) {
+    list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`;
+  }
+};
+
+window.openTicket = async function(docId) {
+  try {
+    const { getDoc, doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snap = await getDoc(fsDoc(db,'support_tickets',docId));
+    if (!snap.exists()) return;
+    const t = snap.data();
+
+    const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('uk-UA') : '—';
+    const color = TYPE_COLORS_A[t.type] || '#888';
+
+    document.getElementById('tm-id').textContent = t.ticketId || docId;
+    document.getElementById('tm-body').innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+        <span style="font-size:11px;color:${color};border:1px solid ${color}44;padding:4px 10px">${TYPE_LABELS_A[t.type]||t.type}</span>
+        <span style="font-size:11px;color:var(--dim);border:1px solid var(--border);padding:4px 10px">${t.priority==='high'?'🔴 Критичний':t.priority==='medium'?'🟡 Середній':'🟢 Низький'}</span>
+        <span style="font-size:11px;color:var(--dim)">📅 ${date}</span>
+      </div>
+      <div style="font-size:16px;color:#fff;font-weight:500;margin-bottom:8px">${t.subject||'—'}</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:4px">Від: <span style="color:var(--text)">${t.reporterNick||'—'}</span>${t.reportedNick?` · На: <span style="color:#e88038">${t.reportedNick}</span>`:''}</div>
+      <div style="margin:16px 0;padding:16px;background:var(--surf);border:1px solid var(--border);font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap">${t.description||'—'}</div>
+      ${t.screenshotUrl ? `<div style="margin-bottom:16px"><img src="${t.screenshotUrl}" style="max-width:100%;border:1px solid var(--border)" alt="Скріншот"><br><a href="${t.screenshotUrl}" target="_blank" style="font-size:11px;color:var(--gold)">Відкрити повний розмір →</a></div>` : ''}
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Статус заявки</label>
+        <select id="tm-status" class="admin-input" style="width:200px">
+          <option value="open" ${t.status==='open'?'selected':''}>🟡 Відкрита</option>
+          <option value="inprogress" ${t.status==='inprogress'?'selected':''}>🔵 В роботі</option>
+          <option value="resolved" ${t.status==='resolved'?'selected':''}>✅ Вирішено</option>
+          <option value="closed" ${t.status==='closed'?'selected':''}>⬜ Закрита</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="updateTicketStatus('${docId}')">💾 Зберегти статус</button>
+        <button class="admin-btn secondary" onclick="closeTicketModal()">Закрити</button>
+      </div>
+    `;
+    document.getElementById('ticket-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.updateTicketStatus = async function(docId) {
+  const status = document.getElementById('tm-status').value;
+  try {
+    const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(fsDoc(db,'support_tickets',docId), { status, updatedAt: new Date() });
+    showToast('✅ Статус оновлено');
+    closeTicketModal();
+    loadTickets();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.closeTicketModal = function() {
+  document.getElementById('ticket-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
 // ── BANS ──────────────────────────────────────────────────────
 window.loadBans = async function() {
   const list = document.getElementById('bans-list');
@@ -798,6 +909,9 @@ select.admin-input{cursor:pointer;}
       <div class="sidebar-item" data-section="give-items" onclick="showSection('give-items')">
         <span class="sidebar-icon">📦</span> Видача айтемів
       </div>
+      <div class="sidebar-item" data-section="tickets" onclick="showSection('tickets');loadTickets()">
+        <span class="sidebar-icon">🎫</span> Заявки
+      </div>
       <div class="sidebar-section">Контент</div>
       <div class="sidebar-item" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()">
         <span class="sidebar-icon">🎁</span> Промокоди
@@ -983,6 +1097,44 @@ select.admin-input{cursor:pointer;}
               <tr><td colspan="4" class="loading-row">Завантаження...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- TICKETS -->
+      <div id="section-tickets" class="admin-section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🎫 Заявки підтримки</span>
+          <div style="display:flex;gap:8px">
+            <select id="tickets-filter" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadTickets()">
+              <option value="all">Всі</option>
+              <option value="open">🟡 Відкриті</option>
+              <option value="inprogress">🔵 В роботі</option>
+              <option value="resolved">✅ Вирішені</option>
+            </select>
+            <select id="tickets-type" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadTickets()">
+              <option value="all">Всі типи</option>
+              <option value="bug">🐛 Баг</option>
+              <option value="report">🚨 Скарга</option>
+              <option value="idea">💡 Ідея</option>
+              <option value="payment">💳 Платіж</option>
+              <option value="account">👤 Акаунт</option>
+              <option value="other">📝 Інше</option>
+            </select>
+          </div>
+        </div>
+        <div id="tickets-list" class="admin-table-wrap">
+          <div class="loading-row">Завантаження...</div>
+        </div>
+      </div>
+
+      <!-- TICKET MODAL -->
+      <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeTicketModal()">
+        <div style="background:var(--card);border:1px solid var(--border);width:min(640px,95vw);max-height:90vh;overflow-y:auto;">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="tm-id">—</span>
+            <button onclick="closeTicketModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
+          </div>
+          <div style="padding:24px" id="tm-body"></div>
         </div>
       </div>
 
