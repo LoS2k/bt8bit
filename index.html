@@ -5,6 +5,18 @@
 <script defer src="/_vercel/insights/script.js"></script>
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#060a10">
+<meta name="description" content="BT 8BIT — мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями. Безкоштовно на Android.">
+<meta name="keywords" content="BT 8BIT, танки, мобільна гра, tank game, android, PVP, клани, tanks battles 3d">
+<meta property="og:title" content="BT 8BIT — Tank Battles 3D">
+<meta property="og:description" content="Mobile tank game with realistic physics, clans and global battles. Free on Android.">
+<meta property="og:image" content="https://8bit-lilac.vercel.app/logo.png">
+<meta property="og:url" content="https://8bit-lilac.vercel.app">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BT 8BIT — Tank Battles 3D">
+<meta name="twitter:description" content="Mobile tank game with realistic physics, clans and global battles.">
+<meta name="twitter:image" content="https://8bit-lilac.vercel.app/logo.png">
 <title>BT 8BIT — Танкові Бої 3D</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -173,14 +185,14 @@
     .nav-links{display:none;}
     .nav-right .lang-sw{display:none;}
     section{padding:48px 16px;}
-    .stats-bar{flex-wrap:wrap;padding:16px;}
+    .stats-bar{flex-wrap:wrap;padding:12px 16px;}
     .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:10px 0;min-width:calc(50% - 1px);flex:none;}
     .stat-item:nth-child(odd){border-right:1px solid var(--border);}
     .stat-value{font-size:16px;}
     .news-grid{grid-template-columns:1fr;}
     .footer-inner{grid-template-columns:1fr;}
     .footer-bottom{flex-direction:column;gap:8px;}
-    #download .inner{flex-direction:column;}
+    #download .inner{flex-direction:column;align-items:flex-start;}
     #download{padding:48px 16px;}
     .hero-logo{width:80px;height:80px;}
     .hero-content{padding:80px 16px 48px;}
@@ -200,14 +212,34 @@
     #modal-tournaments>div:first-child{padding:16px 20px;}
     #modal-tournaments>div:last-child{padding:16px 20px;}
     .btn-primary,.btn-secondary{padding:12px 20px;font-size:8px;}
-    .dl-btns{flex-direction:column;}
-    .btn-dl{min-width:auto;}
+    .dl-btns{flex-direction:column;width:100%;}
+    .btn-dl{min-width:auto;width:100%;}
     h2{font-size:16px;}
+    /* Features grid */
+    .features-grid{grid-template-columns:1fr!important;}
+    /* Hero buttons */
+    .hero-btns{flex-direction:column;align-items:center;gap:10px;}
+    .hero-btns a{width:100%;max-width:280px;text-align:center;}
+    /* Version info */
+    #version-info{width:100%;justify-content:center;}
+    /* Download counter */
+    #dl-count{font-size:13px;}
   }
   @media(max-width:480px){
     .stat-item{min-width:100%;border-right:none;}
     .stat-item:nth-child(odd){border-right:none;}
     nav .btn-cab{padding:6px 12px;font-size:8px;}
+    /* Hide damage column on small phones */
+    .leaderboard-table th:nth-child(4),.leaderboard-table td:nth-child(4){display:none;}
+    /* Smaller hero text */
+    .hero-sub{font-size:clamp(14px,5vw,24px)!important;}
+    h2{font-size:14px;}
+    /* Mobile menu support link */
+    .mobile-menu a{padding:12px 20px;font-size:9px;}
+    /* Tank cards smaller */
+    .tank-card{min-width:200px!important;}
+    /* Footer compact */
+    .footer-col{margin-top:0;}
   }
 
   /* Бургер-меню */
@@ -445,6 +477,7 @@
   <a href="#leaderboard" onclick="toggleMenu()" data-t="nav.leaderboard">Рейтинг</a>
   <a href="#news" onclick="toggleMenu()" data-t="nav.news">Новини</a>
   <a href="market.html" style="color:var(--green)" data-t="nav.market">🏪 Ринок</a>
+  <a href="support.html" style="color:var(--steel)" data-t="nav.support">🎫 Підтримка</a>
   <a href="#download" onclick="toggleMenu()" data-t="nav.download">Завантажити</a>
   <a href="profile.html" style="color:var(--gold)" data-t="nav.cabinet.arrow">Кабінет →</a>
 </div>
@@ -824,7 +857,7 @@ const T = {
   uk: {
     'nav.features':'Особливості','nav.tanks':'Танки','nav.leaderboard':'Рейтинг',
     'nav.news':'Новини','nav.download':'Завантажити','nav.cabinet':'Кабінет',
-    'nav.cabinet.arrow':'Кабінет →',
+    'nav.cabinet.arrow':'Кабінет →','nav.market':'🏪 Ринок','nav.support':'🎫 Підтримка',
     'hero.eyebrow':'Відкрите бета-тестування','hero.sub':'ТАНКОВІ БОЇ 3D',
     'hero.desc':'Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.',
     'hero.btn1':'▶ Завантажити','hero.btn2':'Дізнатись більше',
@@ -863,11 +896,13 @@ const T = {
     'footer.terms':'Угода користувача','footer.privacy':'Конфіденційність',
     'footer.made':'Розроблено в 🇺🇦 Україні',
     'ad.label':'РЕКЛАМНИЙ БЛОК','ad.tag':'Реклама',
+    'tourn.title':'Турніри','tourn.register':'Реєстрація',
+    'tourn.more':'Детальніше','tourn.join':'Взяти участь',
   },
   en: {
     'nav.features':'Features','nav.tanks':'Tanks','nav.leaderboard':'Leaderboard',
     'nav.news':'News','nav.download':'Download','nav.cabinet':'Cabinet',
-    'nav.cabinet.arrow':'Cabinet →',
+    'nav.cabinet.arrow':'Cabinet →','nav.market':'🏪 Market','nav.support':'🎫 Support',
     'hero.eyebrow':'Open Beta Coming Soon','hero.sub':'TANK BATTLES 3D',
     'hero.desc':'Mobile tank game with realistic physics, clans and global battles.',
     'hero.btn1':'▶ Download Free','hero.btn2':'Learn More',
@@ -906,6 +941,8 @@ const T = {
     'footer.terms':'Terms of Service','footer.privacy':'Privacy Policy',
     'footer.made':'Made in 🇺🇦 Ukraine',
     'ad.label':'AD BLOCK','ad.tag':'Ad',
+    'tourn.title':'Tournaments','tourn.register':'Registration',
+    'tourn.more':'Learn More','tourn.join':'Join Now',
   }
 };
 
