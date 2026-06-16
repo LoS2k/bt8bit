@@ -120,6 +120,8 @@
       buildBattleLog(data.battleLog||[]);
       buildSeasonRecord(data.seasonBest||{});
       if(data.clanId) await loadClanData(data.clanId);
+      // Перевірка реферального посилання
+      setTimeout(checkReferral, 500);
       setLoading(false);
     }catch(e){
       console.error(e);
@@ -759,6 +761,7 @@
         <div class="side-nav-item" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> <span data-t="nav.search">Пошук гравців</span></div>
         <div class="side-nav-item" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> <span data-t="nav.compare">Порівняння</span></div>
         <div class="side-nav-item" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> <span data-t="nav.clan">Клан</span></div>
+        <div class="side-nav-item" onclick="showTab('referral')"><span class="side-nav-icon">🎁</span> <span data-t="nav.referral">Реферали</span></div>
         <div class="side-nav-item" onclick="showTab('shop')"><span class="side-nav-icon">💰</span> <span data-t="nav.shop">Поповнити</span></div>
       </div>
 
@@ -1057,6 +1060,65 @@
         <div id="no-clan-msg" style="color:var(--dim);font-size:13px;padding:16px 0">Ти не в клані. Вступи або створи клан в грі.</div>
       </div>
 
+      <!-- REFERRAL -->
+      <div id="tab-referral" class="content-panel" style="display:none">
+        <div class="panel-title">🎁 Реферальна програма</div>
+
+        <!-- Твоє посилання -->
+        <div style="background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:20px;text-align:center;">
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ТВОЄ РЕФЕРАЛЬНЕ ПОСИЛАННЯ</div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:12px 16px;font-family:monospace;font-size:12px;color:var(--steel);margin-bottom:12px;word-break:break-all" id="ref-link-display">Завантаження...</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button onclick="copyRefLink()" style="padding:9px 20px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--font-d);font-size:9px;transition:background .2s" onmouseover="this.style.background='#c49a20'" onmouseout="this.style.background='var(--gold)'">📋 Скопіювати</button>
+            <a id="ref-tg-share" href="#" target="_blank" style="padding:9px 20px;background:rgba(74,170,90,0.15);border:1px solid rgba(74,170,90,0.4);color:var(--green);font-family:var(--font-d);font-size:9px;text-decoration:none;transition:all .2s">📱 Поділитись в TG</a>
+          </div>
+        </div>
+
+        <!-- Нагороди -->
+        <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:20px;">
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">НАГОРОДИ ЗА РЕФЕРАЛА</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center;">
+              <div style="font-size:28px;margin-bottom:8px">👤</div>
+              <div style="font-family:var(--font-d);font-size:8px;color:var(--text);margin-bottom:4px">Тобі</div>
+              <div style="font-size:13px;color:var(--gold)">+500 золота</div>
+              <div style="font-size:11px;color:var(--dim)">за кожного друга</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center;">
+              <div style="font-size:28px;margin-bottom:8px">🎁</div>
+              <div style="font-family:var(--font-d);font-size:8px;color:var(--text);margin-bottom:4px">Другу</div>
+              <div style="font-size:13px;color:var(--green)">+300 золота</div>
+              <div style="font-size:11px;color:var(--dim)">при реєстрації</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Статистика -->
+        <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:20px;">
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">МОЯ СТАТИСТИКА</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div>
+              <div style="font-family:var(--font-d);font-size:20px;color:var(--gold)" id="ref-count">0</div>
+              <div style="font-size:11px;color:var(--dim)">Запрошено друзів</div>
+            </div>
+            <div>
+              <div style="font-family:var(--font-d);font-size:20px;color:var(--green)" id="ref-earned">0</div>
+              <div style="font-size:11px;color:var(--dim)">Золота зароблено</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Список рефералів -->
+        <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ЗАПРОШЕНІ ГРАВЦІ</div>
+        <div id="ref-list">
+          <div style="text-align:center;padding:30px;color:var(--dim);font-size:13px">⏳ Завантаження...</div>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;background:rgba(232,188,56,0.06);border:1px solid rgba(232,188,56,0.2);font-size:12px;color:var(--dim);line-height:1.8">
+          💡 Поділись посиланням з друзями. Коли вони зареєструються по твоєму посиланню і зіграють перший бій — ви обидва отримаєте нагороду автоматично.
+        </div>
+      </div>
+
       <!-- SHOP -->
       <div id="tab-shop" class="content-panel" style="display:none">
         <div class="panel-title">Поповнити нафту</div>
@@ -1087,7 +1149,7 @@ function showToast(msg,type=''){
 }
 
 // TABS
-const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','shop'];
+const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','referral','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
@@ -1787,7 +1849,94 @@ window.confirmListing = async function() {
   }
 };
 
-// ── COSMETICS SYSTEM ──────────────────────────────────────────
+// ── REFERRAL SYSTEM ───────────────────────────────────────────
+window.initReferral = async function() {
+  if (!_currentUser) return;
+  const uid = _currentUser.uid;
+  const nick = document.getElementById('p-nickname')?.textContent || 'player';
+  const baseUrl = window.location.origin;
+  const refLink = `${baseUrl}/profile.html?ref=${uid}`;
+
+  // Показати посилання
+  const display = document.getElementById('ref-link-display');
+  if (display) display.textContent = refLink;
+
+  // Telegram share
+  const tgBtn = document.getElementById('ref-tg-share');
+  if (tgBtn) {
+    const msg = encodeURIComponent(`🎮 Грай в BT 8BIT зі мною!\nОтримай +300 золота при реєстрації:\n${refLink}`);
+    tgBtn.href = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${msg}`;
+  }
+
+  // Завантажити рефералів
+  try {
+    const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snap = await getDocs(query(
+      collection(window._db,'players'),
+      where('referredBy','==',uid)
+    ));
+    const refs = snap.docs.map(d => d.data());
+    const earned = refs.length * 500;
+
+    document.getElementById('ref-count').textContent = refs.length;
+    document.getElementById('ref-earned').textContent = earned.toLocaleString();
+
+    const list = document.getElementById('ref-list');
+    if (!refs.length) {
+      list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--dim);font-size:13px">
+        😔 Ще немає запрошених гравців<br>
+        <span style="font-size:11px">Поділись посиланням щоб запросити друзів</span>
+      </div>`;
+    } else {
+      list.innerHTML = refs.map(r => {
+        const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px">
+          <div>
+            <div style="font-size:13px;color:#fff">${r.nickname||'—'}</div>
+            <div style="font-size:11px;color:var(--dim)">${date}</div>
+          </div>
+          <div style="font-family:var(--font-d);font-size:10px;color:var(--gold)">+500 ⭐</div>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) { console.warn('Referral load error:', e); }
+};
+
+window.copyRefLink = function() {
+  const link = document.getElementById('ref-link-display')?.textContent;
+  if (!link || link === 'Завантаження...') return;
+  navigator.clipboard.writeText(link)
+    .then(() => showToast('✅ Посилання скопійовано!'))
+    .catch(() => showToast('Помилка копіювання','error'));
+};
+
+// Перевірка реферального посилання при вході
+async function checkReferral() {
+  const params = new URLSearchParams(window.location.search);
+  const refUid = params.get('ref');
+  if (!refUid || !_currentUser || refUid === _currentUser.uid) return;
+
+  try {
+    const { doc, getDoc, updateDoc, increment } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const db = window._db;
+    const mySnap = await getDoc(doc(db,'players',_currentUser.uid));
+    if (!mySnap.exists() || mySnap.data().referredBy) return; // вже є реферер
+
+    // Записати реферера
+    await updateDoc(doc(db,'players',_currentUser.uid), {
+      referredBy: refUid,
+      referredAt: new Date()
+    });
+    // Нагорода другу (новому гравцю)
+    await updateDoc(doc(db,'players',_currentUser.uid), { gold: increment(300) });
+    // Нагорода власнику посилання
+    await updateDoc(doc(db,'players',refUid), { gold: increment(500) });
+
+    showToast('🎁 Ти прийшов по реферальному посиланню! +300 золота!');
+    // Очистити URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } catch(e) { console.warn('Referral check error:', e); }
+}
 const AVATARS = [
   // -- EARNED --
   { id:'av_warrior',  src:'earned',  name:'Воїн',       icon:'⚔️',  color:'#4a90d9', bg:'#0a1828', req:'Перший бій',           earned:true,  equipped:true  },
@@ -2194,6 +2343,7 @@ window.showTab = function(name) {
   _prevShowTab(name);
   if (name === 'inventory') loadInventoryFromFirebase();
   if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); syncSidebarAvatar(); }, 50); }
+  if (name === 'referral')  { setTimeout(() => initReferral(), 50); }
 };
 </script>
 </body>
