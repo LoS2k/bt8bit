@@ -8,7 +8,7 @@
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <meta name="description" content="BT 8BIT — Галерея скріншотів гравців. Найкращі моменти танкових боїв.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<title>BT 8BIT — Галерея</title>
+<title>BT 8BIT — Галерея / Gallery</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#060a10;--surf:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
@@ -121,31 +121,35 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <span class="nav-logo-text">BT 8BIT</span>
   </a>
   <div class="nav-right">
-    <a class="btn-back" href="index.html">← Головна</a>
-    <button class="btn-upload" onclick="openUpload()">+ Додати фото</button>
+    <div style="display:flex;gap:4px">
+      <button onclick="setGalleryLang('uk')" id="gl-uk" style="padding:5px 10px;border:1px solid var(--gold);background:rgba(232,188,56,0.1);color:var(--gold);font-size:10px;cursor:pointer;font-family:var(--px)">UA</button>
+      <button onclick="setGalleryLang('en')" id="gl-en" style="padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;cursor:pointer;font-family:var(--px)">EN</button>
+    </div>
+    <a class="btn-back" href="index.html" data-t="nav.back">← Головна</a>
+    <button class="btn-upload" onclick="openUpload()" data-t="nav.upload">+ Додати фото</button>
   </div>
 </nav>
 
 <div class="gallery-hero">
-  <span class="gallery-eye">Спільнота</span>
-  <h1 class="gallery-title">Галерея гравців</h1>
+  <span class="gallery-eye" data-t="gallery.eye">Спільнота</span>
+  <h1 class="gallery-title" data-t="gallery.title">Галерея гравців</h1>
   <div class="gallery-stats">
-    <div class="gallery-stat"><span id="stat-photos">0</span>Скріншотів</div>
-    <div class="gallery-stat"><span id="stat-likes">0</span>Лайків</div>
-    <div class="gallery-stat"><span id="stat-authors">0</span>Авторів</div>
+    <div class="gallery-stat"><span id="stat-photos">0</span><span data-t="gallery.stat.photos">Скріншотів</span></div>
+    <div class="gallery-stat"><span id="stat-likes">0</span><span data-t="gallery.stat.likes">Лайків</span></div>
+    <div class="gallery-stat"><span id="stat-authors">0</span><span data-t="gallery.stat.authors">Авторів</span></div>
   </div>
 </div>
 
 <div class="filters-bar">
-  <button class="filter-tag active" data-tag="all" onclick="filterGallery('all')">Всі</button>
-  <button class="filter-tag" data-tag="battle" onclick="filterGallery('battle')">⚔️ Бій</button>
-  <button class="filter-tag" data-tag="win" onclick="filterGallery('win')">🏆 Перемога</button>
-  <button class="filter-tag" data-tag="clan" onclick="filterGallery('clan')">🏰 Клан</button>
-  <button class="filter-tag" data-tag="funny" onclick="filterGallery('funny')">😂 Прикол</button>
-  <button class="filter-tag" data-tag="tank" onclick="filterGallery('tank')">🚀 Техніка</button>
+  <button class="filter-tag active" data-tag="all" onclick="filterGallery('all')" data-t="filter.all">Всі</button>
+  <button class="filter-tag" data-tag="battle" onclick="filterGallery('battle')" data-t="filter.battle">⚔️ Бій</button>
+  <button class="filter-tag" data-tag="win" onclick="filterGallery('win')" data-t="filter.win">🏆 Перемога</button>
+  <button class="filter-tag" data-tag="clan" onclick="filterGallery('clan')" data-t="filter.clan">🏰 Клан</button>
+  <button class="filter-tag" data-tag="funny" onclick="filterGallery('funny')" data-t="filter.funny">😂 Прикол</button>
+  <button class="filter-tag" data-tag="tank" onclick="filterGallery('tank')" data-t="filter.tank">🚀 Техніка</button>
   <select class="sort-select" id="sort-select" onchange="sortGallery(this.value)">
-    <option value="newest">Новіші</option>
-    <option value="popular">Популярні</option>
+    <option value="newest" data-t="sort.newest">Новіші</option>
+    <option value="popular" data-t="sort.popular">Популярні</option>
   </select>
 </div>
 
@@ -512,6 +516,81 @@ function showToast(msg, type='') {
   setTimeout(()=>t.className='',3000);
 }
 window.showToast = showToast;
+
+// ── I18N ──────────────────────────────────────────────────────
+const GT = {
+  uk: {
+    'nav.back':'← Головна','nav.upload':'+ Додати фото',
+    'gallery.eye':'Спільнота','gallery.title':'Галерея гравців',
+    'gallery.stat.photos':'Скріншотів','gallery.stat.likes':'Лайків',
+    'gallery.stat.authors':'Авторів',
+    'filter.all':'Всі','filter.battle':'⚔️ Бій','filter.win':'🏆 Перемога',
+    'filter.clan':'🏰 Клан','filter.funny':'😂 Прикол','filter.tank':'🚀 Техніка',
+    'sort.newest':'Новіші','sort.popular':'Популярні',
+    'upload.title':'📸 Додати скріншот','upload.hint':'Перетягни або натисни для вибору',
+    'upload.hint2':'PNG, JPG, WEBP — до 10MB',
+    'upload.caption':'Підпис','upload.caption.ph':'Опиши момент...',
+    'upload.tag':'Тег','upload.submit':'📤 Опублікувати',
+    'empty.title':'Ще немає скріншотів','empty.sub':'Будь першим — натисни "+ Додати фото"',
+    'tag.battle':'⚔️ Бій','tag.win':'🏆 Перемога','tag.clan':'🏰 Клан',
+    'tag.funny':'😂 Прикол','tag.tank':'🚀 Техніка',
+    'toast.login':'Увійди в кабінет щоб додавати фото',
+    'toast.copied':'✅ Посилання скопійовано','toast.published':'✅ Фото опубліковано!',
+    'toast.toobig':'Файл занадто великий (макс. 10MB)',
+  },
+  en: {
+    'nav.back':'← Home','nav.upload':'+ Add Photo',
+    'gallery.eye':'Community','gallery.title':'Player Gallery',
+    'gallery.stat.photos':'Screenshots','gallery.stat.likes':'Likes',
+    'gallery.stat.authors':'Authors',
+    'filter.all':'All','filter.battle':'⚔️ Battle','filter.win':'🏆 Victory',
+    'filter.clan':'🏰 Clan','filter.funny':'😂 Funny','filter.tank':'🚀 Vehicle',
+    'sort.newest':'Newest','sort.popular':'Popular',
+    'upload.title':'📸 Add Screenshot','upload.hint':'Drag or click to select',
+    'upload.hint2':'PNG, JPG, WEBP — up to 10MB',
+    'upload.caption':'Caption','upload.caption.ph':'Describe the moment...',
+    'upload.tag':'Tag','upload.submit':'📤 Publish',
+    'empty.title':'No screenshots yet','empty.sub':'Be first — click "+ Add Photo"',
+    'tag.battle':'⚔️ Battle','tag.win':'🏆 Victory','tag.clan':'🏰 Clan',
+    'tag.funny':'😂 Funny','tag.tank':'🚀 Vehicle',
+    'toast.login':'Sign in to add photos',
+    'toast.copied':'✅ Link copied','toast.published':'✅ Photo published!',
+    'toast.toobig':'File too large (max 10MB)',
+  }
+};
+
+let galleryLang = localStorage.getItem('bt8bit_lang') || 'uk';
+
+window.setGalleryLang = function(l) {
+  galleryLang = l;
+  localStorage.setItem('bt8bit_lang', l);
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    if (GT[l]?.[k]) el.textContent = GT[l][k];
+  });
+  // Оновити select options
+  document.querySelectorAll('option[data-t]').forEach(opt => {
+    const k = opt.getAttribute('data-t');
+    if (GT[l]?.[k]) opt.textContent = GT[l][k];
+  });
+  // Lang buttons
+  document.getElementById('gl-uk').style.cssText =
+    l==='uk' ? 'padding:5px 10px;border:1px solid var(--gold);background:rgba(232,188,56,0.1);color:var(--gold);font-size:10px;cursor:pointer;font-family:var(--px)'
+             : 'padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;cursor:pointer;font-family:var(--px)';
+  document.getElementById('gl-en').style.cssText =
+    l==='en' ? 'padding:5px 10px;border:1px solid var(--gold);background:rgba(232,188,56,0.1);color:var(--gold);font-size:10px;cursor:pointer;font-family:var(--px)'
+             : 'padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;cursor:pointer;font-family:var(--px)';
+  // Update tag labels in JS
+  TAG_LABELS.battle = GT[l]['tag.battle'];
+  TAG_LABELS.win    = GT[l]['tag.win'];
+  TAG_LABELS.clan   = GT[l]['tag.clan'];
+  TAG_LABELS.funny  = GT[l]['tag.funny'];
+  TAG_LABELS.tank   = GT[l]['tag.tank'];
+  renderGallery();
+};
+
+// Apply on load
+setGalleryLang(galleryLang);
 
 loadGallery();
 </script>
