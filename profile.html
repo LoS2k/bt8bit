@@ -762,6 +762,7 @@
         <div class="side-nav-item" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> <span data-t="nav.compare">Порівняння</span></div>
         <div class="side-nav-item" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> <span data-t="nav.clan">Клан</span></div>
         <div class="side-nav-item" onclick="showTab('referral')"><span class="side-nav-icon">🎁</span> <span data-t="nav.referral">Реферали</span></div>
+        <div class="side-nav-item" onclick="showTab('streamer')"><span class="side-nav-icon">🎥</span> <span data-t="nav.streamer">Партнер</span></div>
         <div class="side-nav-item" onclick="showTab('shop')"><span class="side-nav-icon">💰</span> <span data-t="nav.shop">Поповнити</span></div>
       </div>
 
@@ -1119,6 +1120,168 @@
         </div>
       </div>
 
+      <!-- STREAMER PARTNER -->
+      <div id="tab-streamer" class="content-panel" style="display:none">
+        <div class="panel-title">🎥 Партнерська програма</div>
+
+        <!-- Статус партнера -->
+        <div id="streamer-status-block" style="margin-bottom:20px"></div>
+
+        <!-- Форма заявки (якщо не партнер) -->
+        <div id="streamer-apply-block" style="display:none">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:20px">
+            <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">ПОДАТИ ЗАЯВКУ НА ПАРТНЕРСТВО</div>
+            <div style="font-size:13px;color:var(--dim);margin-bottom:20px;line-height:1.8">
+              Стань партнером BT 8BIT і отримуй % від донатів своїх глядачів.<br>
+              Заявки розглядаються протягом 3-5 днів.
+            </div>
+            <div class="form-section">
+              <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                <div class="form-group">
+                  <label class="form-label">📺 YouTube / Twitch</label>
+                  <input class="profile-input" id="s-youtube" type="url" placeholder="https://youtube.com/@...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">📱 TikTok</label>
+                  <input class="profile-input" id="s-tiktok" type="url" placeholder="https://tiktok.com/@...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">✈️ Telegram канал</label>
+                  <input class="profile-input" id="s-telegram" type="url" placeholder="https://t.me/...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">🎮 Discord сервер</label>
+                  <input class="profile-input" id="s-discord" type="url" placeholder="https://discord.gg/...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">👥 Приблизна аудиторія</label>
+                <select class="profile-input" id="s-audience">
+                  <option value="under1k">До 1 000 підписників</option>
+                  <option value="1k-10k">1 000 — 10 000</option>
+                  <option value="10k-100k">10 000 — 100 000</option>
+                  <option value="over100k">Більше 100 000</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">📝 Про себе (чому хочеш стати партнером)</label>
+                <textarea class="profile-input" id="s-about" rows="3" placeholder="Розкажи про свій канал і аудиторію..." style="resize:vertical"></textarea>
+              </div>
+              <button class="btn-action" onclick="submitStreamerApplication()" id="s-apply-btn">
+                📨 Подати заявку
+              </button>
+            </div>
+          </div>
+
+          <!-- Рівні партнерів -->
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">РІВНІ ПАРТНЕРІВ</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+            <div style="background:var(--card);border:1px solid #cd7f32;padding:16px;text-align:center">
+              <div style="font-size:28px;margin-bottom:8px">🥉</div>
+              <div style="font-family:var(--font-d);font-size:8px;color:#cd7f32;margin-bottom:6px">ПАРТНЕР</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">До 1 000 глядачів<br><span style="color:#4aaa5a">+1% золото</span></div>
+            </div>
+            <div style="background:var(--card);border:1px solid #c0c0c0;padding:16px;text-align:center">
+              <div style="font-size:28px;margin-bottom:8px">🥈</div>
+              <div style="font-family:var(--font-d);font-size:8px;color:#c0c0c0;margin-bottom:6px">СРІБНИЙ</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">1 000 — 10 000<br><span style="color:#4aaa5a">+2% золото</span><br><span style="color:#e8bc38">+1% реальні</span></div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--gold);padding:16px;text-align:center">
+              <div style="font-size:28px;margin-bottom:8px">🥇</div>
+              <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);margin-bottom:6px">ЗОЛОТИЙ</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">10 000+<br><span style="color:#4aaa5a">+3% золото</span><br><span style="color:#e8bc38">+2% реальні</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Панель активного партнера -->
+        <div id="streamer-partner-block" style="display:none">
+          <!-- Рівень і значок -->
+          <div id="streamer-tier-card" style="background:var(--card);border:1px solid var(--gold);padding:24px;margin-bottom:20px;display:flex;align-items:center;gap:20px">
+            <div id="s-tier-icon" style="font-size:48px">🥉</div>
+            <div style="flex:1">
+              <div id="s-tier-name" style="font-family:var(--font-d);font-size:12px;color:var(--gold);margin-bottom:4px">ПАРТНЕР</div>
+              <div id="s-tier-desc" style="font-size:12px;color:var(--dim)">Базовий рівень партнерства</div>
+              <div id="s-commission" style="font-size:11px;color:#4aaa5a;margin-top:4px">Комісія: 1% золото від кожного доната глядача</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--dim);margin-bottom:4px">Партнерський код</div>
+              <div id="s-code-display" style="font-family:var(--font-d);font-size:12px;color:var(--gold);background:var(--surface);padding:8px 14px;border:1px solid var(--border)">STREAM_---</div>
+              <button onclick="copyStreamerCode()" style="margin-top:6px;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">📋 Копіювати</button>
+            </div>
+          </div>
+
+          <!-- Реферальне посилання стрімера -->
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:20px">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:8px">🔗 Посилання для глядачів</div>
+            <div id="s-ref-link" style="font-family:monospace;font-size:12px;color:var(--steel);word-break:break-all;margin-bottom:10px">—</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="copyStreamerLink()" style="padding:7px 16px;background:var(--gold);color:var(--bg);border:none;font-family:var(--font-d);font-size:9px;cursor:pointer">📋 Копіювати</button>
+              <a id="s-tg-share" href="#" target="_blank" style="padding:7px 16px;background:transparent;border:1px solid rgba(74,170,90,0.4);color:#4aaa5a;font-family:var(--font-d);font-size:9px;text-decoration:none">✈️ Telegram</a>
+            </div>
+          </div>
+
+          <!-- Статистика -->
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">СТАТИСТИКА</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px">
+            <div style="background:var(--card);border:1px solid var(--border);padding:16px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:20px;color:var(--gold)" id="s-stat-refs">0</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:4px">Зареєстрованих глядачів</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);padding:16px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:20px;color:#4aaa5a" id="s-stat-gold">0</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:4px">Золота зароблено</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);padding:16px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:20px;color:#e8bc38" id="s-stat-donations">0</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:4px">Донатів від глядачів</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);padding:16px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:20px;color:#a070cc" id="s-stat-real">₴0</div>
+              <div style="font-size:11px;color:var(--dim);margin-top:4px">Реальних грошей</div>
+            </div>
+          </div>
+
+          <!-- Соцмережі стрімера -->
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">МОЇ СОЦМЕРЕЖІ</div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:20px">
+            <div class="form-grid" style="grid-template-columns:1fr 1fr">
+              <div class="form-group">
+                <label class="form-label">📺 YouTube / Twitch</label>
+                <input class="profile-input" id="s-edit-youtube" type="url" placeholder="https://youtube.com/@...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">📱 TikTok</label>
+                <input class="profile-input" id="s-edit-tiktok" type="url" placeholder="https://tiktok.com/@...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">✈️ Telegram</label>
+                <input class="profile-input" id="s-edit-telegram" type="url" placeholder="https://t.me/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">🎮 Discord</label>
+                <input class="profile-input" id="s-edit-discord" type="url" placeholder="https://discord.gg/...">
+              </div>
+            </div>
+            <button class="btn-action" onclick="saveStreamerSocials()" style="margin-top:4px">💾 Зберегти соцмережі</button>
+          </div>
+
+          <!-- Виплати -->
+          <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ВИПЛАТИ РЕАЛЬНИХ ГРОШЕЙ</div>
+          <div style="background:rgba(232,188,56,0.06);border:1px solid rgba(232,188,56,0.2);padding:16px;font-size:12px;color:var(--dim);line-height:1.8">
+            💡 Реальні виплати здійснюються на картку через WayForPay при накопиченні від <strong style="color:var(--text)">₴100</strong>.<br>
+            Для запиту на виплату — напиши в <a href="https://t.me/tanks_battles_3d" target="_blank" style="color:var(--gold)">Telegram</a>.
+          </div>
+        </div>
+
+        <!-- Заявка на розгляді -->
+        <div id="streamer-pending-block" style="display:none;text-align:center;padding:40px">
+          <div style="font-size:48px;margin-bottom:16px">⏳</div>
+          <div style="font-family:var(--font-d);font-size:11px;color:var(--gold);margin-bottom:12px">ЗАЯВКА НА РОЗГЛЯДІ</div>
+          <div style="font-size:13px;color:var(--dim);line-height:1.8">Твоя заявка відправлена і розглядається адміністрацією.<br>Відповідь надійде протягом 3-5 робочих днів.</div>
+        </div>
+      </div>
+
       <!-- SHOP -->
       <div id="tab-shop" class="content-panel" style="display:none">
         <div class="panel-title">Поповнити нафту</div>
@@ -1149,7 +1312,7 @@ function showToast(msg,type=''){
 }
 
 // TABS
-const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','referral','shop'];
+const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','referral','streamer','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   document.querySelectorAll('.side-nav-item').forEach((el,i)=>{ el.classList.toggle('active',TABS[i]===name); });
@@ -1937,7 +2100,147 @@ async function checkReferral() {
     window.history.replaceState({}, '', window.location.pathname);
   } catch(e) { console.warn('Referral check error:', e); }
 }
-const AVATARS = [
+
+// ── STREAMER PARTNER SYSTEM ───────────────────────────────────
+const STREAMER_TIERS = {
+  bronze: { icon:'🥉', name:'ПАРТНЕР', color:'#cd7f32', goldPct:1, realPct:0, desc:'Базовий рівень партнерства' },
+  silver: { icon:'🥈', name:'СРІБНИЙ', color:'#c0c0c0', goldPct:2, realPct:1, desc:'Середній рівень — до 10 000 глядачів' },
+  gold:   { icon:'🥇', name:'ЗОЛОТИЙ', color:'#e8bc38', goldPct:3, realPct:2, desc:'Топ рівень — 10 000+ глядачів' },
+};
+
+window.initStreamerTab = async function() {
+  if (!_currentUser) return;
+  try {
+    const { getDoc, doc, getDocs, collection, query, where, limit } =
+      await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const db = window._db;
+    const snap = await getDoc(doc(db,'players',_currentUser.uid));
+    if (!snap.exists()) return;
+    const data = snap.data();
+    const streamerStatus = data.streamerStatus || 'none';
+
+    document.getElementById('streamer-apply-block').style.display   = 'none';
+    document.getElementById('streamer-partner-block').style.display = 'none';
+    document.getElementById('streamer-pending-block').style.display = 'none';
+
+    if (streamerStatus === 'none') {
+      document.getElementById('streamer-status-block').innerHTML = `
+        <div style="background:rgba(142,176,204,0.08);border:1px solid rgba(142,176,204,0.2);padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:24px">🎥</span>
+          <div>
+            <div style="font-size:13px;color:var(--text)">Ти ще не партнер</div>
+            <div style="font-size:11px;color:var(--dim)">Подай заявку щоб отримувати % від донатів своїх глядачів</div>
+          </div>
+        </div>`;
+      document.getElementById('streamer-apply-block').style.display = 'block';
+    }
+    else if (streamerStatus === 'pending') {
+      document.getElementById('streamer-status-block').innerHTML = '';
+      document.getElementById('streamer-pending-block').style.display = 'block';
+    }
+    else {
+      const tier = STREAMER_TIERS[streamerStatus] || STREAMER_TIERS.bronze;
+      const streamerCode = data.streamerCode || ('STREAM_'+(data.nickname||'').toUpperCase().slice(0,8));
+      const socials = data.streamerSocials || {};
+      const stats   = data.streamerStats   || {};
+
+      document.getElementById('streamer-status-block').innerHTML = '';
+      document.getElementById('streamer-partner-block').style.display = 'block';
+
+      setText('s-tier-icon', tier.icon);
+      setText('s-tier-name', tier.name);
+      setText('s-tier-desc', tier.desc);
+      document.getElementById('s-tier-name').style.color = tier.color;
+      setText('s-commission', `Комісія: ${tier.goldPct}% золото${tier.realPct>0?' + '+tier.realPct+'% реальні гроші':''} від кожного доната`);
+      document.getElementById('streamer-tier-card').style.borderColor = tier.color;
+
+      setText('s-code-display', streamerCode);
+      const refLink = `${window.location.origin}/profile.html?sref=${encodeURIComponent(streamerCode)}`;
+      setText('s-ref-link', refLink);
+      const tgMsg = encodeURIComponent(`🎮 Грай в BT 8BIT!\nЗавантажуй гру та отримай бонус:\n${refLink}`);
+      document.getElementById('s-tg-share').href = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${tgMsg}`;
+
+      setText('s-stat-gold',      (stats.goldEarned||0).toLocaleString());
+      setText('s-stat-donations', (stats.donations||0).toLocaleString());
+      setText('s-stat-real',      '₴'+(stats.realEarned||0).toFixed(2));
+
+      if (socials.youtube)  document.getElementById('s-edit-youtube').value  = socials.youtube;
+      if (socials.tiktok)   document.getElementById('s-edit-tiktok').value   = socials.tiktok;
+      if (socials.telegram) document.getElementById('s-edit-telegram').value = socials.telegram;
+      if (socials.discord)  document.getElementById('s-edit-discord').value  = socials.discord;
+
+      const refSnap = await getDocs(query(collection(db,'players'), where('streamerRef','==',streamerCode), limit(100)));
+      setText('s-stat-refs', refSnap.size.toLocaleString());
+    }
+  } catch(e) { console.warn('Streamer tab error:', e); }
+};
+
+window.submitStreamerApplication = async function() {
+  if (!_currentUser) return;
+  const youtube  = document.getElementById('s-youtube').value.trim();
+  const tiktok   = document.getElementById('s-tiktok').value.trim();
+  const telegram = document.getElementById('s-telegram').value.trim();
+  const discord  = document.getElementById('s-discord').value.trim();
+  const audience = document.getElementById('s-audience').value;
+  const about    = document.getElementById('s-about').value.trim();
+
+  if (!youtube && !tiktok && !telegram) { showToast('Вкажи хоча б одну соцмережу','error'); return; }
+  if (about.length < 20) { showToast('Напиши більше про себе (мін. 20 символів)','error'); return; }
+
+  const btn = document.getElementById('s-apply-btn');
+  btn.disabled = true; btn.textContent = '⏳ Надсилаємо...';
+
+  try {
+    const { updateDoc, doc, addDoc, collection } =
+      await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const db = window._db;
+    const nick = document.getElementById('p-nickname')?.textContent || 'Стрімер';
+
+    await updateDoc(doc(db,'players',_currentUser.uid), {
+      streamerStatus:   'pending',
+      streamerSocials:  { youtube, tiktok, telegram, discord },
+      streamerAudience: audience,
+      streamerAbout:    about,
+      streamerAppliedAt: new Date(),
+    });
+    await addDoc(collection(db,'streamer_applications'), {
+      uid: _currentUser.uid, nickname: nick,
+      youtube, tiktok, telegram, discord, audience, about,
+      status: 'pending', createdAt: new Date(),
+    });
+
+    showToast('✅ Заявку відправлено! Очікуй відповіді 3-5 днів');
+    setTimeout(() => initStreamerTab(), 500);
+  } catch(e) {
+    showToast('Помилка: '+e.message,'error');
+    btn.disabled = false; btn.textContent = '📨 Подати заявку';
+  }
+};
+
+window.saveStreamerSocials = async function() {
+  if (!_currentUser) return;
+  try {
+    const { updateDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(window._db,'players',_currentUser.uid), {
+      streamerSocials: {
+        youtube:  document.getElementById('s-edit-youtube').value.trim(),
+        tiktok:   document.getElementById('s-edit-tiktok').value.trim(),
+        telegram: document.getElementById('s-edit-telegram').value.trim(),
+        discord:  document.getElementById('s-edit-discord').value.trim(),
+      }
+    });
+    showToast('✅ Соцмережі збережено');
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.copyStreamerCode = function() {
+  const code = document.getElementById('s-code-display')?.textContent;
+  if (code) navigator.clipboard.writeText(code).then(()=>showToast('✅ Код скопійовано'));
+};
+window.copyStreamerLink = function() {
+  const link = document.getElementById('s-ref-link')?.textContent;
+  if (link) navigator.clipboard.writeText(link).then(()=>showToast('✅ Посилання скопійовано'));
+};
   // -- EARNED --
   { id:'av_warrior',  src:'earned',  name:'Воїн',       icon:'⚔️',  color:'#4a90d9', bg:'#0a1828', req:'Перший бій',           earned:true,  equipped:true  },
   { id:'av_veteran',  src:'earned',  name:'Ветеран',     icon:'🎖️',  color:'#e8bc38', bg:'#1a1008', req:'30 днів поспіль',      earned:false, equipped:false },
@@ -2344,6 +2647,7 @@ window.showTab = function(name) {
   if (name === 'inventory') loadInventoryFromFirebase();
   if (name === 'cosmetics') { setTimeout(() => { showCosTab('avatars'); updatePreview(); syncSidebarAvatar(); }, 50); }
   if (name === 'referral')  { setTimeout(() => initReferral(), 50); }
+  if (name === 'streamer')  { setTimeout(() => initStreamerTab(), 50); }
 };
 </script>
 </body>
