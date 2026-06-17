@@ -953,16 +953,7 @@ setLang(lang);
   const scroll     = document.getElementById('tanks-scroll');
   if (!scroll) return;
 
-  const FALLBACK = [
-    { id:'hellcat',   name:'M18 Hellcat', emoji:'🚀', nation:'США',      faction:'west',  tankClass:'support', tier:5,  stats:{hp:75,damage:80,armor:20,speed:95} },
-    { id:'elc',       name:'ELC AMX',     emoji:'🏎️', nation:'Франція',  faction:'euro',  tankClass:'recon',   tier:5,  stats:{hp:40,damage:55,armor:10,speed:88} },
-    { id:'kv2',       name:'КВ-2',        emoji:'💣', nation:'East',     faction:'east',  tankClass:'arty',    tier:6,  stats:{hp:85,damage:100,armor:60,speed:25} },
-    { id:'fv4005',    name:'FV4005',      emoji:'🔫', nation:'Британія', faction:'west',  tankClass:'support', tier:10, stats:{hp:60,damage:100,armor:15,speed:55} },
-    { id:'sturmtiger',name:'Sturmtiger',  emoji:'🐯', nation:'Нім.',     faction:'west',  tankClass:'assault', tier:7,  stats:{hp:90,damage:95,armor:80,speed:30} },
-    { id:'amx10rc',   name:'AMX 10 RC',  emoji:'🛞', nation:'Франція',  faction:'euro',  tankClass:'recon',   tier:8,  stats:{hp:45,damage:65,armor:25,speed:92} },
-    { id:'leopard2',  name:'Leopard 2A7',emoji:'🐆', nation:'Нім.',     faction:'west',  tankClass:'medium',  tier:10, stats:{hp:85,damage:85,armor:85,speed:75}, comingSoon:true },
-    { id:'type99',    name:'Type 99A',    emoji:'🐲', nation:'Китай',    faction:'asian', tankClass:'assault', tier:10, stats:{hp:90,damage:88,armor:90,speed:65}, comingSoon:true },
-  ];
+  const FALLBACK = [];
 
   function renderCard(t) {
     const fc = FACTION_FC[t.faction] || '#888';
