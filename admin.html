@@ -364,6 +364,129 @@ function showToast(msg,type=''){
 window.showToast=showToast;
 window.adminSignOut = () => signOut(auth).then(()=>window.location.href='profile.html');
 
+// ── STREAMERS ─────────────────────────────────────────────────
+const TIER_LABELS = { pending:'⏳ Заявка', bronze:'🥉 Партнер', silver:'🥈 Срібний', gold:'🥇 Золотий' };
+const TIER_COLORS = { pending:'#e8bc38', bronze:'#cd7f32', silver:'#c0c0c0', gold:'#e8bc38' };
+
+window.loadStreamers = async function() {
+  const list   = document.getElementById('streamers-list');
+  const filter = document.getElementById('streamers-filter')?.value || 'pending';
+  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
+
+  try {
+    let q;
+    if (filter === 'all') {
+      q = query(collection(db,'streamer_applications'), orderBy('createdAt','desc'), limit(50));
+    } else {
+      q = query(collection(db,'streamer_applications'),
+        where('status','==',filter), orderBy('createdAt','desc'), limit(50));
+    }
+    const snap = await getDocs(q);
+    if (snap.empty) { list.innerHTML = '<div class="loading-row">Нічого немає</div>'; return; }
+
+    list.innerHTML = `<table><thead><tr>
+      <th>Нік</th><th>Аудиторія</th><th>Соцмережі</th><th>Дата</th><th>Статус</th><th>Дія</th>
+    </tr></thead><tbody>` +
+    snap.docs.map(d => {
+      const s = d.data();
+      const date = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
+      const color = TIER_COLORS[s.status] || '#888';
+      const socials = [
+        s.youtube  ? `<a href="${s.youtube}"  target="_blank" style="color:var(--gold)">YT</a>`  : '',
+        s.tiktok   ? `<a href="${s.tiktok}"   target="_blank" style="color:var(--gold)">TK</a>`  : '',
+        s.telegram ? `<a href="${s.telegram}" target="_blank" style="color:var(--gold)">TG</a>`  : '',
+        s.discord  ? `<a href="${s.discord}"  target="_blank" style="color:var(--gold)">DC</a>`  : '',
+      ].filter(Boolean).join(' · ');
+      return `<tr>
+        <td style="font-size:13px">${s.nickname||'—'}</td>
+        <td style="font-size:12px;color:var(--dim)">${s.audience||'—'}</td>
+        <td style="font-size:12px">${socials||'—'}</td>
+        <td style="font-size:11px;color:var(--dim)">${date}</td>
+        <td><span style="font-size:10px;color:${color}">${TIER_LABELS[s.status]||s.status}</span></td>
+        <td><button class="tbl-btn" onclick="openStreamerModal('${d.id}','${s.uid||''}')">Відкрити</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  } catch(e) { list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`; }
+};
+
+window.openStreamerModal = async function(docId, uid) {
+  try {
+    const snap = await getDoc(doc(db,'streamer_applications',docId));
+    if (!snap.exists()) return;
+    const s = snap.data();
+    const date = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleString('uk-UA') : '—';
+
+    document.getElementById('sm-nick').textContent = s.nickname || '—';
+    document.getElementById('sm-body').innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Аудиторія: <span style="color:var(--text)">${s.audience}</span></div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Дата: ${date}</div>
+        ${s.youtube  ? `<div style="font-size:12px;margin-bottom:4px">📺 <a href="${s.youtube}"  target="_blank" style="color:var(--gold)">${s.youtube}</a></div>` : ''}
+        ${s.tiktok   ? `<div style="font-size:12px;margin-bottom:4px">📱 <a href="${s.tiktok}"   target="_blank" style="color:var(--gold)">${s.tiktok}</a></div>` : ''}
+        ${s.telegram ? `<div style="font-size:12px;margin-bottom:4px">✈️ <a href="${s.telegram}" target="_blank" style="color:var(--gold)">${s.telegram}</a></div>` : ''}
+        ${s.discord  ? `<div style="font-size:12px;margin-bottom:4px">🎮 <a href="${s.discord}"  target="_blank" style="color:var(--gold)">${s.discord}</a></div>` : ''}
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--border);padding:14px;margin-bottom:20px;font-size:13px;color:var(--text);line-height:1.7">${s.about||'—'}</div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Рівень партнера</label>
+        <select id="sm-tier" class="admin-input" style="width:200px">
+          <option value="pending" ${s.status==='pending'?'selected':''}>⏳ Заявка</option>
+          <option value="bronze"  ${s.status==='bronze' ?'selected':''}>🥉 Партнер (1%)</option>
+          <option value="silver"  ${s.status==='silver' ?'selected':''}>🥈 Срібний (2%+1%)</option>
+          <option value="gold"    ${s.status==='gold'   ?'selected':''}>🥇 Золотий (3%+2%)</option>
+          <option value="rejected" ${s.status==='rejected'?'selected':''}>❌ Відхилено</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="approveStreamer('${docId}','${uid}')">💾 Зберегти</button>
+        <button class="admin-btn secondary" onclick="closeStreamerModal()">Закрити</button>
+      </div>
+    `;
+    document.getElementById('streamer-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.approveStreamer = async function(docId, uid) {
+  const tier = document.getElementById('sm-tier').value;
+  try {
+    // Оновити статус заявки
+    await updateDoc(doc(db,'streamer_applications',docId), { status: tier, updatedAt: new Date() });
+
+    if (uid && tier !== 'pending' && tier !== 'rejected') {
+      // Генеруємо код стрімера якщо немає
+      const pSnap = await getDoc(doc(db,'players',uid));
+      if (pSnap.exists()) {
+        const pData = pSnap.data();
+        const code  = pData.streamerCode || ('STREAM_'+(pData.nickname||'').toUpperCase().slice(0,8).replace(/\s/g,''));
+        await updateDoc(doc(db,'players',uid), {
+          streamerStatus: tier,
+          streamerCode:   code,
+          streamerApprovedAt: new Date(),
+        });
+      }
+    } else if (uid && tier === 'rejected') {
+      await updateDoc(doc(db,'players',uid), { streamerStatus: 'none' });
+    }
+
+    // Лог
+    await addDoc(collection(db,'moderation_log'), {
+      action: 'streamer_'+tier, adminNick: currentAdmin?.nickname||'Адмін',
+      target: uid, details: TIER_LABELS[tier]||tier, createdAt: new Date()
+    });
+
+    showToast('✅ Статус стрімера оновлено');
+    closeStreamerModal();
+    loadStreamers();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.closeStreamerModal = function() {
+  document.getElementById('streamer-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
 // ── SUPPORT TICKETS ───────────────────────────────────────────
 const TYPE_LABELS_A = {
   bug:'🐛 Баг', report:'🚨 Скарга', idea:'💡 Ідея',
@@ -917,6 +1040,9 @@ select.admin-input{cursor:pointer;}
       <div class="sidebar-item" data-section="tickets" onclick="showSection('tickets');loadTickets()">
         <span class="sidebar-icon">🎫</span> Заявки
       </div>
+      <div class="sidebar-item" data-section="streamers" onclick="showSection('streamers');loadStreamers()">
+        <span class="sidebar-icon">🎥</span> Стрімери
+      </div>
       <div class="sidebar-section">Контент</div>
       <div class="sidebar-item" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()">
         <span class="sidebar-icon">🎁</span> Промокоди
@@ -1102,6 +1228,34 @@ select.admin-input{cursor:pointer;}
               <tr><td colspan="4" class="loading-row">Завантаження...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- STREAMERS -->
+      <div id="section-streamers" class="admin-section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🎥 Партнери-стрімери</span>
+          <select id="streamers-filter" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadStreamers()">
+            <option value="pending">⏳ Заявки</option>
+            <option value="bronze">🥉 Партнер</option>
+            <option value="silver">🥈 Срібний</option>
+            <option value="gold">🥇 Золотий</option>
+            <option value="all">Всі</option>
+          </select>
+        </div>
+        <div id="streamers-list" class="admin-table-wrap">
+          <div class="loading-row">Завантаження...</div>
+        </div>
+      </div>
+
+      <!-- STREAMER MODAL -->
+      <div id="streamer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeStreamerModal()">
+        <div style="background:var(--card);border:1px solid var(--border);width:min(600px,95vw);max-height:90vh;overflow-y:auto;">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="sm-nick">—</span>
+            <button onclick="closeStreamerModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
+          </div>
+          <div style="padding:24px" id="sm-body"></div>
         </div>
       </div>
 
