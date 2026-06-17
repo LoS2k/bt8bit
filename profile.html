@@ -41,6 +41,11 @@
   window._db=db; window._auth=auth;
   window._currentUser = null;
 
+  // Допоміжні функції (доступні з module scope)
+  function showLogin(){ document.getElementById('login-screen').style.display='flex'; document.getElementById('profile-screen').style.display='none'; }
+  function showProfile(){ document.getElementById('login-screen').style.display='none'; document.getElementById('profile-screen').style.display='block'; }
+  function setLoading(on){ document.getElementById('loading-overlay').style.display=on?'flex':'none'; }
+
   function showToast(msg,type=''){
     const t=document.getElementById('toast');
     t.textContent=msg; t.className='show '+(type||'');
@@ -2343,8 +2348,10 @@ window.copyStreamerLink = function() {
   const link = document.getElementById('s-ref-link')?.textContent;
   if (link) navigator.clipboard.writeText(link).then(()=>showToast('✅ Посилання скопійовано'));
 };
+
+const AVATARS = [
   // -- EARNED --
-  { id:'av_warrior',  src:'earned',  name:'Воїн',       icon:'⚔️',  color:'#4a90d9', bg:'#0a1828', req:'Перший бій',           earned:true, equipped:true },
+  { id:'av_warrior',  src:'earned',  name:'Воїн',       icon:'⚔️',  color:'#4a90d9', bg:'#0a1828', req:'Перший бій',           earned:true,  equipped:true  },
   { id:'av_veteran',  src:'earned',  name:'Ветеран',     icon:'🎖️',  color:'#e8bc38', bg:'#1a1008', req:'30 днів поспіль',      earned:false, equipped:false },
   { id:'av_loyal',    src:'earned',  name:'Вірний',      icon:'🔥',  color:'#e88038', bg:'#1a0a00', req:'7 днів поспіль',       earned:true,  equipped:false },
   { id:'av_destroyer',src:'earned',  name:'Руйнівник',   icon:'💥',  color:'#aa4a4a', bg:'#180808', req:'Легенда рівень 10',    earned:false, equipped:false },
