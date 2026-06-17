@@ -406,31 +406,42 @@ window.openTankEditor = async function(tankId) {
   document.getElementById('te-msg').style.display = 'none';
 
   // Очищуємо
-  ['id','name','emoji','nation','desc','role','hp','damage','armor','speed','view','masking'].forEach(f => {
-    const el = document.getElementById('te-'+f);
-    if (el) el.value = f === 'hp' || f === 'damage' || f === 'armor' || f === 'speed' || f === 'view' || f === 'masking' ? '50' : '';
+  ['id','name','emoji','nation','desc','role'].forEach(f => {
+    const el = document.getElementById('te-'+f); if (el) el.value = '';
+  });
+  ['hp','damage','armor','speed','view','masking'].forEach(f => {
+    const el = document.getElementById('te-'+f); if (el) el.value = '50';
   });
   [0,1,2].forEach(i => {
     ['icon','name','desc'].forEach(f => { const el = document.getElementById(`te-perk${i}-${f}`); if(el) el.value=''; });
   });
   document.getElementById('te-soon').checked = false;
+  document.getElementById('te-img-preview').style.display = 'none';
+  document.getElementById('te-img-url').value = '';
 
   if (tankId) {
     try {
-      const snap = await getDoc(fsDoc(db,'tanks_db',tankId));
+      // Використовуємо вже імпортований doc і getDoc
+      const snap = await getDoc(doc(db,'tanks_db',tankId));
       if (snap.exists()) {
         const t = snap.data();
-        document.getElementById('te-id').value     = tankId;
-        document.getElementById('te-id').disabled  = true;
-        document.getElementById('te-name').value   = t.name||'';
-        document.getElementById('te-emoji').value  = t.emoji||'';
-        document.getElementById('te-nation').value = t.nation||'';
-        document.getElementById('te-faction').value= t.faction||'west';
-        document.getElementById('te-class').value  = t.tankClass||'medium';
-        document.getElementById('te-tier').value   = t.tier||1;
-        document.getElementById('te-soon').checked = !!t.comingSoon;
-        document.getElementById('te-desc').value   = t.desc||'';
-        document.getElementById('te-role').value   = t.role||'';
+        document.getElementById('te-id').value      = tankId;
+        document.getElementById('te-id').disabled   = true;
+        document.getElementById('te-name').value    = t.name||'';
+        document.getElementById('te-emoji').value   = t.emoji||'';
+        document.getElementById('te-nation').value  = t.nation||'';
+        document.getElementById('te-faction').value = t.faction||'west';
+        document.getElementById('te-class').value   = t.tankClass||'medium';
+        document.getElementById('te-tier').value    = t.tier||1;
+        document.getElementById('te-soon').checked  = !!t.comingSoon;
+        document.getElementById('te-desc').value    = t.desc||'';
+        document.getElementById('te-role').value    = t.role||'';
+        // Зображення
+        if (t.imageUrl) {
+          document.getElementById('te-img-url').value = t.imageUrl;
+          const prev = document.getElementById('te-img-preview');
+          prev.src = t.imageUrl; prev.style.display = 'block';
+        }
         const s = t.stats||{};
         ['hp','damage','armor','speed','view','masking'].forEach(f => {
           const el = document.getElementById('te-'+f); if(el) el.value = s[f]||50;
@@ -442,7 +453,7 @@ window.openTankEditor = async function(tankId) {
           document.getElementById(`te-perk${i}-desc`).value = p.desc||'';
         });
       }
-    } catch(e) {}
+    } catch(e) { console.error('openTankEditor error:', e); }
   } else {
     document.getElementById('te-id').disabled = false;
   }
@@ -457,10 +468,48 @@ window.closeTankEditor = function() {
   editingTankId = null;
 };
 
+window.previewTankImg = function(url) {
+  const prev = document.getElementById('te-img-preview');
+  if (url) { prev.src = url; prev.style.display = 'block'; }
+  else { prev.style.display = 'none'; }
+};
+
+window.uploadTankImg = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('Файл занадто великий (макс 5MB)','error'); return; }
+
+  const msgEl = document.getElementById('te-msg');
+  showMsg(msgEl, '⏳ Завантаження зображення...', 'ok');
+
+  try {
+    const { getStorage, ref, uploadBytesResumable, getDownloadURL } =
+      await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js');
+    const storage = getStorage();
+    const tankId  = document.getElementById('te-id').value.trim() || 'tank_' + Date.now();
+    const storageRef = ref(storage, `tanks/${tankId}_${file.name}`);
+    const task = uploadBytesResumable(storageRef, file);
+
+    const url = await new Promise((resolve, reject) => {
+      task.on('state_changed', null, reject,
+        async () => resolve(await getDownloadURL(task.snapshot.ref)));
+    });
+
+    document.getElementById('te-img-url').value = url;
+    const prev = document.getElementById('te-img-preview');
+    prev.src = url; prev.style.display = 'block';
+    showMsg(msgEl, '✅ Зображення завантажено!', 'ok');
+  } catch(e) {
+    showMsg(msgEl, 'Помилка: ' + e.message, 'err');
+  }
+};
+
 window.saveTank = async function() {
   const msgEl = document.getElementById('te-msg');
-  const id    = document.getElementById('te-id').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const rawId = document.getElementById('te-id').value.trim();
+  const id    = editingTankId || rawId.toLowerCase().replace(/\s+/g,'-');
   const name  = document.getElementById('te-name').value.trim();
+
   if (!id)   { showMsg(msgEl,'Введи ID','err'); return; }
   if (!name) { showMsg(msgEl,'Введи назву','err'); return; }
 
@@ -480,6 +529,7 @@ window.saveTank = async function() {
     comingSoon:document.getElementById('te-soon').checked,
     desc:      document.getElementById('te-desc').value.trim(),
     role:      document.getElementById('te-role').value.trim(),
+    imageUrl:  document.getElementById('te-img-url').value.trim() || null,
     stats: {
       hp:      parseInt(document.getElementById('te-hp').value)||50,
       damage:  parseInt(document.getElementById('te-damage').value)||50,
@@ -493,8 +543,8 @@ window.saveTank = async function() {
   };
 
   try {
-    const { doc: fsDoc2, setDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    await setDoc(fsDoc2(db,'tanks_db',id), data, { merge: true });
+    // Використовуємо вже імпортовані функції
+    await setDoc(doc(db,'tanks_db',id), data, { merge: true });
     showMsg(msgEl,'✅ Збережено!','ok');
     setTimeout(() => { closeTankEditor(); loadTanksDB(); }, 1000);
   } catch(e) { showMsg(msgEl,'Помилка: '+e.message,'err'); }
@@ -1451,6 +1501,19 @@ select.admin-input{cursor:pointer;}
             <div style="margin-bottom:16px">
               <label class="admin-label">Роль в бою</label>
               <input class="admin-input" id="te-role" placeholder="Як грати на цьому танку...">
+            </div>
+            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ЗОБРАЖЕННЯ</div>
+            <div style="margin-bottom:16px">
+              <label class="admin-label">URL зображення (або завантаж)</label>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <input class="admin-input" id="te-img-url" type="url" placeholder="https://..." style="flex:1" oninput="previewTankImg(this.value)">
+                <label style="padding:8px 14px;background:var(--gold);color:var(--bg);font-size:11px;cursor:pointer;white-space:nowrap;border:none;display:flex;align-items:center">
+                  📁 Файл
+                  <input type="file" accept="image/*" style="display:none" onchange="uploadTankImg(this)">
+                </label>
+              </div>
+              <img id="te-img-preview" src="" alt="" style="display:none;max-width:100%;max-height:150px;border:1px solid var(--border);object-fit:contain;background:var(--surf)">
+              <div style="font-size:11px;color:var(--dim);margin-top:6px">Рекомендовано: PNG 400×300px з прозорим фоном</div>
             </div>
             <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ХАРАКТЕРИСТИКИ (0-100)</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
