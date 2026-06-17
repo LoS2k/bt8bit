@@ -51,10 +51,15 @@
   window.loginEmail=async()=>{
     const email=document.getElementById('email-input').value.trim();
     const password=document.getElementById('password-input').value;
-    if(!email||!password){showToast('Введи email і пароль!','error');return;}
+    hideAuthError('login-error');
+    if(!email||!password){showAuthError('login-error','❌ Введи email і пароль!');return;}
     setAuthLoading(true);
-    try{ await signInWithEmailAndPassword(auth,email,password); showToast('Успішний вхід!'); }
-    catch(e){ showToast(e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'Невірний email або пароль':'Помилка: '+e.message,'error'); }
+    try{
+      await signInWithEmailAndPassword(auth,email,password);
+      showToast('Успішний вхід!');
+    }catch(e){
+      showAuthError('login-error', translateFirebaseError(e.code));
+    }
     finally{ setAuthLoading(false); }
   };
 
@@ -62,14 +67,17 @@
     const email=document.getElementById('email-input').value.trim();
     const password=document.getElementById('password-input').value;
     const nickname=document.getElementById('nickname-input').value.trim();
-    if(!email||!password||!nickname){showToast('Заповни всі поля!','error');return;}
-    if(password.length<6){showToast('Пароль мінімум 6 символів!','error');return;}
+    hideAuthError('register-error');
+    if(!email||!password||!nickname){showAuthError('register-error','❌ Заповни всі поля!');return;}
+    if(password.length<6){showAuthError('register-error','❌ Пароль мінімум 6 символів!');return;}
     setAuthLoading(true);
     try{
       const cred=await createUserWithEmailAndPassword(auth,email,password);
       await updateProfile(cred.user,{displayName:nickname});
       showToast('Акаунт створено!');
-    }catch(e){ showToast(e.code==='auth/email-already-in-use'?'Email вже зареєстровано':'Помилка: '+e.message,'error'); }
+    }catch(e){
+      showAuthError('register-error', translateFirebaseError(e.code));
+    }
     finally{ setAuthLoading(false); }
   };
 
@@ -703,7 +711,11 @@
     </div>
     <div id="form-login">
       <input class="auth-input" id="email-input" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="password-input" type="password" placeholder="Пароль" onkeydown="if(event.key==='Enter') loginEmail()">
+      <div style="position:relative;margin-bottom:10px">
+        <input class="auth-input" id="password-input" type="password" placeholder="Пароль" style="margin-bottom:0;padding-right:90px" onkeydown="if(event.key==='Enter') loginEmail()">
+        <button onclick="togglePass('password-input','eye-login')" type="button" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;font-family:var(--font-d);letter-spacing:1px" id="eye-login">ПОКАЗАТИ</button>
+      </div>
+      <div id="login-error" style="display:none;background:rgba(120,30,30,0.15);border:1px solid var(--red);color:#c07070;padding:10px 12px;font-size:12px;margin-bottom:10px;line-height:1.6"></div>
       <button class="forgot-link" onclick="resetPassword()">Забув пароль?</button>
       <button class="btn-email" id="btn-login" onclick="loginEmail()">Увійти</button>
       <div class="divider">або</div>
@@ -715,11 +727,15 @@
     <div id="form-register" style="display:none">
       <input class="auth-input" id="nickname-input" type="text" placeholder="Нікнейм (мін. 3 символи)" maxlength="24">
       <input class="auth-input" id="email-reg-input" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="password-reg-input" type="password" placeholder="Пароль (мін. 6 символів)" onkeydown="if(event.key==='Enter') registerEmailForm()">
+      <div style="position:relative;margin-bottom:10px">
+        <input class="auth-input" id="password-reg-input" type="password" placeholder="Пароль (мін. 6 символів)" style="margin-bottom:0;padding-right:90px" onkeydown="if(event.key==='Enter') registerEmailForm()">
+        <button onclick="togglePass('password-reg-input','eye-reg')" type="button" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;font-family:var(--font-d);letter-spacing:1px" id="eye-reg">ПОКАЗАТИ</button>
+      </div>
+      <div id="register-error" style="display:none;background:rgba(120,30,30,0.15);border:1px solid var(--red);color:#c07070;padding:10px 12px;font-size:12px;margin-bottom:10px;line-height:1.6"></div>
       <button class="btn-email" id="btn-register" onclick="registerEmailForm()">Створити акаунт</button>
       <div class="divider">або</div>
       <button class="btn-google" onclick="signInGoogle()">
-        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Зареєструватись через Google
       </button>
     </div>
@@ -1311,6 +1327,45 @@ function showToast(msg,type=''){
   setTimeout(()=>t.className='',3500);
 }
 
+// Показати/сховати пароль
+window.togglePass = function(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn   = document.getElementById(btnId);
+  if (!input || !btn) return;
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  btn.textContent = isPass ? 'СХОВАТИ' : 'ПОКАЗАТИ';
+};
+
+// Показ помилки в блоці (не тост)
+function showAuthError(blockId, msg) {
+  const el = document.getElementById(blockId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideAuthError(blockId) {
+  const el = document.getElementById(blockId);
+  if (el) el.style.display = 'none';
+}
+
+// Переклад помилок Firebase
+function translateFirebaseError(code) {
+  const map = {
+    'auth/wrong-password':       '❌ Невірний пароль. Перевір і спробуй знову.',
+    'auth/user-not-found':       '❌ Акаунт з таким email не знайдено.',
+    'auth/invalid-credential':   '❌ Невірний email або пароль.',
+    'auth/invalid-email':        '❌ Невірний формат email.',
+    'auth/email-already-in-use': '❌ Цей email вже зареєстрований. Спробуй увійти.',
+    'auth/weak-password':        '❌ Пароль занадто простий. Мінімум 6 символів.',
+    'auth/too-many-requests':    '❌ Забагато спроб. Спробуй через кілька хвилин.',
+    'auth/network-request-failed':'❌ Помилка мережі. Перевір підключення до інтернету.',
+    'auth/popup-closed-by-user': '❌ Вікно входу було закрито.',
+    'auth/cancelled-popup-request': '',
+  };
+  return map[code] || '❌ Помилка: ' + (code || 'невідома помилка');
+}
+
 // TABS
 const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','referral','streamer','shop'];
 function showTab(name){
@@ -1349,6 +1404,12 @@ window.registerEmailForm=async()=>{
   const nick=document.getElementById('nickname-input')?.value.trim()||'';
   const em=document.getElementById('email-reg-input')?.value.trim()||'';
   const pw=document.getElementById('password-reg-input')?.value||'';
+  hideAuthError('register-error');
+  if(!nick){showAuthError('register-error','❌ Введи нікнейм!');return;}
+  if(nick.length<3){showAuthError('register-error','❌ Нікнейм мінімум 3 символи!');return;}
+  if(!em){showAuthError('register-error','❌ Введи email!');return;}
+  if(!pw||pw.length<6){showAuthError('register-error','❌ Пароль мінімум 6 символів!');return;}
+  // Підставляємо в основні поля і викликаємо registerEmail
   document.getElementById('email-input').value=em;
   document.getElementById('password-input').value=pw;
   document.getElementById('nickname-input').value=nick;
