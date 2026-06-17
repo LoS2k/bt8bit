@@ -660,62 +660,15 @@
     <h2 data-t="tanks.title">Обирай свій танк</h2>
     <p class="s-desc" data-t="tanks.desc">Від легких розвідників до важких штурмових машин.</p>
   </div>
-  <div class="tanks-scroll">
-    <div class="tank-card">
-      <div class="tank-nation">🇩🇪 Німеччина</div>
-      <div class="tank-name">Panzer IV</div><div class="tank-tier">Рівень I</div>
-      <div class="tank-stats">
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:55%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:60%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Швидк.</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
-      </div>
+  <div class="tanks-scroll" id="tanks-scroll">
+    <!-- Завантажується динамічно -->
+    <div class="tank-card" style="opacity:.5;pointer-events:none">
+      <div class="tank-nation">⏳ Завантаження...</div>
+      <div class="tank-name" style="color:var(--dim)">Техніка</div>
     </div>
-    <div class="tank-card">
-      <div class="tank-nation">🛡 СРСР</div>
-      <div class="tank-name">T-34</div><div class="tank-tier">Рівень I</div>
-      <div class="tank-stats">
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Швидк.</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:75%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:65%"></div></div></div>
-      </div>
-    </div>
-    <div class="tank-card">
-      <div class="tank-nation">🇺🇸 США</div>
-      <div class="tank-name">M18 Hellcat</div><div class="tank-tier">Рівень I</div>
-      <div class="tank-stats">
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:30%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:75%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Швидк.</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:95%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:85%"></div></div></div>
-      </div>
-    </div>
-    <div class="tank-card">
-      <div class="tank-nation">🇩🇪 Німеччина</div>
-      <div class="tank-name">Tiger I</div><div class="tank-tier">Рівень I</div>
-      <div class="tank-stats">
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:85%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:80%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Швидк.</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:40%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:60%"></div></div></div>
-      </div>
-    </div>
-    <div class="tank-card">
-      <div class="tank-nation">🇫🇷 Франція</div>
-      <div class="tank-name">AMX ELC</div><div class="tank-tier">Рівень I</div>
-      <div class="tank-stats">
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Броня</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:25%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Урон</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:70%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Швидк.</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:88%"></div></div></div>
-        <div class="tank-stat-row"><span class="tank-stat-lbl">Огляд</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:90%"></div></div></div>
-      </div>
-    </div>
-    <div class="tank-card" style="border-color:rgba(232,188,56,.2);background:rgba(232,188,56,.03)">
-      <div class="tank-nation" style="color:var(--gold)">Скоро</div>
-      <div class="tank-name" style="color:var(--dim)">+ 45 танків</div>
-      <div class="tank-tier" style="background:var(--border);color:var(--dim)">Різні нації</div>
-    </div>
+  </div>
+  <div style="text-align:center;padding:16px 0">
+    <a href="tanks.html" style="display:inline-block;padding:10px 28px;border:1px solid var(--gold);color:var(--gold);font-family:var(--px);font-size:9px;text-decoration:none;letter-spacing:2px;transition:all .2s" onmouseover="this.style.background='rgba(232,188,56,0.1)'" onmouseout="this.style.background='transparent'" data-t="tanks.all">🚀 Вся база техніки →</a>
   </div>
 </div>
 <div class="pixel-div"></div>
@@ -992,7 +945,71 @@ function setLang(l) {
 }
 setLang(lang);
 
-function toggleMenu(){
+// ── ЗАВАНТАЖЕННЯ ТАНКІВ З FIREBASE ────────────────────────────
+(async function loadIndexTanks() {
+  const FACTION_FC = { east:'#cc2222', west:'#2244cc', north:'#888', euro:'#4488cc', asian:'#cc44aa' };
+  const CLASS_LB   = { assault:'⚔️ Штурм', support:'🛡️ Підт.', recon:'👁️ Розв.', arty:'💥 Арта', medium:'⚙️ Унів.' };
+  const TIER_R     = ['','І','ІІ','ІІІ','IV','V','VI','VII','VIII','IX','X'];
+  const scroll     = document.getElementById('tanks-scroll');
+  if (!scroll) return;
+
+  const FALLBACK = [
+    { id:'hellcat',   name:'M18 Hellcat', emoji:'🚀', nation:'США',      faction:'west',  tankClass:'support', tier:5,  stats:{hp:75,damage:80,armor:20,speed:95} },
+    { id:'elc',       name:'ELC AMX',     emoji:'🏎️', nation:'Франція',  faction:'euro',  tankClass:'recon',   tier:5,  stats:{hp:40,damage:55,armor:10,speed:88} },
+    { id:'kv2',       name:'КВ-2',        emoji:'💣', nation:'East',     faction:'east',  tankClass:'arty',    tier:6,  stats:{hp:85,damage:100,armor:60,speed:25} },
+    { id:'fv4005',    name:'FV4005',      emoji:'🔫', nation:'Британія', faction:'west',  tankClass:'support', tier:10, stats:{hp:60,damage:100,armor:15,speed:55} },
+    { id:'sturmtiger',name:'Sturmtiger',  emoji:'🐯', nation:'Нім.',     faction:'west',  tankClass:'assault', tier:7,  stats:{hp:90,damage:95,armor:80,speed:30} },
+    { id:'amx10rc',   name:'AMX 10 RC',  emoji:'🛞', nation:'Франція',  faction:'euro',  tankClass:'recon',   tier:8,  stats:{hp:45,damage:65,armor:25,speed:92} },
+    { id:'leopard2',  name:'Leopard 2A7',emoji:'🐆', nation:'Нім.',     faction:'west',  tankClass:'medium',  tier:10, stats:{hp:85,damage:85,armor:85,speed:75}, comingSoon:true },
+    { id:'type99',    name:'Type 99A',    emoji:'🐲', nation:'Китай',    faction:'asian', tankClass:'assault', tier:10, stats:{hp:90,damage:88,armor:90,speed:65}, comingSoon:true },
+  ];
+
+  function renderCard(t) {
+    const fc = FACTION_FC[t.faction] || '#888';
+    const cl = CLASS_LB[t.tankClass] || '';
+    const st = t.stats || {};
+    const imgEl = t.imageUrl
+      ? `<div style="height:90px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);margin-bottom:10px">
+           <img src="${t.imageUrl}" alt="${t.name}" style="max-height:86px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 8px ${fc}66)">
+         </div>`
+      : `<div style="font-size:48px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 10px ${fc}66)">${t.emoji||'🚀'}</div>`;
+
+    return `<div class="tank-card" style="${t.comingSoon?'opacity:.7;':''}" onclick="window.location.href='tanks.html'">
+      <div style="height:3px;background:${fc};margin:-24px -20px 14px"></div>
+      ${imgEl}
+      <div class="tank-nation" style="color:${fc}">${t.nation||''}</div>
+      <div class="tank-name">${t.name}</div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <div class="tank-tier">${TIER_R[t.tier]||t.tier}</div>
+        <div style="font-family:var(--px);font-size:7px;padding:4px 8px;border:1px solid ${fc}44;color:${fc}">${cl}</div>
+        ${t.comingSoon?`<div style="font-family:var(--px);font-size:7px;padding:4px 8px;background:rgba(232,188,56,.1);color:var(--gold);border:1px solid rgba(232,188,56,.3)">СКОРО</div>`:''}
+      </div>
+      <div class="tank-stats">
+        ${['hp','damage','armor','speed'].map((k,i)=>{
+          const names=['HP','Урон','Броня','Швидк.'];
+          return `<div class="tank-stat-row"><span class="tank-stat-lbl">${names[i]}</span><div class="tank-stat-bar"><div class="tank-stat-fill" style="width:${st[k]||0}%;background:${fc}"></div></div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  try {
+    const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const { getFirestore, getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const fbCfg = { apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw", authDomain:"tanksbattles3d.firebaseapp.com", projectId:"tanksbattles3d", storageBucket:"tanksbattles3d.firebasestorage.app", messagingSenderId:"626439210789", appId:"1:626439210789:web:3445ea49a9196e08e27ccc" };
+    const app  = getApps().length ? getApps()[0] : initializeApp(fbCfg);
+    const db   = getFirestore(app);
+    const snap = await getDocs(collection(db,'tanks_db'));
+    const tanks = snap.empty ? FALLBACK : snap.docs.map(d=>({id:d.id,...d.data()}));
+    scroll.innerHTML = tanks.map(renderCard).join('') +
+      `<div class="tank-card" style="border-color:rgba(232,188,56,.2);background:rgba(232,188,56,.03);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px" onclick="window.location.href='tanks.html'">
+        <div style="font-size:32px;margin-bottom:12px">🚀</div>
+        <div style="font-family:var(--px);font-size:8px;color:var(--gold);text-align:center;line-height:1.8">Вся база<br>техніки →</div>
+      </div>`;
+  } catch(e) {
+    scroll.innerHTML = FALLBACK.map(renderCard).join('');
+  }
+})();
   const btn=document.getElementById('burger-btn');
   const menu=document.getElementById('mobile-menu');
   btn.classList.toggle('open');
