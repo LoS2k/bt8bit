@@ -364,6 +364,160 @@ function showToast(msg,type=''){
 window.showToast=showToast;
 window.adminSignOut = () => signOut(auth).then(()=>window.location.href='profile.html');
 
+// ── TANKS DB ──────────────────────────────────────────────────
+const FACTION_LBL = { east:'🔴 East', west:'🔵 West', north:'⚫ North', euro:'🟣 Euro', asian:'🟡 Asian' };
+const CLASS_LBL   = { assault:'⚔️ Штурм', support:'🛡️ Підтримка', recon:'👁️ Розвідка', arty:'💥 Арта', medium:'⚙️ Універсал' };
+const TIER_ROM    = ['','І','ІІ','ІІІ','IV','V','VI','VII','VIII','IX','X'];
+let editingTankId = null;
+
+window.loadTanksDB = async function() {
+  const list = document.getElementById('tanks-db-list');
+  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
+  try {
+    const snap = await getDocs(collection(db,'tanks_db'));
+    if (snap.empty) {
+      list.innerHTML = '<div class="loading-row">База танків порожня. Натисни "+ Додати танк"</div>';
+      return;
+    }
+    list.innerHTML = `<table><thead><tr>
+      <th>Emoji</th><th>Назва</th><th>Фракція</th><th>Клас</th><th>Тір</th><th>Статус</th><th>Дії</th>
+    </tr></thead><tbody>` +
+    snap.docs.map(d => {
+      const t = d.data();
+      return `<tr>
+        <td style="font-size:20px;text-align:center">${t.emoji||'🚀'}</td>
+        <td><strong>${t.name||'—'}</strong><br><span style="font-size:10px;color:var(--dim)">${t.nation||''}</span></td>
+        <td style="font-size:12px">${FACTION_LBL[t.faction]||t.faction}</td>
+        <td style="font-size:12px">${CLASS_LBL[t.tankClass]||t.tankClass}</td>
+        <td style="font-family:var(--px);font-size:11px;color:var(--gold)">${TIER_ROM[t.tier]||t.tier}</td>
+        <td>${t.comingSoon?'<span style="color:var(--gold);font-size:11px">⏳ Скоро</span>':'<span style="color:var(--green);font-size:11px">✅ Активний</span>'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="tbl-btn" onclick="openTankEditor('${d.id}')">✏️</button>
+          <button class="tbl-btn" style="color:#c07070;border-color:#7a2020" onclick="deleteTank('${d.id}','${(t.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  } catch(e) { list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`; }
+};
+
+window.openTankEditor = async function(tankId) {
+  editingTankId = tankId;
+  document.getElementById('te-title').textContent = tankId ? 'Редагувати танк' : 'Новий танк';
+  document.getElementById('te-msg').style.display = 'none';
+
+  // Очищуємо
+  ['id','name','emoji','nation','desc','role','hp','damage','armor','speed','view','masking'].forEach(f => {
+    const el = document.getElementById('te-'+f);
+    if (el) el.value = f === 'hp' || f === 'damage' || f === 'armor' || f === 'speed' || f === 'view' || f === 'masking' ? '50' : '';
+  });
+  [0,1,2].forEach(i => {
+    ['icon','name','desc'].forEach(f => { const el = document.getElementById(`te-perk${i}-${f}`); if(el) el.value=''; });
+  });
+  document.getElementById('te-soon').checked = false;
+
+  if (tankId) {
+    try {
+      const snap = await getDoc(fsDoc(db,'tanks_db',tankId));
+      if (snap.exists()) {
+        const t = snap.data();
+        document.getElementById('te-id').value     = tankId;
+        document.getElementById('te-id').disabled  = true;
+        document.getElementById('te-name').value   = t.name||'';
+        document.getElementById('te-emoji').value  = t.emoji||'';
+        document.getElementById('te-nation').value = t.nation||'';
+        document.getElementById('te-faction').value= t.faction||'west';
+        document.getElementById('te-class').value  = t.tankClass||'medium';
+        document.getElementById('te-tier').value   = t.tier||1;
+        document.getElementById('te-soon').checked = !!t.comingSoon;
+        document.getElementById('te-desc').value   = t.desc||'';
+        document.getElementById('te-role').value   = t.role||'';
+        const s = t.stats||{};
+        ['hp','damage','armor','speed','view','masking'].forEach(f => {
+          const el = document.getElementById('te-'+f); if(el) el.value = s[f]||50;
+        });
+        (t.perks||[]).forEach((p,i) => {
+          if (i>2) return;
+          document.getElementById(`te-perk${i}-icon`).value = p.icon||'';
+          document.getElementById(`te-perk${i}-name`).value = p.name||'';
+          document.getElementById(`te-perk${i}-desc`).value = p.desc||'';
+        });
+      }
+    } catch(e) {}
+  } else {
+    document.getElementById('te-id').disabled = false;
+  }
+
+  document.getElementById('tank-editor-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeTankEditor = function() {
+  document.getElementById('tank-editor-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  editingTankId = null;
+};
+
+window.saveTank = async function() {
+  const msgEl = document.getElementById('te-msg');
+  const id    = document.getElementById('te-id').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const name  = document.getElementById('te-name').value.trim();
+  if (!id)   { showMsg(msgEl,'Введи ID','err'); return; }
+  if (!name) { showMsg(msgEl,'Введи назву','err'); return; }
+
+  const perks = [0,1,2].map(i => ({
+    icon: document.getElementById(`te-perk${i}-icon`).value.trim(),
+    name: document.getElementById(`te-perk${i}-name`).value.trim(),
+    desc: document.getElementById(`te-perk${i}-desc`).value.trim(),
+  })).filter(p => p.name);
+
+  const data = {
+    name,
+    emoji:     document.getElementById('te-emoji').value.trim() || '🚀',
+    nation:    document.getElementById('te-nation').value.trim(),
+    faction:   document.getElementById('te-faction').value,
+    tankClass: document.getElementById('te-class').value,
+    tier:      parseInt(document.getElementById('te-tier').value),
+    comingSoon:document.getElementById('te-soon').checked,
+    desc:      document.getElementById('te-desc').value.trim(),
+    role:      document.getElementById('te-role').value.trim(),
+    stats: {
+      hp:      parseInt(document.getElementById('te-hp').value)||50,
+      damage:  parseInt(document.getElementById('te-damage').value)||50,
+      armor:   parseInt(document.getElementById('te-armor').value)||50,
+      speed:   parseInt(document.getElementById('te-speed').value)||50,
+      view:    parseInt(document.getElementById('te-view').value)||50,
+      masking: parseInt(document.getElementById('te-masking').value)||50,
+    },
+    perks,
+    updatedAt: new Date(),
+  };
+
+  try {
+    const { doc: fsDoc2, setDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await setDoc(fsDoc2(db,'tanks_db',id), data, { merge: true });
+    showMsg(msgEl,'✅ Збережено!','ok');
+    setTimeout(() => { closeTankEditor(); loadTanksDB(); }, 1000);
+  } catch(e) { showMsg(msgEl,'Помилка: '+e.message,'err'); }
+};
+
+window.deleteTank = async function(id, name) {
+  if (!confirm(`Видалити "${name}"?`)) return;
+  try {
+    const { doc: fsDoc2, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await deleteDoc(fsDoc2(db,'tanks_db',id));
+    showToast('✅ Танк видалено');
+    loadTanksDB();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.style.display = 'block';
+  el.style.cssText += type==='ok'
+    ? ';color:#4aaa5a;background:rgba(30,80,30,0.2);border-color:#4aaa5a'
+    : ';color:#c07070;background:rgba(120,30,30,0.15);border-color:#aa2020';
+}
+
 // ── STREAMERS ─────────────────────────────────────────────────
 const TIER_LABELS = { pending:'⏳ Заявка', bronze:'🥉 Партнер', silver:'🥈 Срібний', gold:'🥇 Золотий' };
 const TIER_COLORS = { pending:'#e8bc38', bronze:'#cd7f32', silver:'#c0c0c0', gold:'#e8bc38' };
@@ -1043,6 +1197,10 @@ select.admin-input{cursor:pointer;}
       <div class="sidebar-item" data-section="streamers" onclick="showSection('streamers');loadStreamers()">
         <span class="sidebar-icon">🎥</span> Стрімери
       </div>
+      <div class="sidebar-section">База</div>
+      <div class="sidebar-item" data-section="tanks" onclick="showSection('tanks');loadTanksDB()">
+        <span class="sidebar-icon">🚀</span> Танки
+      </div>
       <div class="sidebar-section">Контент</div>
       <div class="sidebar-item" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()">
         <span class="sidebar-icon">🎁</span> Промокоди
@@ -1228,6 +1386,94 @@ select.admin-input{cursor:pointer;}
               <tr><td colspan="4" class="loading-row">Завантаження...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- TANKS DB -->
+      <div id="section-tanks" class="admin-section">
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🚀 База танків</span>
+          <button class="admin-btn" onclick="openTankEditor(null)">+ Додати танк</button>
+        </div>
+        <div id="tanks-db-list" class="admin-table-wrap">
+          <div class="loading-row">Завантаження...</div>
+        </div>
+      </div>
+
+      <!-- TANK EDITOR MODAL -->
+      <div id="tank-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:600;align-items:flex-start;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0" onclick="if(event.target===this)closeTankEditor()">
+        <div style="background:var(--card);border:1px solid var(--border);width:min(620px,96vw);margin:auto">
+          <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="te-title">Новий танк</span>
+            <button onclick="closeTankEditor()" style="background:none;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+          </div>
+          <div style="padding:24px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div><label class="admin-label">ID (латиниця)</label><input class="admin-input" id="te-id" placeholder="hellcat"></div>
+              <div><label class="admin-label">Назва</label><input class="admin-input" id="te-name" placeholder="M18 Hellcat"></div>
+              <div><label class="admin-label">Emoji</label><input class="admin-input" id="te-emoji" placeholder="🚀" maxlength="4"></div>
+              <div><label class="admin-label">Нація</label><input class="admin-input" id="te-nation" placeholder="США"></div>
+              <div>
+                <label class="admin-label">Фракція</label>
+                <select class="admin-input" id="te-faction">
+                  <option value="east">🔴 East Coalition</option>
+                  <option value="west">🔵 West Alliance</option>
+                  <option value="north">⚫ Northern Front</option>
+                  <option value="euro">🟣 Euro Union</option>
+                  <option value="asian">🟡 Asian Pact</option>
+                </select>
+              </div>
+              <div>
+                <label class="admin-label">Клас</label>
+                <select class="admin-input" id="te-class">
+                  <option value="assault">⚔️ Штурм</option>
+                  <option value="support">🛡️ Підтримка</option>
+                  <option value="recon">👁️ Розвідка</option>
+                  <option value="arty">💥 Арта</option>
+                  <option value="medium">⚙️ Універсал</option>
+                </select>
+              </div>
+              <div>
+                <label class="admin-label">Тір (1-10)</label>
+                <select class="admin-input" id="te-tier">
+                  ${[1,2,3,4,5,6,7,8,9,10].map(i=>`<option value="${i}">${i}</option>`).join('')}
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+                <label style="font-size:12px;color:var(--dim)">Скоро:</label>
+                <input type="checkbox" id="te-soon" style="width:18px;height:18px;cursor:pointer">
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label class="admin-label">Опис</label>
+              <textarea class="admin-input" id="te-desc" rows="2" placeholder="Короткий опис танку..."></textarea>
+            </div>
+            <div style="margin-bottom:16px">
+              <label class="admin-label">Роль в бою</label>
+              <input class="admin-input" id="te-role" placeholder="Як грати на цьому танку...">
+            </div>
+            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ХАРАКТЕРИСТИКИ (0-100)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+              <div><label class="admin-label">❤️ HP</label><input class="admin-input" id="te-hp" type="number" min="0" max="100" value="50"></div>
+              <div><label class="admin-label">🔫 Урон</label><input class="admin-input" id="te-damage" type="number" min="0" max="100" value="50"></div>
+              <div><label class="admin-label">🛡️ Броня</label><input class="admin-input" id="te-armor" type="number" min="0" max="100" value="50"></div>
+              <div><label class="admin-label">💨 Швидкість</label><input class="admin-input" id="te-speed" type="number" min="0" max="100" value="50"></div>
+              <div><label class="admin-label">👁️ Огляд</label><input class="admin-input" id="te-view" type="number" min="0" max="100" value="50"></div>
+              <div><label class="admin-label">👻 Маскування</label><input class="admin-input" id="te-masking" type="number" min="0" max="100" value="50"></div>
+            </div>
+            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ОСОБЛИВОСТІ (до 3)</div>
+            ${[0,1,2].map(i=>`
+            <div style="display:grid;grid-template-columns:50px 1fr 2fr;gap:8px;margin-bottom:8px;align-items:center">
+              <input class="admin-input" id="te-perk${i}-icon" placeholder="⭐" maxlength="4" style="text-align:center">
+              <input class="admin-input" id="te-perk${i}-name" placeholder="Назва">
+              <input class="admin-input" id="te-perk${i}-desc" placeholder="Опис особливості">
+            </div>`).join('')}
+            <div id="te-msg" style="display:none;padding:10px;font-size:12px;margin-bottom:12px;border:1px solid"></div>
+            <div style="display:flex;gap:10px">
+              <button class="admin-btn" onclick="saveTank()" style="flex:1">💾 Зберегти</button>
+              <button class="admin-btn secondary" onclick="closeTankEditor()">Скасувати</button>
+            </div>
+          </div>
         </div>
       </div>
 
