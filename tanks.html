@@ -429,7 +429,9 @@ window.renderTanks = function() {
     return `<div class="tank-card ${t.comingSoon?'coming-soon':''}" onclick="openModal('${t.id}')">
       <div class="tank-card-faction-bar" style="background:${fc}"></div>
       <div class="tank-card-img">
-        <span style="filter:drop-shadow(0 0 16px ${fc}66)">${t.emoji||'🚀'}</span>
+        ${t.imageUrl
+          ? `<img src="${t.imageUrl}" alt="${t.name}" style="max-height:120px;max-width:90%;object-fit:contain;filter:drop-shadow(0 0 12px ${fc}66)">`
+          : `<span style="filter:drop-shadow(0 0 16px ${fc}66)">${t.emoji||'🚀'}</span>`}
         <div class="tank-card-tier">Тір ${TIER_ROMAN[t.tier]||t.tier}</div>
         <div class="tank-card-class" style="color:${cc};border-color:${cc}55;background:rgba(0,0,0,0.7)">${cl}</div>
         ${t.comingSoon?'<div class="tank-card-soon">СКОРО</div>':''}
@@ -472,7 +474,9 @@ window.openModal = function(id) {
   const st = t.stats || {};
 
   document.getElementById('m-title').textContent = t.name;
-  document.getElementById('m-img').innerHTML = `<span style="font-size:80px;filter:drop-shadow(0 0 20px ${fc}88)">${t.emoji||'🚀'}</span>`;
+  document.getElementById('m-img').innerHTML = t.imageUrl
+    ? `<img src="${t.imageUrl}" alt="${t.name}" style="max-width:100%;max-height:130px;object-fit:contain;filter:drop-shadow(0 0 20px ${fc}88)">`
+    : `<span style="font-size:80px;filter:drop-shadow(0 0 20px ${fc}88)">${t.emoji||'🚀'}</span>`;
   document.getElementById('m-name').textContent = t.name;
   document.getElementById('m-desc').textContent = t.desc || '';
   document.getElementById('m-role').textContent = t.role ? '💡 ' + t.role : '';
