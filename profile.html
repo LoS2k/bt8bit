@@ -39,13 +39,46 @@
   window._fbFunctions=fbFunctions;
   window._httpsCallable=httpsCallable;
   window._db=db; window._auth=auth;
+  window._currentUser = null;
+
+  function showToast(msg,type=''){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.className='show '+(type||'');
+    setTimeout(()=>t.className='',3500);
+  }
+  window.showToast = showToast;
+
+  function hideAuthError(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
+  function showAuthError(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display='block'; }
+  window.hideAuthError = hideAuthError;
+  window.showAuthError = showAuthError;
+
+  function translateFirebaseError(code){
+    const map={
+      'auth/wrong-password':       '❌ Невірний пароль. Перевір і спробуй знову.',
+      'auth/user-not-found':       '❌ Акаунт з таким email не знайдено.',
+      'auth/invalid-credential':   '❌ Невірний email або пароль.',
+      'auth/invalid-email':        '❌ Невірний формат email.',
+      'auth/email-already-in-use': '❌ Цей email вже зареєстрований. Спробуй увійти.',
+      'auth/weak-password':        '❌ Пароль занадто простий. Мінімум 6 символів.',
+      'auth/too-many-requests':    '❌ Забагато спроб. Спробуй через кілька хвилин.',
+      'auth/network-request-failed':'❌ Помилка мережі. Перевір підключення.',
+      'auth/popup-closed-by-user': '❌ Вікно входу було закрито.',
+      'auth/cancelled-popup-request': '',
+    };
+    return map[code] || '❌ Помилка: '+(code||'невідома');
+  }
 
   onAuthStateChanged(auth, async user => {
-    if(user){ _currentUser=user; showProfile(); await loadPlayerData(user.uid,user); }
+    window._currentUser = user;
+    if(user){ showProfile(); await loadPlayerData(user.uid,user); }
     else { showLogin(); }
   });
 
-  window.signInGoogle=async()=>{ try{ await signInWithPopup(auth,new GoogleAuthProvider()); }catch(e){ showToast('Помилка: '+e.message,'error'); } };
+  window.signInGoogle=async()=>{
+    try{ await signInWithPopup(auth,new GoogleAuthProvider()); }
+    catch(e){ if(e.code!=='auth/cancelled-popup-request') showToast('Помилка: '+e.message,'error'); }
+  };
   window.signOutUser=async()=>{ await signOut(auth); showToast('Вийшли з акаунту'); };
 
   window.loginEmail=async()=>{
@@ -56,11 +89,9 @@
     setAuthLoading(true);
     try{
       await signInWithEmailAndPassword(auth,email,password);
-      showToast('Успішний вхід!');
     }catch(e){
       showAuthError('login-error', translateFirebaseError(e.code));
-    }
-    finally{ setAuthLoading(false); }
+    }finally{ setAuthLoading(false); }
   };
 
   window.registerEmail=async()=>{
@@ -74,11 +105,21 @@
     try{
       const cred=await createUserWithEmailAndPassword(auth,email,password);
       await updateProfile(cred.user,{displayName:nickname});
-      showToast('Акаунт створено!');
     }catch(e){
       showAuthError('register-error', translateFirebaseError(e.code));
-    }
-    finally{ setAuthLoading(false); }
+    }finally{ setAuthLoading(false); }
+  };
+
+  window.resetPassword=async()=>{
+    const email=document.getElementById('email-input').value.trim();
+    if(!email){showAuthError('login-error','❌ Введи email для відновлення паролю!');return;}
+    try{
+      await sendPasswordResetEmail(auth,email);
+      showAuthError('login-error','✅ Лист надіслано на '+email);
+      document.getElementById('login-error').style.background='rgba(30,80,30,0.2)';
+      document.getElementById('login-error').style.borderColor='#4aaa5a';
+      document.getElementById('login-error').style.color='#4aaa5a';
+    }catch(e){ showAuthError('login-error', translateFirebaseError(e.code)); }
   };
 
   window.resetPassword=async()=>{
