@@ -285,9 +285,7 @@ const CLASS_LABELS = {
 };
 const TIER_ROMAN = ['','І','ІІ','ІІІ','IV','V','VI','VII','VIII','IX','X'];
 
-const DEFAULT_TANKS = [
-  {
-    id:'hellcat', name:'M18 Hellcat', emoji:'🚀', faction:'west', tankClass:'support',
+const DEFAULT_TANKS = [];
     tier:5, nation:'США', comingSoon:false,
     desc:'Найшвидший танковий знищувач Другої світової. Відмінна швидкість і пробиття, але тонка броня.',
     role:'Снайпер на дистанції. Стріляй і ховайся — виживає хитрістю, не бронею.',
@@ -369,21 +367,6 @@ const DEFAULT_TANKS = [
       {icon:'⚡', name:'Цифровий мозок', desc:'Автоматичне слідкування за ціллю — +20% до точності'},
       {icon:'🌍', name:'Бойова гнучкість', desc:'Однаково ефективний на будь-якій дистанції бою'},
     ]
-  },
-  {
-    id:'type99', name:'Type 99A', emoji:'🐲', faction:'asian', tankClass:'assault',
-    tier:10, nation:'Китай', comingSoon:true,
-    desc:'Флагман китайського танкобудування. Комбінує важку броню зі сучасними системами захисту.',
-    role:'Лідируй в атаці. Товста броня і хороша гармата — йди першим і не бійся.',
-    stats:{ hp:90, damage:88, armor:90, speed:65, view:70, masking:40 },
-    perks:[
-      {icon:'🛡️', name:'Динамічний захист', desc:'ERA броня поглинає кумулятивні снаряди'},
-      {icon:'🔫', name:'125мм гармата', desc:'Висока швидкострільність для важкого танку'},
-      {icon:'🏴', name:'Диміна завіса', desc:'Автоматичне задимлення при влученні'},
-    ]
-  },
-];
-
 // ── ФІЛЬТРИ ───────────────────────────────────────────────────
 let activeFilters = { faction:'all', class:'all', tier:'all' };
 
