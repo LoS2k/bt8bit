@@ -6,1211 +6,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BT 8BIT — Адмін панель</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" sizes="192x192" href="favicon-192.png">
 <script defer src="/_vercel/insights/script.js"></script>
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut }
-  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, query, orderBy, limit, getDocs, where, increment,
-  onSnapshot, serverTimestamp, addDoc }
-  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-const app = initializeApp({
-  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
-  authDomain:"tanksbattles3d.firebaseapp.com",
-  projectId:"tanksbattles3d",
-  storageBucket:"tanksbattles3d.firebasestorage.app",
-  messagingSenderId:"626439210789",
-  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
-});
-const auth = getAuth(app);
-const db   = getFirestore(app);
-window._db = db; window._auth = auth;
-
-let currentAdmin = null;
-
-onAuthStateChanged(auth, async user => {
-  if (!user) { window.location.href = 'profile.html'; return; }
-  const snap = await getDoc(doc(db, 'players', user.uid));
-  if (!snap.exists() || !['admin','moderator'].includes(snap.data().role)) {
-    document.getElementById('access-denied').style.display = 'flex';
-    document.getElementById('admin-panel').style.display = 'none';
-    return;
-  }
-  currentAdmin = { uid: user.uid, ...snap.data() };
-  window._currentAdmin = currentAdmin;
-  document.getElementById('access-denied').style.display = 'none';
-  document.getElementById('admin-panel').style.display = 'block';
-  document.getElementById('admin-nick').textContent = snap.data().nickname || user.email;
-  document.getElementById('admin-role').textContent =
-    snap.data().role === 'admin' ? '👑 Адміністратор' : '🛡 Модератор';
-  loadDashboard();
-  loadPlayers();
-  loadPromocodes();
-});
-
-// ── DASHBOARD ─────────────────────────────────────────────────
-async function loadDashboard() {
-  try {
-    // Site stats — з захистом від відсутності документа
-    try {
-      onSnapshot(doc(db,'siteStats','main'), snap => {
-        if (!snap.exists()) {
-          setText('dash-total-visits', '0');
-          setText('dash-unique-visits', '0');
-          return;
-        }
-        const d = snap.data();
-        setText('dash-total-visits',  (d.totalVisits||0).toLocaleString());
-        setText('dash-unique-visits', (d.uniqueVisitors||0).toLocaleString());
-      });
-    } catch(e) { setText('dash-total-visits','—'); }
-
-    const today = new Date().toISOString().slice(0,10);
-    try {
-      onSnapshot(doc(db,'siteStats','daily_'+today), snap => {
-        if (!snap.exists()) { setText('dash-today-visits','0'); return; }
-        setText('dash-today-visits', (snap.data().visits||0).toLocaleString());
-      });
-    } catch(e) { setText('dash-today-visits','—'); }
-
-    // Players count — без orderBy щоб не потребував індекс
-    try {
-      const pSnap = await getDocs(collection(db,'players'));
-      setText('dash-players', pSnap.size.toLocaleString());
-    } catch(e) { setText('dash-players','—'); }
-
-    // Clans count
-    try {
-      const cSnap = await getDocs(collection(db,'clans'));
-      setText('dash-clans', cSnap.size.toLocaleString());
-    } catch(e) { setText('dash-clans','—'); }
-
-    // Top player — може потребувати індекс, обробляємо окремо
-    try {
-      const topSnap = await getDocs(query(collection(db,'players'),orderBy('rating','desc'),limit(1)));
-      if (!topSnap.empty) {
-        const t = topSnap.docs[0].data();
-        setText('dash-top-player', (t.nickname||'—') + ' · ' + (t.rating||0));
-      } else { setText('dash-top-player','—'); }
-    } catch(e) { setText('dash-top-player','Індекс будується...'); }
-
-    // Banned count
-    try {
-      const banSnap = await getDocs(query(collection(db,'players'),where('banned','==',true)));
-      setText('dash-banned', banSnap.size.toLocaleString());
-    } catch(e) { setText('dash-banned','—'); }
-
-  } catch(e) { console.error('Dashboard error:', e); }
-}
-
-// ── PLAYERS ───────────────────────────────────────────────────
-let playersCache = [];
-
-window.loadPlayers = async function(searchQ='') {
-  const list = document.getElementById('players-list');
-  list.innerHTML = '<tr><td colspan="8" class="loading-row">Завантаження...</td></tr>';
-  try {
-    let q;
-    if (searchQ) {
-      q = query(collection(db,'players'),
-        where('nickname','>=',searchQ),
-        where('nickname','<=',searchQ+'\uf8ff'),
-        limit(50));
-    } else {
-      q = query(collection(db,'players'), orderBy('createdAt','desc'), limit(50));
-    }
-    const snap = await getDocs(q);
-    playersCache = [];
-    snap.forEach(d => playersCache.push({id:d.id,...d.data()}));
-    renderPlayers(playersCache);
-  } catch(e) {
-    list.innerHTML = `<tr><td colspan="8" class="loading-row" style="color:#c07070">Помилка: ${e.message}</td></tr>`;
-  }
-};
-
-function renderPlayers(players) {
-  const list = document.getElementById('players-list');
-  if (!players.length) {
-    list.innerHTML = '<tr><td colspan="8" class="loading-row">Гравців не знайдено</td></tr>';
-    return;
-  }
-  list.innerHTML = players.map(p => {
-    const wr = p.battles>0 ? Math.round(p.wins/p.battles*100) : 0;
-    const banned = p.banned ? '🚫 Заблокований' : '✅ Активний';
-    const roleColor = p.role==='admin'?'#ffd700':p.role==='moderator'?'#a070cc':'var(--dim)';
-    const created = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
-    return `<tr onclick="openPlayer('${p.id}')" style="cursor:pointer">
-      <td><span class="player-nick">${p.nickname||'—'}</span></td>
-      <td style="font-size:10px;color:${roleColor}">${p.role||'user'}</td>
-      <td>LVL ${p.level||1}</td>
-      <td style="color:var(--gold)">${(p.rating||0).toLocaleString()}</td>
-      <td>${p.battles||0} · ${wr}%</td>
-      <td style="color:var(--gold)">${(p.gold||0).toLocaleString()}</td>
-      <td style="font-size:11px;color:var(--dim)">${created}</td>
-      <td><span style="font-size:11px;color:${p.banned?'#c07070':'#4aaa5a'}">${banned}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-window.openPlayer = function(uid) {
-  const p = playersCache.find(x => x.id === uid);
-  if (!p) return;
-  const modal = document.getElementById('player-modal');
-  document.getElementById('pm-nick').textContent = p.nickname || '—';
-  document.getElementById('pm-uid').textContent = uid;
-  document.getElementById('pm-role').value = p.role || 'user';
-  document.getElementById('pm-gold').value = p.gold || 0;
-  document.getElementById('pm-coins').value = p.coins || 0;
-  document.getElementById('pm-fuel').value = p.fuel || 0;
-  document.getElementById('pm-oil').value = p.oil || 0;
-  document.getElementById('pm-metal').value = p.metal || 0;
-  document.getElementById('pm-ban-reason').value = p.banReason || '';
-  document.getElementById('pm-banned-status').textContent = p.banned ? '🚫 Заблокований' : '✅ Активний';
-  document.getElementById('pm-banned-status').style.color = p.banned ? '#c07070' : '#4aaa5a';
-  document.getElementById('pm-ban-btn').textContent = p.banned ? '✅ Розблокувати' : '🚫 Заблокувати';
-  document.getElementById('pm-ban-btn').onclick = () => toggleBan(uid, p.banned);
-  document.getElementById('pm-save-btn').onclick = () => savePlayer(uid);
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-};
-
-window.savePlayer = async function(uid) {
-  const role      = document.getElementById('pm-role').value;
-  const gold      = parseInt(document.getElementById('pm-gold').value) || 0;
-  const coins     = parseInt(document.getElementById('pm-coins').value) || 0;
-  const fuel      = parseInt(document.getElementById('pm-fuel').value) || 0;
-  const oil       = parseInt(document.getElementById('pm-oil').value) || 0;
-  const metal     = parseInt(document.getElementById('pm-metal').value) || 0;
-  try {
-    await updateDoc(doc(db,'players',uid), { role, gold, coins, fuel, oil, metal });
-    showToast('✅ Гравця оновлено');
-    closePlayerModal();
-    loadPlayers();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.toggleBan = async function(uid, isBanned) {
-  const reason = document.getElementById('pm-ban-reason').value;
-  try {
-    await updateDoc(doc(db,'players',uid), {
-      banned: !isBanned,
-      banReason: isBanned ? '' : reason
-    });
-    showToast(isBanned ? '✅ Розблоковано' : '🚫 Заблоковано');
-    closePlayerModal();
-    loadPlayers();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.closePlayerModal = function() {
-  document.getElementById('player-modal').style.display = 'none';
-  document.body.style.overflow = '';
-};
-
-// ── PROMOCODES ────────────────────────────────────────────────
-window.loadPromocodes = async function() {
-  const list = document.getElementById('promo-list');
-  list.innerHTML = '<tr><td colspan="6" class="loading-row">Завантаження...</td></tr>';
-  try {
-    const snap = await getDocs(query(collection(db,'promocodes'), orderBy('createdAt','desc')));
-    if (snap.empty) {
-      list.innerHTML = '<tr><td colspan="6" class="loading-row">Промокодів немає</td></tr>';
-      return;
-    }
-    list.innerHTML = snap.docs.map(d => {
-      const p = d.data();
-      const exp = p.expiresAt?.toDate ? p.expiresAt.toDate().toLocaleDateString('uk-UA') : '—';
-      const reward = Object.entries(p.reward||{}).map(([k,v])=>`${v} ${k}`).join(', ');
-      const used = (p.usedBy||[]).length;
-      return `<tr>
-        <td><span class="promo-code">${d.id}</span></td>
-        <td style="color:var(--gold)">${reward}</td>
-        <td>${used} / ${p.maxUses||'∞'}</td>
-        <td style="font-size:11px;color:var(--dim)">${exp}</td>
-        <td><span style="color:${p.active?'#4aaa5a':'#c07070'}">${p.active?'✅ Активний':'❌ Неактивний'}</span></td>
-        <td style="display:flex;gap:6px">
-          <button class="tbl-btn" onclick="togglePromo('${d.id}',${p.active})">${p.active?'Вимк':'Увімк'}</button>
-          <button class="tbl-btn danger" onclick="deletePromo('${d.id}')">Видалити</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    list.innerHTML = `<tr><td colspan="6" class="loading-row" style="color:#c07070">Помилка: ${e.message}</td></tr>`;
-  }
-};
-
-window.createPromo = async function() {
-  const code    = document.getElementById('new-promo-code').value.trim().toUpperCase();
-  const gold    = parseInt(document.getElementById('new-promo-gold').value)||0;
-  const coins   = parseInt(document.getElementById('new-promo-coins').value)||0;
-  const fuel    = parseInt(document.getElementById('new-promo-fuel').value)||0;
-  const oil     = parseInt(document.getElementById('new-promo-oil').value)||0;
-  const metal   = parseInt(document.getElementById('new-promo-metal').value)||0;
-  const maxUses = parseInt(document.getElementById('new-promo-maxuses').value)||99999;
-  const desc    = document.getElementById('new-promo-desc').value.trim();
-  const days    = parseInt(document.getElementById('new-promo-days').value)||30;
-
-  if (!code || code.length < 3) { showToast('Введи код (мін. 3 символи)','error'); return; }
-
-  const reward = {};
-  if (gold)  reward.gold  = gold;
-  if (coins) reward.coins = coins;
-  if (fuel)  reward.fuel  = fuel;
-  if (oil)   reward.oil   = oil;
-  if (metal) reward.metal = metal;
-  if (!Object.keys(reward).length) { showToast('Вкажи хоча б одну нагороду','error'); return; }
-
-  const expires = new Date();
-  expires.setDate(expires.getDate() + days);
-
-  try {
-    await setDoc(doc(db,'promocodes',code), {
-      code, reward, usedBy:[], active:true, maxUses, description:desc,
-      expiresAt: expires, createdAt: new Date(),
-      createdBy: currentAdmin?.uid || 'admin'
-    });
-    showToast('✅ Промокод '+code+' створено!');
-    // Очистити форму
-    ['new-promo-code','new-promo-gold','new-promo-coins','new-promo-fuel',
-     'new-promo-oil','new-promo-metal','new-promo-desc'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById('new-promo-maxuses').value = '99999';
-    document.getElementById('new-promo-days').value = '30';
-    loadPromocodes();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.togglePromo = async function(code, isActive) {
-  try {
-    await updateDoc(doc(db,'promocodes',code), { active: !isActive });
-    showToast(isActive ? 'Промокод вимкнено' : 'Промокод увімкнено');
-    loadPromocodes();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.deletePromo = async function(code) {
-  if (!confirm('Видалити промокод '+code+'?')) return;
-  try {
-    await deleteDoc(doc(db,'promocodes',code));
-    showToast('Промокод видалено');
-    loadPromocodes();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── NEWS ──────────────────────────────────────────────────────
-window.loadNews = async function() {
-  const list = document.getElementById('news-list');
-  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
-  try {
-    const snap = await getDocs(query(collection(db,'news'), orderBy('createdAt','desc'), limit(20)));
-    if (snap.empty) { list.innerHTML = '<div class="loading-row">Новин немає</div>'; return; }
-    list.innerHTML = snap.docs.map(d => {
-      const n = d.data();
-      const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
-      return `<div class="news-admin-row">
-        <div>
-          <div class="news-admin-title">${n.title||'—'}</div>
-          <div style="font-size:11px;color:var(--dim)">${date} · ${n.tag||'—'}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button class="tbl-btn" onclick="editNews('${d.id}')">Редагувати</button>
-          <button class="tbl-btn danger" onclick="deleteNews('${d.id}')">Видалити</button>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) { list.innerHTML = `<div class="loading-row" style="color:#c07070">Помилка: ${e.message}</div>`; }
-};
-
-window.createNews = async function() {
-  const title = document.getElementById('news-title').value.trim();
-  const tag   = document.getElementById('news-tag').value.trim();
-  const text  = document.getElementById('news-text').value.trim();
-  if (!title || !text) { showToast('Заповни заголовок і текст','error'); return; }
-  try {
-    await addDoc(collection(db,'news'), {
-      title, tag: tag||'Оновлення', text, pinned: false,
-      createdAt: new Date(), authorId: currentAdmin?.uid,
-      authorNick: currentAdmin?.nickname || 'Адмін'
-    });
-    showToast('✅ Новину опубліковано!');
-    document.getElementById('news-title').value = '';
-    document.getElementById('news-tag').value = '';
-    document.getElementById('news-text').value = '';
-    loadNews();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.deleteNews = async function(id) {
-  if (!confirm('Видалити новину?')) return;
-  try { await deleteDoc(doc(db,'news',id)); showToast('Видалено'); loadNews(); }
-  catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── HELPERS ───────────────────────────────────────────────────
-function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='show'+(type?' '+type:'');
-  setTimeout(()=>t.className='',3000);
-}
-window.showToast=showToast;
-window.adminSignOut = () => signOut(auth).then(()=>window.location.href='profile.html');
-
-// ── TANKS DB ──────────────────────────────────────────────────
-const FACTION_LBL = { east:'🔴 East', west:'🔵 West', north:'⚫ North', euro:'🟣 Euro', asian:'🟡 Asian' };
-const CLASS_LBL   = { assault:'⚔️ Штурм', support:'🛡️ Підтримка', recon:'👁️ Розвідка', arty:'💥 Арта', medium:'⚙️ Універсал' };
-const TIER_ROM    = ['','І','ІІ','ІІІ','IV','V','VI','VII','VIII','IX','X'];
-let editingTankId = null;
-
-window.loadTanksDB = async function() {
-  const list = document.getElementById('tanks-db-list');
-  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
-  try {
-    const snap = await getDocs(collection(db,'tanks_db'));
-    if (snap.empty) {
-      list.innerHTML = '<div class="loading-row">База танків порожня. Натисни "+ Додати танк"</div>';
-      return;
-    }
-    list.innerHTML = `<table><thead><tr>
-      <th>Emoji</th><th>Назва</th><th>Фракція</th><th>Клас</th><th>Тір</th><th>Статус</th><th>Дії</th>
-    </tr></thead><tbody>` +
-    snap.docs.map(d => {
-      const t = d.data();
-      return `<tr>
-        <td style="font-size:20px;text-align:center">${t.emoji||'🚀'}</td>
-        <td><strong>${t.name||'—'}</strong><br><span style="font-size:10px;color:var(--dim)">${t.nation||''}</span></td>
-        <td style="font-size:12px">${FACTION_LBL[t.faction]||t.faction}</td>
-        <td style="font-size:12px">${CLASS_LBL[t.tankClass]||t.tankClass}</td>
-        <td style="font-family:var(--px);font-size:11px;color:var(--gold)">${TIER_ROM[t.tier]||t.tier}</td>
-        <td>${t.comingSoon?'<span style="color:var(--gold);font-size:11px">⏳ Скоро</span>':'<span style="color:var(--green);font-size:11px">✅ Активний</span>'}</td>
-        <td style="display:flex;gap:6px">
-          <button class="tbl-btn" onclick="openTankEditor('${d.id}')">✏️</button>
-          <button class="tbl-btn" style="color:#c07070;border-color:#7a2020" onclick="deleteTank('${d.id}','${(t.name||'').replace(/'/g,"\\'")}')">🗑️</button>
-        </td>
-      </tr>`;
-    }).join('') + '</tbody></table>';
-  } catch(e) { list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`; }
-};
-
-window.openTankEditor = async function(tankId) {
-  editingTankId = tankId;
-  document.getElementById('te-title').textContent = tankId ? 'Редагувати танк' : 'Новий танк';
-  document.getElementById('te-msg').style.display = 'none';
-
-  // Очищуємо
-  ['id','name','emoji','nation','desc','role'].forEach(f => {
-    const el = document.getElementById('te-'+f); if (el) el.value = '';
-  });
-  ['hp','damage','armor','speed','view','masking'].forEach(f => {
-    const el = document.getElementById('te-'+f); if (el) el.value = '50';
-  });
-  [0,1,2].forEach(i => {
-    ['icon','name','desc'].forEach(f => { const el = document.getElementById(`te-perk${i}-${f}`); if(el) el.value=''; });
-  });
-  document.getElementById('te-soon').checked = false;
-  document.getElementById('te-img-preview').style.display = 'none';
-  document.getElementById('te-img-url').value = '';
-
-  if (tankId) {
-    try {
-      // Використовуємо вже імпортований doc і getDoc
-      const snap = await getDoc(doc(db,'tanks_db',tankId));
-      if (snap.exists()) {
-        const t = snap.data();
-        document.getElementById('te-id').value      = tankId;
-        document.getElementById('te-id').disabled   = true;
-        document.getElementById('te-name').value    = t.name||'';
-        document.getElementById('te-emoji').value   = t.emoji||'';
-        document.getElementById('te-nation').value  = t.nation||'';
-        document.getElementById('te-faction').value = t.faction||'west';
-        document.getElementById('te-class').value   = t.tankClass||'medium';
-        document.getElementById('te-tier').value    = t.tier||1;
-        document.getElementById('te-soon').checked  = !!t.comingSoon;
-        document.getElementById('te-desc').value    = t.desc||'';
-        document.getElementById('te-role').value    = t.role||'';
-        // Зображення
-        if (t.imageUrl) {
-          document.getElementById('te-img-url').value = t.imageUrl;
-          const prev = document.getElementById('te-img-preview');
-          prev.src = t.imageUrl; prev.style.display = 'block';
-        }
-        const s = t.stats||{};
-        ['hp','damage','armor','speed','view','masking'].forEach(f => {
-          const el = document.getElementById('te-'+f); if(el) el.value = s[f]||50;
-        });
-        (t.perks||[]).forEach((p,i) => {
-          if (i>2) return;
-          document.getElementById(`te-perk${i}-icon`).value = p.icon||'';
-          document.getElementById(`te-perk${i}-name`).value = p.name||'';
-          document.getElementById(`te-perk${i}-desc`).value = p.desc||'';
-        });
-      }
-    } catch(e) { console.error('openTankEditor error:', e); }
-  } else {
-    document.getElementById('te-id').disabled = false;
-  }
-
-  document.getElementById('tank-editor-modal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-};
-
-window.closeTankEditor = function() {
-  document.getElementById('tank-editor-modal').style.display = 'none';
-  document.body.style.overflow = '';
-  editingTankId = null;
-};
-
-window.previewTankImg = function(url) {
-  const prev = document.getElementById('te-img-preview');
-  if (url) { prev.src = url; prev.style.display = 'block'; }
-  else { prev.style.display = 'none'; }
-};
-
-window.uploadTankImg = async function(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('Файл занадто великий (макс 5MB)','error'); return; }
-
-  const msgEl = document.getElementById('te-msg');
-  showMsg(msgEl, '⏳ Завантаження зображення...', 'ok');
-
-  try {
-    const { getStorage, ref, uploadBytesResumable, getDownloadURL } =
-      await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js');
-    const storage = getStorage();
-    const tankId  = document.getElementById('te-id').value.trim() || 'tank_' + Date.now();
-    const storageRef = ref(storage, `tanks/${tankId}_${file.name}`);
-    const task = uploadBytesResumable(storageRef, file);
-
-    const url = await new Promise((resolve, reject) => {
-      task.on('state_changed', null, reject,
-        async () => resolve(await getDownloadURL(task.snapshot.ref)));
-    });
-
-    document.getElementById('te-img-url').value = url;
-    const prev = document.getElementById('te-img-preview');
-    prev.src = url; prev.style.display = 'block';
-    showMsg(msgEl, '✅ Зображення завантажено!', 'ok');
-  } catch(e) {
-    showMsg(msgEl, 'Помилка: ' + e.message, 'err');
-  }
-};
-
-window.saveTank = async function() {
-  const msgEl = document.getElementById('te-msg');
-  const rawId = document.getElementById('te-id').value.trim();
-  const id    = editingTankId || rawId.toLowerCase().replace(/\s+/g,'-');
-  const name  = document.getElementById('te-name').value.trim();
-
-  if (!id)   { showMsg(msgEl,'Введи ID','err'); return; }
-  if (!name) { showMsg(msgEl,'Введи назву','err'); return; }
-
-  const perks = [0,1,2].map(i => ({
-    icon: document.getElementById(`te-perk${i}-icon`).value.trim(),
-    name: document.getElementById(`te-perk${i}-name`).value.trim(),
-    desc: document.getElementById(`te-perk${i}-desc`).value.trim(),
-  })).filter(p => p.name);
-
-  const data = {
-    name,
-    emoji:     document.getElementById('te-emoji').value.trim() || '🚀',
-    nation:    document.getElementById('te-nation').value.trim(),
-    faction:   document.getElementById('te-faction').value,
-    tankClass: document.getElementById('te-class').value,
-    tier:      parseInt(document.getElementById('te-tier').value),
-    comingSoon:document.getElementById('te-soon').checked,
-    desc:      document.getElementById('te-desc').value.trim(),
-    role:      document.getElementById('te-role').value.trim(),
-    imageUrl:  document.getElementById('te-img-url').value.trim() || null,
-    stats: {
-      hp:      parseInt(document.getElementById('te-hp').value)||50,
-      damage:  parseInt(document.getElementById('te-damage').value)||50,
-      armor:   parseInt(document.getElementById('te-armor').value)||50,
-      speed:   parseInt(document.getElementById('te-speed').value)||50,
-      view:    parseInt(document.getElementById('te-view').value)||50,
-      masking: parseInt(document.getElementById('te-masking').value)||50,
-    },
-    perks,
-    updatedAt: new Date(),
-  };
-
-  try {
-    // Використовуємо вже імпортовані функції
-    await setDoc(doc(db,'tanks_db',id), data, { merge: true });
-    showMsg(msgEl,'✅ Збережено!','ok');
-    setTimeout(() => { closeTankEditor(); loadTanksDB(); }, 1000);
-  } catch(e) { showMsg(msgEl,'Помилка: '+e.message,'err'); }
-};
-
-window.deleteTank = async function(id, name) {
-  if (!confirm(`Видалити "${name}"?`)) return;
-  try {
-    const { doc: fsDoc2, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    await deleteDoc(fsDoc2(db,'tanks_db',id));
-    showToast('✅ Танк видалено');
-    loadTanksDB();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-function showMsg(el, text, type) {
-  el.textContent = text;
-  el.style.display = 'block';
-  el.style.cssText += type==='ok'
-    ? ';color:#4aaa5a;background:rgba(30,80,30,0.2);border-color:#4aaa5a'
-    : ';color:#c07070;background:rgba(120,30,30,0.15);border-color:#aa2020';
-}
-
-// ── STREAMERS ─────────────────────────────────────────────────
-const TIER_LABELS = { pending:'⏳ Заявка', bronze:'🥉 Партнер', silver:'🥈 Срібний', gold:'🥇 Золотий' };
-const TIER_COLORS = { pending:'#e8bc38', bronze:'#cd7f32', silver:'#c0c0c0', gold:'#e8bc38' };
-
-window.loadStreamers = async function() {
-  const list   = document.getElementById('streamers-list');
-  const filter = document.getElementById('streamers-filter')?.value || 'pending';
-  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
-
-  try {
-    let q;
-    if (filter === 'all') {
-      q = query(collection(db,'streamer_applications'), orderBy('createdAt','desc'), limit(50));
-    } else {
-      q = query(collection(db,'streamer_applications'),
-        where('status','==',filter), orderBy('createdAt','desc'), limit(50));
-    }
-    const snap = await getDocs(q);
-    if (snap.empty) { list.innerHTML = '<div class="loading-row">Нічого немає</div>'; return; }
-
-    list.innerHTML = `<table><thead><tr>
-      <th>Нік</th><th>Аудиторія</th><th>Соцмережі</th><th>Дата</th><th>Статус</th><th>Дія</th>
-    </tr></thead><tbody>` +
-    snap.docs.map(d => {
-      const s = d.data();
-      const date = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
-      const color = TIER_COLORS[s.status] || '#888';
-      const socials = [
-        s.youtube  ? `<a href="${s.youtube}"  target="_blank" style="color:var(--gold)">YT</a>`  : '',
-        s.tiktok   ? `<a href="${s.tiktok}"   target="_blank" style="color:var(--gold)">TK</a>`  : '',
-        s.telegram ? `<a href="${s.telegram}" target="_blank" style="color:var(--gold)">TG</a>`  : '',
-        s.discord  ? `<a href="${s.discord}"  target="_blank" style="color:var(--gold)">DC</a>`  : '',
-      ].filter(Boolean).join(' · ');
-      return `<tr>
-        <td style="font-size:13px">${s.nickname||'—'}</td>
-        <td style="font-size:12px;color:var(--dim)">${s.audience||'—'}</td>
-        <td style="font-size:12px">${socials||'—'}</td>
-        <td style="font-size:11px;color:var(--dim)">${date}</td>
-        <td><span style="font-size:10px;color:${color}">${TIER_LABELS[s.status]||s.status}</span></td>
-        <td><button class="tbl-btn" onclick="openStreamerModal('${d.id}','${s.uid||''}')">Відкрити</button></td>
-      </tr>`;
-    }).join('') + '</tbody></table>';
-  } catch(e) { list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`; }
-};
-
-window.openStreamerModal = async function(docId, uid) {
-  try {
-    const snap = await getDoc(doc(db,'streamer_applications',docId));
-    if (!snap.exists()) return;
-    const s = snap.data();
-    const date = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleString('uk-UA') : '—';
-
-    document.getElementById('sm-nick').textContent = s.nickname || '—';
-    document.getElementById('sm-body').innerHTML = `
-      <div style="margin-bottom:16px">
-        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Аудиторія: <span style="color:var(--text)">${s.audience}</span></div>
-        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Дата: ${date}</div>
-        ${s.youtube  ? `<div style="font-size:12px;margin-bottom:4px">📺 <a href="${s.youtube}"  target="_blank" style="color:var(--gold)">${s.youtube}</a></div>` : ''}
-        ${s.tiktok   ? `<div style="font-size:12px;margin-bottom:4px">📱 <a href="${s.tiktok}"   target="_blank" style="color:var(--gold)">${s.tiktok}</a></div>` : ''}
-        ${s.telegram ? `<div style="font-size:12px;margin-bottom:4px">✈️ <a href="${s.telegram}" target="_blank" style="color:var(--gold)">${s.telegram}</a></div>` : ''}
-        ${s.discord  ? `<div style="font-size:12px;margin-bottom:4px">🎮 <a href="${s.discord}"  target="_blank" style="color:var(--gold)">${s.discord}</a></div>` : ''}
-      </div>
-      <div style="background:var(--surf);border:1px solid var(--border);padding:14px;margin-bottom:20px;font-size:13px;color:var(--text);line-height:1.7">${s.about||'—'}</div>
-
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Рівень партнера</label>
-        <select id="sm-tier" class="admin-input" style="width:200px">
-          <option value="pending" ${s.status==='pending'?'selected':''}>⏳ Заявка</option>
-          <option value="bronze"  ${s.status==='bronze' ?'selected':''}>🥉 Партнер (1%)</option>
-          <option value="silver"  ${s.status==='silver' ?'selected':''}>🥈 Срібний (2%+1%)</option>
-          <option value="gold"    ${s.status==='gold'   ?'selected':''}>🥇 Золотий (3%+2%)</option>
-          <option value="rejected" ${s.status==='rejected'?'selected':''}>❌ Відхилено</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:10px">
-        <button class="admin-btn" onclick="approveStreamer('${docId}','${uid}')">💾 Зберегти</button>
-        <button class="admin-btn secondary" onclick="closeStreamerModal()">Закрити</button>
-      </div>
-    `;
-    document.getElementById('streamer-modal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.approveStreamer = async function(docId, uid) {
-  const tier = document.getElementById('sm-tier').value;
-  try {
-    // Оновити статус заявки
-    await updateDoc(doc(db,'streamer_applications',docId), { status: tier, updatedAt: new Date() });
-
-    if (uid && tier !== 'pending' && tier !== 'rejected') {
-      // Генеруємо код стрімера якщо немає
-      const pSnap = await getDoc(doc(db,'players',uid));
-      if (pSnap.exists()) {
-        const pData = pSnap.data();
-        const code  = pData.streamerCode || ('STREAM_'+(pData.nickname||'').toUpperCase().slice(0,8).replace(/\s/g,''));
-        await updateDoc(doc(db,'players',uid), {
-          streamerStatus: tier,
-          streamerCode:   code,
-          streamerApprovedAt: new Date(),
-        });
-      }
-    } else if (uid && tier === 'rejected') {
-      await updateDoc(doc(db,'players',uid), { streamerStatus: 'none' });
-    }
-
-    // Лог
-    await addDoc(collection(db,'moderation_log'), {
-      action: 'streamer_'+tier, adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, details: TIER_LABELS[tier]||tier, createdAt: new Date()
-    });
-
-    showToast('✅ Статус стрімера оновлено');
-    closeStreamerModal();
-    loadStreamers();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.closeStreamerModal = function() {
-  document.getElementById('streamer-modal').style.display = 'none';
-  document.body.style.overflow = '';
-};
-
-// ── SUPPORT TICKETS ───────────────────────────────────────────
-const TYPE_LABELS_A = {
-  bug:'🐛 Баг', report:'🚨 Скарга', idea:'💡 Ідея',
-  payment:'💳 Платіж', account:'👤 Акаунт', other:'📝 Інше'
-};
-const TYPE_COLORS_A = {
-  bug:'#e84040', report:'#e88038', idea:'#4aaa5a',
-  payment:'#e8bc38', account:'#8eb0cc', other:'#a070cc'
-};
-const STATUS_LABELS_A = {
-  open:'🟡 Відкрита', inprogress:'🔵 В роботі',
-  resolved:'✅ Вирішено', closed:'⬜ Закрита'
-};
-
-window.loadTickets = async function() {
-  const list = document.getElementById('tickets-list');
-  list.innerHTML = '<div class="loading-row">Завантаження...</div>';
-
-  const statusFilter = document.getElementById('tickets-filter')?.value || 'all';
-  const typeFilter   = document.getElementById('tickets-type')?.value   || 'all';
-
-  try {
-    let q = query(collection(db,'support_tickets'), orderBy('createdAt','desc'), limit(50));
-    if (statusFilter !== 'all') q = query(collection(db,'support_tickets'), where('status','==',statusFilter), orderBy('createdAt','desc'), limit(50));
-    const snap = await getDocs(q);
-
-    if (snap.empty) { list.innerHTML = '<div class="loading-row">Заявок немає</div>'; return; }
-
-    let tickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (typeFilter !== 'all') tickets = tickets.filter(t => t.type === typeFilter);
-
-    list.innerHTML = `<table><thead><tr>
-      <th>ID</th><th>Тип</th><th>Гравець</th><th>Тема</th><th>Пріоритет</th><th>Дата</th><th>Статус</th><th>Дія</th>
-    </tr></thead><tbody>` +
-    tickets.map(t => {
-      const color = TYPE_COLORS_A[t.type] || '#888';
-      const date  = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('uk-UA') : '—';
-      const prio  = t.priority === 'high' ? '🔴' : t.priority === 'medium' ? '🟡' : '🟢';
-      const statusColor = t.status === 'resolved' ? '#4aaa5a' : t.status === 'inprogress' ? '#8eb0cc' : t.status === 'closed' ? '#6a7a8a' : '#e8bc38';
-      return `<tr>
-        <td style="font-family:var(--px);font-size:9px;color:var(--dim)">${t.ticketId||t.id.slice(0,8)}</td>
-        <td><span style="font-size:10px;color:${color}">${TYPE_LABELS_A[t.type]||t.type}</span></td>
-        <td style="font-size:13px">${t.reporterNick||'—'}</td>
-        <td style="font-size:12px;max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${t.subject||'—'}</td>
-        <td style="text-align:center">${prio}</td>
-        <td style="font-size:11px;color:var(--dim)">${date}</td>
-        <td><span style="font-size:10px;color:${statusColor}">${STATUS_LABELS_A[t.status]||t.status}</span></td>
-        <td><button class="tbl-btn" onclick="openTicket('${t.id}')">Відкрити</button></td>
-      </tr>`;
-    }).join('') + '</tbody></table>';
-  } catch(e) {
-    list.innerHTML = `<div class="loading-row" style="color:#c07070">${e.message}</div>`;
-  }
-};
-
-window.openTicket = async function(docId) {
-  try {
-    const { getDoc, doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const snap = await getDoc(fsDoc(db,'support_tickets',docId));
-    if (!snap.exists()) return;
-    const t = snap.data();
-
-    const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('uk-UA') : '—';
-    const color = TYPE_COLORS_A[t.type] || '#888';
-
-    document.getElementById('tm-id').textContent = t.ticketId || docId;
-    document.getElementById('tm-body').innerHTML = `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-        <span style="font-size:11px;color:${color};border:1px solid ${color}44;padding:4px 10px">${TYPE_LABELS_A[t.type]||t.type}</span>
-        <span style="font-size:11px;color:var(--dim);border:1px solid var(--border);padding:4px 10px">${t.priority==='high'?'🔴 Критичний':t.priority==='medium'?'🟡 Середній':'🟢 Низький'}</span>
-        <span style="font-size:11px;color:var(--dim)">📅 ${date}</span>
-      </div>
-      <div style="font-size:16px;color:#fff;font-weight:500;margin-bottom:8px">${t.subject||'—'}</div>
-      <div style="font-size:13px;color:var(--dim);margin-bottom:4px">
-        Від: <span style="color:var(--text)">${t.reporterNick||'—'}</span>
-        ${t.reporterEmail ? `· 📧 <a href="mailto:${t.reporterEmail}" style="color:var(--gold)">${t.reporterEmail}</a>` : ''}
-        ${t.reportedNick?` · На: <span style="color:#e88038">${t.reportedNick}</span>`:''}
-      </div>
-      <div style="margin:16px 0;padding:16px;background:var(--surf);border:1px solid var(--border);font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap">${t.description||'—'}</div>
-      ${t.screenshotUrl ? `<div style="margin-bottom:16px"><img src="${t.screenshotUrl}" style="max-width:100%;border:1px solid var(--border)" alt="Скріншот"><br><a href="${t.screenshotUrl}" target="_blank" style="font-size:11px;color:var(--gold)">Відкрити повний розмір →</a></div>` : ''}
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Статус заявки</label>
-        <select id="tm-status" class="admin-input" style="width:200px">
-          <option value="open" ${t.status==='open'?'selected':''}>🟡 Відкрита</option>
-          <option value="inprogress" ${t.status==='inprogress'?'selected':''}>🔵 В роботі</option>
-          <option value="resolved" ${t.status==='resolved'?'selected':''}>✅ Вирішено</option>
-          <option value="closed" ${t.status==='closed'?'selected':''}>⬜ Закрита</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:10px">
-        <button class="admin-btn" onclick="updateTicketStatus('${docId}')">💾 Зберегти статус</button>
-        <button class="admin-btn secondary" onclick="closeTicketModal()">Закрити</button>
-      </div>
-    `;
-    document.getElementById('ticket-modal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.updateTicketStatus = async function(docId) {
-  const status = document.getElementById('tm-status').value;
-  try {
-    const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    await updateDoc(fsDoc(db,'support_tickets',docId), { status, updatedAt: new Date() });
-    showToast('✅ Статус оновлено');
-    closeTicketModal();
-    loadTickets();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-window.closeTicketModal = function() {
-  document.getElementById('ticket-modal').style.display = 'none';
-  document.body.style.overflow = '';
-};
-
-// ── BANS ──────────────────────────────────────────────────────
-window.loadBans = async function() {
-  const list = document.getElementById('bans-list');
-  list.innerHTML = '<tr><td colspan="4" class="loading-row">Завантаження...</td></tr>';
-  try {
-    const snap = await getDocs(query(collection(db,'players'), where('banned','==',true), limit(100)));
-    if (snap.empty) {
-      list.innerHTML = '<tr><td colspan="4" class="loading-row" style="color:#4aaa5a">✅ Немає заблокованих гравців</td></tr>';
-      return;
-    }
-    list.innerHTML = snap.docs.map(d => {
-      const p = d.data();
-      const banDate = p.bannedAt?.toDate ? p.bannedAt.toDate().toLocaleDateString('uk-UA') : '—';
-      return `<tr>
-        <td><span class="player-nick">${p.nickname||'—'}</span><br><span style="font-size:10px;color:var(--dim)">${d.id.slice(0,12)}...</span></td>
-        <td style="color:#c07070;max-width:200px">${p.banReason||'Причина не вказана'}</td>
-        <td style="font-size:11px;color:var(--dim)">${banDate}</td>
-        <td><button class="tbl-btn" onclick="unbanPlayer('${d.id}','${(p.nickname||'').replace(/'/g,"\\'")}')">✅ Розблокувати</button></td>
-      </tr>`;
-    }).join('');
-  } catch(e) { list.innerHTML = `<tr><td colspan="4" class="loading-row" style="color:#c07070">${e.message}</td></tr>`; }
-};
-
-window.unbanPlayer = async function(uid, nick) {
-  if (!confirm(`Розблокувати ${nick}?`)) return;
-  try {
-    await updateDoc(doc(db,'players',uid), { banned:false, banReason:'' });
-    await addDoc(collection(db,'moderation_log'), {
-      action:'unban', adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick, createdAt: new Date()
-    });
-    showToast('✅ '+nick+' розблоковано');
-    loadBans();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── GIVE — пошук гравця ───────────────────────────────────────
-let giveTargetUID = { gr: null, gi: null };
-
-window.searchForGive = async function(prefix) {
-  const q = document.getElementById(prefix+'-search').value.trim();
-  if (!q) { showToast('Введи нікнейм або UID','error'); return; }
-
-  try {
-    let playerData = null, playerUID = null;
-
-    // Спроба як UID
-    if (q.length > 20) {
-      const snap = await getDoc(doc(db,'players',q));
-      if (snap.exists()) { playerUID = q; playerData = snap.data(); }
-    }
-
-    // Пошук по нікнейму
-    if (!playerData) {
-      const snap = await getDocs(query(
-        collection(db,'players'),
-        where('nickname','>=',q),
-        where('nickname','<=',q+'\uf8ff'),
-        limit(1)
-      ));
-      if (!snap.empty) { playerUID = snap.docs[0].id; playerData = snap.docs[0].data(); }
-    }
-
-    if (!playerData) { showToast('Гравця не знайдено','error'); return; }
-
-    giveTargetUID[prefix] = playerUID;
-    const nick = playerData.nickname || '—';
-
-    document.getElementById(prefix+'-avatar').textContent = nick[0].toUpperCase();
-    document.getElementById(prefix+'-nick').textContent = nick;
-    document.getElementById(prefix+'-uid-show').textContent = playerUID;
-
-    if (prefix === 'gr') {
-      setText('gr-cur-gold',  (playerData.gold||0).toLocaleString());
-      setText('gr-cur-coins', (playerData.coins||0).toLocaleString());
-      setText('gr-cur-oil',   (playerData.oil||0).toLocaleString());
-      document.getElementById('gr-player-found').style.display = 'block';
-      document.getElementById('gr-btn').disabled = false;
-    } else {
-      document.getElementById('gi-player-found').style.display = 'block';
-      document.getElementById('gi-btn').disabled = false;
-    }
-    showToast('✅ Знайдено: '+nick);
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-};
-
-// ── GIVE RESOURCES ────────────────────────────────────────────
-window.giveResources = async function() {
-  const uid = giveTargetUID['gr'];
-  if (!uid) { showToast('Спочатку знайди гравця','error'); return; }
-
-  const gold     = parseInt(document.getElementById('gr-gold').value)||0;
-  const coins    = parseInt(document.getElementById('gr-coins').value)||0;
-  const fuel     = parseInt(document.getElementById('gr-fuel').value)||0;
-  const oil      = parseInt(document.getElementById('gr-oil').value)||0;
-  const metal    = parseInt(document.getElementById('gr-metal').value)||0;
-  const diamonds = parseInt(document.getElementById('gr-diamonds').value)||0;
-  const reason   = document.getElementById('gr-reason').value.trim() || 'Видача адміном';
-
-  if (!gold && !coins && !fuel && !oil && !metal && !diamonds) {
-    showToast('Вкажи хоча б один ресурс','error'); return;
-  }
-
-  const btn = document.getElementById('gr-btn');
-  btn.disabled = true; btn.textContent = '...';
-
-  try {
-    const updates = {};
-    if (gold)     updates.gold     = increment(gold);
-    if (coins)    updates.coins    = increment(coins);
-    if (fuel)     updates.fuel     = increment(fuel);
-    if (oil)      updates.oil      = increment(oil);
-    if (metal)    updates.metal    = increment(metal);
-    if (diamonds) updates.diamonds = increment(diamonds);
-
-    await updateDoc(doc(db,'players',uid), updates);
-
-    const nick = document.getElementById('gr-nick').textContent;
-    const resText = [
-      gold?`+${gold} золото`:'', coins?`+${coins} монети`:'',
-      fuel?`+${fuel} паливо`:'', oil?`+${oil} нафта`:'',
-      metal?`+${metal} метал`:'', diamonds?`+${diamonds} діаманти`:''
-    ].filter(Boolean).join(', ');
-
-    await addDoc(collection(db,'moderation_log'), {
-      action:'give_resources', adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick, details: resText, reason, createdAt: new Date()
-    });
-
-    showToast(`✅ ${nick}: ${resText}`);
-    ['gr-gold','gr-coins','gr-fuel','gr-oil','gr-metal','gr-diamonds'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    // Оновити баланс
-    const fresh = await getDoc(doc(db,'players',uid));
-    if (fresh.exists()) {
-      const d = fresh.data();
-      setText('gr-cur-gold',  (d.gold||0).toLocaleString());
-      setText('gr-cur-coins', (d.coins||0).toLocaleString());
-      setText('gr-cur-oil',   (d.oil||0).toLocaleString());
-    }
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-  finally { btn.disabled = false; btn.textContent = '💰 Видати ресурси'; }
-};
-
-// ── GIVE ITEMS ────────────────────────────────────────────────
-window.updateItemFields = function() {
-  const type = document.getElementById('gi-type').value;
-  const isSpecial = ['nickname_change','exp_boost','fuel_refill'].includes(type);
-  document.getElementById('gi-name-wrap').style.display   = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-rarity-wrap').style.display = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-tier-wrap').style.display   = type === 'tank' ? 'block' : 'none';
-  document.getElementById('gi-image-wrap').style.display  = isSpecial ? 'none' : 'block';
-  document.getElementById('gi-nation-wrap').style.display = type === 'tank' ? 'block' : 'none';
-};
-
-window.giveItem = async function() {
-  const uid  = giveTargetUID['gi'];
-  if (!uid) { showToast('Спочатку знайди гравця','error'); return; }
-
-  const type   = document.getElementById('gi-type').value;
-  const name   = document.getElementById('gi-name').value.trim();
-  const rarity = document.getElementById('gi-rarity').value;
-  const tier   = parseInt(document.getElementById('gi-tier').value)||0;
-  const image  = document.getElementById('gi-image').value.trim() || type;
-  const nation = document.getElementById('gi-nation').value;
-  const reason = document.getElementById('gi-reason').value.trim() || 'Видача адміном';
-  const nick   = document.getElementById('gi-nick').textContent;
-
-  const isSpecial = ['nickname_change','exp_boost','fuel_refill'].includes(type);
-  if (!isSpecial && !name) { showToast('Введи назву айтему','error'); return; }
-
-  const SPECIAL_NAMES = {
-    nickname_change:'Зміна нікнейму', exp_boost:'Буст досвіду x2',
-    fuel_refill:'Заправка палива', premium_camo:'Преміум камуфляж'
-  };
-
-  const btn = document.getElementById('gi-btn');
-  btn.disabled = true; btn.textContent = '...';
-
-  try {
-    const itemData = {
-      itemType: type,
-      itemName: isSpecial ? SPECIAL_NAMES[type] : name,
-      itemRarity: isSpecial ? 'epic' : rarity,
-      itemTier: tier, itemImage: image, itemNation: nation||'',
-      isListed: false, isRented: false,
-      acquiredBy: 'admin', acquiredReason: reason, acquiredAt: new Date(),
-    };
-    const itemId = type + '_' + Date.now();
-    await setDoc(doc(db,'inventory',uid,'items',itemId), itemData);
-    await addDoc(collection(db,'moderation_log'), {
-      action:'give_item', adminNick: currentAdmin?.nickname||'Адмін',
-      target: uid, targetNick: nick, details: itemData.itemName, reason, createdAt: new Date()
-    });
-    showToast(`✅ ${nick} отримав: ${itemData.itemName}`);
-    loadItemHistory();
-  } catch(e) { showToast('Помилка: '+e.message,'error'); }
-  finally { btn.disabled = false; btn.textContent = '📦 Видати айтем'; }
-};
-
-window.loadItemHistory = async function() {
-  const el = document.getElementById('gi-history');
-  if (!el) return;
-  try {
-    const snap = await getDocs(query(
-      collection(db,'moderation_log'),
-      where('action','==','give_item'),
-      orderBy('createdAt','desc'), limit(10)
-    ));
-    if (snap.empty) { el.innerHTML = '<div style="color:var(--dim);font-size:12px">Ще не було видач</div>'; return; }
-    el.innerHTML = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
-      '<th style="font-family:var(--px);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Час</th>' +
-      '<th style="font-family:var(--px);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Гравець</th>' +
-      '<th style="font-family:var(--px);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Айтем</th>' +
-      '<th style="font-family:var(--px);font-size:8px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Причина</th>' +
-      '</tr></thead><tbody>' +
-      snap.docs.map(d => {
-        const l = d.data();
-        const t = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('uk-UA') : '—';
-        return `<tr>
-          <td style="font-size:11px;color:var(--dim);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${t}</td>
-          <td style="font-size:12px;color:#fff;padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.targetNick||'—'}</td>
-          <td style="font-size:12px;color:var(--gold);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.details||'—'}</td>
-          <td style="font-size:11px;color:var(--dim);padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3)">${l.reason||'—'}</td>
-        </tr>`;
-      }).join('') + '</tbody></table>';
-  } catch(e) { el.innerHTML = '<div style="color:#c07070;font-size:12px">'+e.message+'</div>'; }
-};
-
-// ── SHOW SECTION ──────────────────────────────────────────────
-window.showSection = function(name) {
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('section-'+name);
-  if (el) el.classList.add('active');
-  // Підсвічуємо активну кнопку по data-section атрибуту
-  const activeBtn = document.querySelector(`.sidebar-item[data-section="${name}"]`);
-  if (activeBtn) activeBtn.classList.add('active');
-  if (name === 'logs') loadLogs();
-  if (name === 'give-items') loadItemHistory();
-  if (name === 'bans') loadBans();
-};
-
-// ── LOGS ──────────────────────────────────────────────────────
-async function loadLogs() {
-  const list = document.getElementById('logs-list');
-  try {
-    const snap = await getDocs(query(collection(db,'moderation_log'), orderBy('createdAt','desc'), limit(50)));
-    if (snap.empty) { list.innerHTML = '<div class="loading-row">Логів немає</div>'; return; }
-    list.innerHTML = '<table><thead><tr><th>Час</th><th>Адмін</th><th>Дія</th><th>Ціль</th><th>Деталі</th></tr></thead><tbody>' +
-      snap.docs.map(d => {
-        const l = d.data();
-        const t = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('uk-UA') : '—';
-        const actionColor = l.action?.includes('ban') ? '#c07070' : l.action?.includes('give') ? '#4aaa5a' : 'var(--gold)';
-        return `<tr>
-          <td style="font-size:11px;color:var(--dim)">${t}</td>
-          <td style="font-size:12px">${l.adminNick||'—'}</td>
-          <td style="color:${actionColor};font-size:11px">${l.action||'—'}</td>
-          <td style="font-size:12px">${l.targetNick||l.target||'—'}</td>
-          <td style="font-size:11px;color:var(--dim)">${l.details||l.reason||'—'}</td>
-        </tr>`;
-      }).join('') + '</tbody></table>';
-  } catch(e) { list.innerHTML = '<div class="loading-row" style="color:#c07070">'+e.message+'</div>'; }
-}
-</script>
-
 <style>
-:root{--bg:#060a10;--surf:#0d1520;--surface:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--font-d:'Press Start 2P',monospace;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
+:root{--bg:#060a10;--surf:#0d1520;--surface:#0d1520;--card:#111e2e;--border:#1a3050;--gold:#e8bc38;--gold2:#c49a20;--steel:#8eb0cc;--text:#d4cdb8;--dim:#6a7a8a;--green:#4aaa5a;--red:#aa2020;--px:'Press Start 2P',monospace;--rb:system-ui,sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--rb);min-height:100vh;}
-
-/* ACCESS DENIED */
 #access-denied{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:999;}
-.denied-icon{font-size:64px;}
-.denied-title{font-family:var(--px);font-size:18px;color:#c07070;}
-.denied-sub{font-size:14px;color:var(--dim);}
-
-/* NAV */
+.denied-icon{font-size:64px;}.denied-title{font-family:var(--px);font-size:18px;color:#c07070;}.denied-sub{font-size:14px;color:var(--dim);}
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:rgba(6,10,16,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
 .nav-logo-icon{width:30px;height:30px;background:var(--gold);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:10px;color:var(--bg);}
 .nav-logo-text{font-family:var(--px);font-size:12px;color:var(--gold);}
 .nav-badge{font-family:var(--px);font-size:8px;color:#aa2020;border:1px solid #aa2020;padding:3px 8px;margin-left:8px;}
 .nav-right{display:flex;align-items:center;gap:16px;}
-.admin-info{text-align:right;}
-.admin-info-nick{font-family:var(--px);font-size:10px;color:#fff;}
-.admin-info-role{font-size:11px;color:var(--gold);}
+.admin-info{text-align:right;}.admin-info-nick{font-family:var(--px);font-size:10px;color:#fff;}.admin-info-role{font-size:11px;color:var(--gold);}
 .btn-signout{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .2s;}
 .btn-signout:hover{border-color:#aa2020;color:#c07070;}
-
-/* LAYOUT */
 #admin-panel{display:none;}
-.admin-layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 56px);}
-
-/* SIDEBAR */
-.admin-sidebar{background:var(--surf);border-right:1px solid var(--border);padding:16px 0;}
+.admin-layout{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 56px);}
+.admin-sidebar{background:var(--surf);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto;}
 .sidebar-section{font-family:var(--px);font-size:7px;color:var(--dim);letter-spacing:2px;padding:12px 20px 6px;}
 .sidebar-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:var(--dim);font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
 .sidebar-item:hover{background:var(--card);color:var(--text);}
 .sidebar-item.active{border-left-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.06);}
 .sidebar-icon{font-size:14px;width:18px;text-align:center;}
-
-/* MAIN */
-.admin-main{padding:24px 32px;overflow-y:auto;}
-.admin-section{display:none;}
-.admin-section.active{display:block;}
-.section-title{font-family:var(--px);font-size:13px;color:#fff;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
-
-/* DASHBOARD CARDS */
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.admin-main{padding:24px 32px;overflow-y:auto;max-height:calc(100vh - 56px);}
+.admin-section{display:none;}.admin-section.active{display:block;}
+.section-title{font-family:var(--px);font-size:13px;color:#fff;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
 .dash-card{background:var(--card);border:1px solid var(--border);padding:20px;text-align:center;}
-.dash-val{font-family:var(--px);font-size:22px;color:var(--gold);display:block;margin-bottom:6px;}
+.dash-card.clickable{cursor:pointer;transition:border-color .2s;}.dash-card.clickable:hover{border-color:var(--gold);}
+.dash-val{font-family:var(--px);font-size:20px;color:var(--gold);display:block;margin-bottom:6px;}
 .dash-lbl{font-size:11px;color:var(--dim);}
-.dash-card.live{border-color:rgba(74,170,90,0.3);}
-.dash-card.live .dash-val{color:var(--green);}
+.dash-card.live{border-color:rgba(74,170,90,0.3);}.dash-card.live .dash-val{color:var(--green);}
+.dash-card.warn{border-color:rgba(232,128,56,0.3);}.dash-card.warn .dash-val{color:#e88038;}
 .live-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:4px;animation:lp 1.5s infinite;}
 @keyframes lp{0%,100%{opacity:1}50%{opacity:.4}}
-
-/* TABLES */
 .admin-table-wrap{overflow-x:auto;margin-bottom:20px;}
 table{width:100%;border-collapse:collapse;}
 th{font-family:var(--px);font-size:8px;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px;white-space:nowrap;}
 td{padding:11px 14px;border-bottom:1px solid rgba(26,48,80,0.4);font-size:13px;color:var(--text);}
 tr:hover td{background:rgba(26,48,80,0.15);}
 .loading-row{text-align:center;color:var(--dim);padding:24px;}
-.player-nick{color:#fff;font-weight:500;}
-.promo-code{font-family:var(--px);font-size:11px;color:var(--gold);}
-.tbl-btn{padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .15s;}
+.player-nick{color:#fff;font-weight:500;}.promo-code{font-family:var(--px);font-size:11px;color:var(--gold);}
+.tbl-btn{padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tbl-btn:hover{border-color:var(--gold);color:var(--gold);}
-.tbl-btn.danger{border-color:rgba(170,32,32,0.4);color:#c07070;}
-.tbl-btn.danger:hover{border-color:#aa2020;background:rgba(170,32,32,0.1);}
-
-/* SEARCH BAR */
-.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.tbl-btn.danger{border-color:rgba(170,32,32,0.4);color:#c07070;}.tbl-btn.danger:hover{border-color:#aa2020;background:rgba(170,32,32,0.1);}
+.tbl-btn.success{border-color:rgba(74,170,90,0.4);color:#4aaa5a;}.tbl-btn.success:hover{border-color:#4aaa5a;background:rgba(74,170,90,0.1);}
+.search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
 .admin-input{padding:10px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;transition:border-color .2s;}
-.admin-input:focus{border-color:var(--gold);}
-.admin-input::placeholder{color:var(--dim);}
-.admin-btn{padding:10px 20px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;letter-spacing:1px;transition:background .2s;}
-.admin-btn:hover{background:var(--gold2);}
-.admin-btn.secondary{background:transparent;color:var(--steel);border:1px solid var(--border);}
-.admin-btn.secondary:hover{border-color:var(--steel);}
-
-/* FORMS */
+.admin-input:focus{border-color:var(--gold);}.admin-input::placeholder{color:var(--dim);}
+.admin-btn{padding:10px 20px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;letter-spacing:1px;transition:background .2s;white-space:nowrap;}
+.admin-btn:hover{background:var(--gold2);}.admin-btn:disabled{opacity:.5;cursor:not-allowed;}
+.admin-btn.secondary{background:transparent;color:var(--steel);border:1px solid var(--border);}.admin-btn.secondary:hover{border-color:var(--steel);}
+.admin-btn.danger{background:transparent;color:#c07070;border:1px solid rgba(170,32,32,0.4);}.admin-btn.danger:hover{background:rgba(170,32,32,0.15);}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
-.form-group{display:flex;flex-direction:column;gap:6px;}
-.form-label{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}.form-label{font-size:11px;color:var(--dim);letter-spacing:1px;}
 .form-group .admin-input{width:100%;}
 .form-section{background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:20px;}
 .form-section-title{font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;}
 textarea.admin-input{width:100%;min-height:100px;resize:vertical;}
-
-/* NEWS ADMIN */
-.news-admin-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--card);border:1px solid var(--border);margin-bottom:8px;}
+.news-admin-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--card);border:1px solid var(--border);margin-bottom:8px;gap:12px;flex-wrap:wrap;}
 .news-admin-title{font-size:14px;color:#fff;margin-bottom:4px;}
-
-/* PLAYER MODAL */
 #player-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.pm-box{background:var(--card);border:1px solid var(--border);width:min(560px,95vw);max-height:90vh;overflow-y:auto;}
-.pm-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.pm-nick{font-family:var(--px);font-size:14px;color:#fff;}
-.pm-uid{font-size:10px;color:var(--dim);margin-top:4px;}
-.pm-body{padding:20px 24px;}
-.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.pm-box{background:var(--card);border:1px solid var(--border);width:min(580px,95vw);max-height:92vh;overflow-y:auto;}
+.pm-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1;}
+.pm-nick{font-family:var(--px);font-size:14px;color:#fff;}.pm-uid{font-size:10px;color:var(--dim);margin-top:4px;}
+.pm-body{padding:20px 24px;}.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .pm-close{background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer;transition:all .2s;}
 .pm-close:hover{border-color:var(--gold);color:var(--gold);}
 .pm-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
 select.admin-input{cursor:pointer;}
-
-/* TOAST */
 #toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
-#toast.show{transform:translateY(0);opacity:1;}
-#toast.error{border-color:var(--red);color:#c07070;}
-
+#toast.show{transform:translateY(0);opacity:1;}#toast.error{border-color:var(--red);color:#c07070;}#toast.success{border-color:var(--green);color:#4aaa5a;}
+.forum-post-row{background:var(--card);border:1px solid var(--border);padding:14px 16px;margin-bottom:6px;display:flex;align-items:flex-start;gap:14px;}
+.forum-post-badge{font-family:var(--px);font-size:7px;padding:3px 8px;border:1px solid;white-space:nowrap;}
+.forum-post-title{font-size:13px;color:#fff;margin-bottom:4px;line-height:1.4;}
+.forum-post-meta{font-size:11px;color:var(--dim);}
+.announce-preview{background:var(--surface);border:1px solid var(--border);padding:16px;margin-top:12px;font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;}
+.mini-chart{display:flex;align-items:flex-end;gap:4px;height:60px;padding:4px 0;}
+.mini-bar{flex:1;background:var(--gold);opacity:.7;border-radius:2px 2px 0 0;min-height:4px;transition:opacity .2s;}
+.mini-bar:hover{opacity:1;}
 @media(max-width:768px){
   .admin-layout{grid-template-columns:1fr;}
   .admin-sidebar{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);padding:8px 0;}
   .sidebar-section{display:none;}
   .sidebar-item{flex-direction:column;gap:4px;font-size:10px;padding:8px 14px;min-width:70px;text-align:center;border-left:none;border-bottom:2px solid transparent;}
   .sidebar-item.active{border-left:none;border-bottom-color:var(--gold);}
-  .admin-main{padding:16px;}
+  .admin-main{padding:16px;max-height:none;}
   .dash-grid{grid-template-columns:repeat(2,1fr);}
   .pm-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
-
 <div id="toast"></div>
 
-<!-- ACCESS DENIED -->
 <div id="access-denied">
   <div class="denied-icon">🚫</div>
   <div class="denied-title">Доступ заборонено</div>
-  <div class="denied-sub">Тільки адміністратори мають доступ до цієї сторінки</div>
-  <button onclick="window.location.href='index.html'" style="margin-top:16px;padding:10px 24px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;">← На головну</button>
+  <div class="denied-sub">Тільки адміністратори та модератори</div>
+  <button onclick="window.location.href='index.html'" style="margin-top:16px;padding:10px 24px;background:var(--gold);color:var(--bg);border:none;cursor:pointer;font-family:var(--px);font-size:10px;">← Головна</button>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="admin-panel">
   <nav>
     <a class="nav-logo" href="index.html">
       <div class="nav-logo-icon">BT</div>
       <span class="nav-logo-text">BT 8BIT</span>
-      <span class="nav-badge">ADMIN</span>
+      <span class="nav-badge" id="nav-role-badge">ADMIN</span>
     </a>
     <div class="nav-right">
       <div class="admin-info">
@@ -1222,204 +128,126 @@ select.admin-input{cursor:pointer;}
   </nav>
 
   <div class="admin-layout">
-    <!-- SIDEBAR -->
     <div class="admin-sidebar">
       <div class="sidebar-section">Головне</div>
-      <div class="sidebar-item active" data-section="dashboard" onclick="showSection('dashboard')">
-        <span class="sidebar-icon">📊</span> Дашборд
-      </div>
-      <div class="sidebar-item" data-section="players" onclick="showSection('players');loadPlayers()">
-        <span class="sidebar-icon">👥</span> Гравці
-      </div>
-      <div class="sidebar-item" data-section="bans" onclick="showSection('bans');loadBans()">
-        <span class="sidebar-icon">🚫</span> Бани
-      </div>
-      <div class="sidebar-section">Інструменти</div>
-      <div class="sidebar-item" data-section="give-resources" onclick="showSection('give-resources')">
-        <span class="sidebar-icon">💰</span> Видача ресурсів
-      </div>
-      <div class="sidebar-item" data-section="give-items" onclick="showSection('give-items')">
-        <span class="sidebar-icon">📦</span> Видача айтемів
-      </div>
-      <div class="sidebar-item" data-section="tickets" onclick="showSection('tickets');loadTickets()">
-        <span class="sidebar-icon">🎫</span> Заявки
-      </div>
-      <div class="sidebar-item" data-section="streamers" onclick="showSection('streamers');loadStreamers()">
-        <span class="sidebar-icon">🎥</span> Стрімери
-      </div>
-      <div class="sidebar-section">База</div>
-      <div class="sidebar-item" data-section="tanks" onclick="showSection('tanks');loadTanksDB()">
-        <span class="sidebar-icon">🚀</span> Танки
-      </div>
-      <div class="sidebar-section">Контент</div>
-      <div class="sidebar-item" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()">
-        <span class="sidebar-icon">🎁</span> Промокоди
-      </div>
-      <div class="sidebar-item" data-section="news" onclick="showSection('news');loadNews()">
-        <span class="sidebar-icon">📰</span> Новини
-      </div>
+      <div class="sidebar-item active" data-section="dashboard" onclick="showSection('dashboard')"><span class="sidebar-icon">📊</span> Дашборд</div>
+      <div class="sidebar-item" data-section="players" onclick="showSection('players');loadPlayers()"><span class="sidebar-icon">👥</span> Гравці</div>
+      <div class="sidebar-item" data-section="bans" onclick="showSection('bans');loadBans()"><span class="sidebar-icon">🚫</span> Бани</div>
+      <div class="sidebar-section">Модерація</div>
+      <div class="sidebar-item" data-section="forum-mod" onclick="showSection('forum-mod');loadForumMod()"><span class="sidebar-icon">💬</span> Форум</div>
+      <div class="sidebar-item" data-section="tickets" onclick="showSection('tickets');loadTickets()"><span class="sidebar-icon">🎫</span> Заявки</div>
+      <div class="sidebar-item" data-section="reports" onclick="showSection('reports');loadReports()"><span class="sidebar-icon">🚨</span> Скарги</div>
+      <div class="sidebar-section" id="sb-admin-tools" style="display:none">Інструменти</div>
+      <div class="sidebar-item admin-only" data-section="give-resources" onclick="showSection('give-resources')" style="display:none"><span class="sidebar-icon">💰</span> Ресурси</div>
+      <div class="sidebar-item admin-only" data-section="give-items" onclick="showSection('give-items')" style="display:none"><span class="sidebar-icon">📦</span> Айтеми</div>
+      <div class="sidebar-item admin-only" data-section="announce" onclick="showSection('announce')" style="display:none"><span class="sidebar-icon">📢</span> Оголошення</div>
+      <div class="sidebar-item admin-only" data-section="streamers" onclick="showSection('streamers');loadStreamers()" style="display:none"><span class="sidebar-icon">🎥</span> Стрімери</div>
+      <div class="sidebar-section" id="sb-admin-base" style="display:none">База</div>
+      <div class="sidebar-item admin-only" data-section="tanks" onclick="showSection('tanks');loadTanksDB()" style="display:none"><span class="sidebar-icon">🚀</span> Танки</div>
+      <div class="sidebar-section" id="sb-admin-content" style="display:none">Контент</div>
+      <div class="sidebar-item admin-only" data-section="promocodes" onclick="showSection('promocodes');loadPromocodes()" style="display:none"><span class="sidebar-icon">🎁</span> Промокоди</div>
+      <div class="sidebar-item admin-only" data-section="news" onclick="showSection('news');loadNews()" style="display:none"><span class="sidebar-icon">📰</span> Новини</div>
+      <div class="sidebar-item admin-only" data-section="tournaments-admin" onclick="showSection('tournaments-admin');loadTournamentsAdmin()" style="display:none"><span class="sidebar-icon">🏆</span> Турніри</div>
+      <div class="sidebar-section">Аналітика</div>
+      <div class="sidebar-item admin-only" data-section="analytics" onclick="showSection('analytics');loadAnalytics()" style="display:none"><span class="sidebar-icon">📈</span> Аналітика</div>
+      <div class="sidebar-item" data-section="logs" onclick="showSection('logs');loadLogs()"><span class="sidebar-icon">📋</span> Логи</div>
       <div class="sidebar-section">Інше</div>
-      <div class="sidebar-item" data-section="logs" onclick="showSection('logs')">
-        <span class="sidebar-icon">📋</span> Логи
-      </div>
-      <div class="sidebar-item" onclick="window.open('index.html','_blank')">
-        <span class="sidebar-icon">🌐</span> Сайт
-      </div>
+      <div class="sidebar-item" onclick="window.open('index.html','_blank')"><span class="sidebar-icon">🌐</span> Сайт</div>
+      <div class="sidebar-item" onclick="window.open('forum.html','_blank')"><span class="sidebar-icon">💬</span> Форум</div>
     </div>
-
-    <!-- MAIN -->
     <div class="admin-main">
 
       <!-- DASHBOARD -->
       <div id="section-dashboard" class="admin-section active">
         <div class="section-title">📊 Дашборд</div>
         <div class="dash-grid">
-          <div class="dash-card live">
-            <span class="dash-val" id="dash-total-visits">...</span>
-            <span class="dash-lbl"><span class="live-dot"></span>Всього відвідувань</span>
-          </div>
-          <div class="dash-card live">
-            <span class="dash-val" id="dash-today-visits">...</span>
-            <span class="dash-lbl"><span class="live-dot"></span>Сьогодні</span>
-          </div>
-          <div class="dash-card">
-            <span class="dash-val" id="dash-unique-visits">...</span>
-            <span class="dash-lbl">Унікальних гостей</span>
-          </div>
-          <div class="dash-card">
-            <span class="dash-val" id="dash-players">...</span>
-            <span class="dash-lbl">👥 Гравців</span>
-          </div>
-          <div class="dash-card">
-            <span class="dash-val" id="dash-clans">...</span>
-            <span class="dash-lbl">🏰 Кланів</span>
-          </div>
-          <div class="dash-card" style="border-color:rgba(170,32,32,0.3)">
-            <span class="dash-val" id="dash-banned" style="color:#c07070">...</span>
-            <span class="dash-lbl">🚫 Заблокованих</span>
-          </div>
+          <div class="dash-card live"><span class="dash-val" id="dash-total-visits">...</span><span class="dash-lbl"><span class="live-dot"></span>Всього відвідувань</span></div>
+          <div class="dash-card live"><span class="dash-val" id="dash-today-visits">...</span><span class="dash-lbl"><span class="live-dot"></span>Сьогодні</span></div>
+          <div class="dash-card"><span class="dash-val" id="dash-unique-visits">...</span><span class="dash-lbl">Унікальних</span></div>
+          <div class="dash-card clickable" onclick="showSection('players');loadPlayers()"><span class="dash-val" id="dash-players">...</span><span class="dash-lbl">👥 Гравців</span></div>
+          <div class="dash-card clickable" onclick="showSection('players');loadPlayers()"><span class="dash-val" id="dash-clans">...</span><span class="dash-lbl">🏰 Кланів</span></div>
+          <div class="dash-card warn clickable" onclick="showSection('tickets');loadTickets()"><span class="dash-val" id="dash-open-tickets">...</span><span class="dash-lbl">🎫 Відкритих заявок</span></div>
+          <div class="dash-card warn clickable" onclick="showSection('reports');loadReports()"><span class="dash-val" id="dash-reports">...</span><span class="dash-lbl">🚨 Скарг</span></div>
+          <div class="dash-card" style="border-color:rgba(170,32,32,0.3)"><span class="dash-val" id="dash-banned" style="color:#c07070">...</span><span class="dash-lbl">🚫 Забанених</span></div>
+          <div class="dash-card clickable" id="dash-forum-card" style="display:none" onclick="showSection('forum-mod');loadForumMod()"><span class="dash-val" id="dash-forum-posts">...</span><span class="dash-lbl">💬 Постів форуму</span></div>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);padding:16px;font-size:13px;color:var(--dim)">
+        <div style="background:var(--card);border:1px solid var(--border);padding:16px;font-size:13px;color:var(--dim);margin-bottom:16px">
           🏆 Топ гравець: <span id="dash-top-player" style="color:var(--gold)">...</span>
         </div>
+        <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ОСТАННІ ДІЇ МОДЕРАЦІЇ</div>
+        <div id="dash-recent-logs" style="display:flex;flex-direction:column;gap:6px"><div style="color:var(--dim);font-size:12px">Завантаження...</div></div>
       </div>
 
       <!-- PLAYERS -->
       <div id="section-players" class="admin-section">
         <div class="section-title">👥 Гравці</div>
         <div class="search-bar">
-          <input class="admin-input" id="player-search" type="text"
-            placeholder="Пошук по нікнейму..." style="flex:1"
-            onkeydown="if(event.key==='Enter') loadPlayers(this.value)">
+          <input class="admin-input" id="player-search" type="text" placeholder="Пошук по нікнейму..." style="flex:1" onkeydown="if(event.key==='Enter') loadPlayers(this.value)">
           <button class="admin-btn" onclick="loadPlayers(document.getElementById('player-search').value)">Знайти</button>
           <button class="admin-btn secondary" onclick="loadPlayers()">Всі</button>
+          <select class="admin-input" id="player-filter" onchange="loadPlayers()" style="padding:10px">
+            <option value="all">Всі</option>
+            <option value="banned">🚫 Забанені</option>
+            <option value="staff">👑 Стаф</option>
+          </select>
         </div>
         <div class="admin-table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Нікнейм</th><th>Роль</th><th>Рівень</th><th>Рейтинг</th>
-                <th>Бої · WR</th><th>Золото</th><th>Дата реєстр.</th><th>Статус</th>
-              </tr>
-            </thead>
-            <tbody id="players-list">
-              <tr><td colspan="8" class="loading-row">Завантаження...</td></tr>
-            </tbody>
+            <thead><tr><th>Нікнейм</th><th>Роль</th><th>LVL</th><th>Рейтинг</th><th>Бої · WR</th><th>Золото</th><th>Дата</th><th>Статус</th><th>Дії</th></tr></thead>
+            <tbody id="players-list"><tr><td colspan="9" class="loading-row">Завантаження...</td></tr></tbody>
           </table>
         </div>
-        <div style="font-size:12px;color:var(--dim)">Натисни на рядок щоб відкрити гравця</div>
+        <div style="font-size:12px;color:var(--dim)">Натисни на рядок щоб відкрити</div>
       </div>
 
-      <!-- PROMOCODES -->
-      <div id="section-promocodes" class="admin-section">
-        <div class="section-title">🎁 Промокоди</div>
-
-        <!-- Створити -->
-        <div class="form-section">
-          <div class="form-section-title">Створити новий промокод</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Код</label>
-              <input class="admin-input" id="new-promo-code" type="text" placeholder="BT8BIT2026" maxlength="32">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Опис</label>
-              <input class="admin-input" id="new-promo-desc" type="text" placeholder="Опис промокоду">
-            </div>
-            <div class="form-group">
-              <label class="form-label">⭐ Золото</label>
-              <input class="admin-input" id="new-promo-gold" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🪙 Монети</label>
-              <input class="admin-input" id="new-promo-coins" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">⛽ Паливо</label>
-              <input class="admin-input" id="new-promo-fuel" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🛢️ Нафта</label>
-              <input class="admin-input" id="new-promo-oil" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🔩 Метал</label>
-              <input class="admin-input" id="new-promo-metal" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Макс. активацій</label>
-              <input class="admin-input" id="new-promo-maxuses" type="number" value="99999" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Діє (днів)</label>
-              <input class="admin-input" id="new-promo-days" type="number" value="30" min="1">
-            </div>
+      <!-- FORUM MOD -->
+      <div id="section-forum-mod" class="admin-section">
+        <div class="section-title">
+          💬 Форум — модерація
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="admin-input" id="forum-cat-filter" onchange="loadForumMod()" style="padding:6px 10px;font-size:12px">
+              <option value="all">Всі категорії</option>
+              <option value="general">💬 Загальне</option>
+              <option value="bug">🐛 Баги</option>
+              <option value="idea">💡 Ідеї</option>
+              <option value="clan">🏰 Клани</option>
+              <option value="tournaments">🏆 Турніри</option>
+            </select>
           </div>
-          <button class="admin-btn" onclick="createPromo()">+ Створити промокод</button>
         </div>
-
-        <!-- Список -->
-        <div class="admin-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Код</th><th>Нагорода</th><th>Використано</th>
-                <th>Діє до</th><th>Статус</th><th>Дії</th>
-              </tr>
-            </thead>
-            <tbody id="promo-list">
-              <tr><td colspan="6" class="loading-row">Завантаження...</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="forum-mod-list"><div class="loading-row">Завантаження...</div></div>
       </div>
 
-      <!-- NEWS -->
-      <div id="section-news" class="admin-section">
-        <div class="section-title">📰 Новини</div>
-
-        <div class="form-section">
-          <div class="form-section-title">Опублікувати новину</div>
-          <div class="form-grid" style="margin-bottom:12px">
-            <div class="form-group">
-              <label class="form-label">Заголовок</label>
-              <input class="admin-input" id="news-title" type="text" placeholder="Заголовок новини">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Тег</label>
-              <input class="admin-input" id="news-tag" type="text" placeholder="Оновлення / Турнір / Промокод">
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label class="form-label">Текст новини</label>
-            <textarea class="admin-input" id="news-text" placeholder="Текст новини..."></textarea>
-          </div>
-          <button class="admin-btn" onclick="createNews()">📢 Опублікувати</button>
+      <!-- REPORTS -->
+      <div id="section-reports" class="admin-section">
+        <div class="section-title">
+          🚨 Скарги
+          <select class="admin-input" id="report-status-filter" onchange="loadReports()" style="padding:6px 10px;font-size:12px">
+            <option value="open">🟡 Відкриті</option>
+            <option value="all">Всі</option>
+            <option value="resolved">✅ Вирішені</option>
+          </select>
         </div>
+        <div id="reports-list"><div class="loading-row">Завантаження...</div></div>
+      </div>
 
-        <div id="news-list">
-          <div class="loading-row">Завантаження...</div>
+      <!-- TICKETS -->
+      <div id="section-tickets" class="admin-section">
+        <div class="section-title">
+          🎫 Заявки підтримки
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="tickets-filter" class="admin-input" onchange="loadTickets()" style="padding:6px 10px;font-size:12px">
+              <option value="all">Всі</option><option value="open">🟡 Відкриті</option>
+              <option value="inprogress">🔵 В роботі</option><option value="resolved">✅ Вирішені</option>
+            </select>
+            <select id="tickets-type" class="admin-input" onchange="loadTickets()" style="padding:6px 10px;font-size:12px">
+              <option value="all">Всі типи</option><option value="bug">🐛 Баг</option>
+              <option value="report">🚨 Скарга</option><option value="idea">💡 Ідея</option>
+              <option value="payment">💳 Платіж</option><option value="account">👤 Акаунт</option>
+            </select>
+          </div>
         </div>
+        <div id="tickets-list" class="admin-table-wrap"><div class="loading-row">Завантаження...</div></div>
       </div>
 
       <!-- BANS -->
@@ -1427,355 +255,246 @@ select.admin-input{cursor:pointer;}
         <div class="section-title">🚫 Заблоковані гравці</div>
         <div class="admin-table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Нікнейм</th><th>Причина бану</th><th>Дата бану</th><th>Дії</th>
-              </tr>
-            </thead>
-            <tbody id="bans-list">
-              <tr><td colspan="4" class="loading-row">Завантаження...</td></tr>
-            </tbody>
+            <thead><tr><th>Нікнейм</th><th>Причина</th><th>Дата</th><th>Дії</th></tr></thead>
+            <tbody id="bans-list"><tr><td colspan="4" class="loading-row">Завантаження...</td></tr></tbody>
           </table>
         </div>
       </div>
 
-      <!-- TANKS DB -->
-      <div id="section-tanks" class="admin-section">
-        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>🚀 База танків</span>
-          <button class="admin-btn" onclick="openTankEditor(null)">+ Додати танк</button>
+      <!-- ANNOUNCE -->
+      <div id="section-announce" class="admin-section">
+        <div class="section-title">📢 Оголошення</div>
+        <div class="form-section">
+          <div class="form-section-title">Надіслати повідомлення всім гравцям</div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Тип</label>
+              <select class="admin-input" id="ann-type" onchange="updateAnnPreview()">
+                <option value="info">ℹ️ Інформація</option><option value="warn">⚠️ Попередження</option>
+                <option value="event">🎉 Подія</option><option value="update">🔧 Оновлення</option><option value="promo">🎁 Промо</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Отримувачі</label>
+              <select class="admin-input" id="ann-target">
+                <option value="all">Всі гравці</option><option value="active">Активні (7 днів)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px"><label class="form-label">Заголовок</label><input class="admin-input" id="ann-title" type="text" placeholder="Заголовок" maxlength="80" oninput="updateAnnPreview()" style="width:100%"></div>
+          <div class="form-group" style="margin-bottom:12px"><label class="form-label">Текст</label><textarea class="admin-input" id="ann-text" placeholder="Текст оголошення..." maxlength="500" oninput="updateAnnPreview()"></textarea></div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);cursor:pointer;margin-bottom:12px"><input type="checkbox" id="ann-pin"> Закріпити в профілі гравця</label>
+          <div style="font-family:var(--px);font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:8px">ПЕРЕГЛЯД</div>
+          <div class="announce-preview" id="ann-preview">Введи текст...</div>
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <button class="admin-btn" onclick="sendAnnouncement()">📢 Надіслати</button>
+            <button class="admin-btn secondary" onclick="document.getElementById('ann-title').value='';document.getElementById('ann-text').value='';updateAnnPreview()">Очистити</button>
+          </div>
         </div>
-        <div id="tanks-db-list" class="admin-table-wrap">
-          <div class="loading-row">Завантаження...</div>
-        </div>
+        <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">АРХІВ</div>
+        <div id="ann-history"><div style="color:var(--dim);font-size:12px">Завантаження...</div></div>
       </div>
 
-      <!-- TANK EDITOR MODAL -->
-      <div id="tank-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:600;align-items:flex-start;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0" onclick="if(event.target===this)closeTankEditor()">
-        <div style="background:var(--card);border:1px solid var(--border);width:min(620px,96vw);margin:auto">
-          <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="te-title">Новий танк</span>
-            <button onclick="closeTankEditor()" style="background:none;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+      <!-- ANALYTICS -->
+      <div id="section-analytics" class="admin-section">
+        <div class="section-title">📈 Аналітика</div>
+        <div class="dash-grid" style="margin-bottom:24px">
+          <div class="dash-card"><span class="dash-val" id="an-dau">...</span><span class="dash-lbl">DAU (сьогодні)</span></div>
+          <div class="dash-card"><span class="dash-val" id="an-wau">...</span><span class="dash-lbl">WAU (7 днів)</span></div>
+          <div class="dash-card"><span class="dash-val" id="an-new-players">...</span><span class="dash-lbl">Нових гравців (7д)</span></div>
+          <div class="dash-card"><span class="dash-val" id="an-forum">...</span><span class="dash-lbl">Постів форуму</span></div>
+        </div>
+        <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ВІДВІДУВАНІСТЬ — 7 ДНІВ</div>
+        <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:20px">
+          <div class="mini-chart" id="visits-chart"></div>
+          <div id="visits-labels" style="display:flex;gap:4px;margin-top:6px;"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="background:var(--card);border:1px solid var(--border);padding:20px">
+            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">ТОП ГРАВЦІВ</div>
+            <div id="an-top-players" style="color:var(--dim);font-size:12px">Завантаження...</div>
           </div>
-          <div style="padding:24px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-              <div><label class="admin-label">ID (латиниця)</label><input class="admin-input" id="te-id" placeholder="hellcat"></div>
-              <div><label class="admin-label">Назва</label><input class="admin-input" id="te-name" placeholder="M18 Hellcat"></div>
-              <div><label class="admin-label">Emoji</label><input class="admin-input" id="te-emoji" placeholder="🚀" maxlength="4"></div>
-              <div><label class="admin-label">Нація</label><input class="admin-input" id="te-nation" placeholder="США"></div>
-              <div>
-                <label class="admin-label">Фракція</label>
-                <select class="admin-input" id="te-faction">
-                  <option value="east">🔴 East Coalition</option>
-                  <option value="west">🔵 West Alliance</option>
-                  <option value="north">⚫ Northern Front</option>
-                  <option value="euro">🟣 Euro Union</option>
-                  <option value="asian">🟡 Asian Pact</option>
-                </select>
-              </div>
-              <div>
-                <label class="admin-label">Клас</label>
-                <select class="admin-input" id="te-class">
-                  <option value="assault">⚔️ Штурм</option>
-                  <option value="support">🛡️ Підтримка</option>
-                  <option value="recon">👁️ Розвідка</option>
-                  <option value="arty">💥 Арта</option>
-                  <option value="medium">⚙️ Універсал</option>
-                </select>
-              </div>
-              <div>
-                <label class="admin-label">Тір (1-10)</label>
-                <select class="admin-input" id="te-tier">
-                  ${[1,2,3,4,5,6,7,8,9,10].map(i=>`<option value="${i}">${i}</option>`).join('')}
-                </select>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
-                <label style="font-size:12px;color:var(--dim)">Скоро:</label>
-                <input type="checkbox" id="te-soon" style="width:18px;height:18px;cursor:pointer">
-              </div>
-            </div>
-            <div style="margin-bottom:12px">
-              <label class="admin-label">Опис</label>
-              <textarea class="admin-input" id="te-desc" rows="2" placeholder="Короткий опис танку..."></textarea>
-            </div>
-            <div style="margin-bottom:16px">
-              <label class="admin-label">Роль в бою</label>
-              <input class="admin-input" id="te-role" placeholder="Як грати на цьому танку...">
-            </div>
-            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ЗОБРАЖЕННЯ</div>
-            <div style="margin-bottom:16px">
-              <label class="admin-label">URL зображення (або завантаж)</label>
-              <div style="display:flex;gap:8px;margin-bottom:8px">
-                <input class="admin-input" id="te-img-url" type="url" placeholder="https://..." style="flex:1" oninput="previewTankImg(this.value)">
-                <label style="padding:8px 14px;background:var(--gold);color:var(--bg);font-size:11px;cursor:pointer;white-space:nowrap;border:none;display:flex;align-items:center">
-                  📁 Файл
-                  <input type="file" accept="image/*" style="display:none" onchange="uploadTankImg(this)">
-                </label>
-              </div>
-              <img id="te-img-preview" src="" alt="" style="display:none;max-width:100%;max-height:150px;border:1px solid var(--border);object-fit:contain;background:var(--surf)">
-              <div style="font-size:11px;color:var(--dim);margin-top:6px">Рекомендовано: PNG 400×300px з прозорим фоном</div>
-            </div>
-            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ХАРАКТЕРИСТИКИ (0-100)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-              <div><label class="admin-label">❤️ HP</label><input class="admin-input" id="te-hp" type="number" min="0" max="100" value="50"></div>
-              <div><label class="admin-label">🔫 Урон</label><input class="admin-input" id="te-damage" type="number" min="0" max="100" value="50"></div>
-              <div><label class="admin-label">🛡️ Броня</label><input class="admin-input" id="te-armor" type="number" min="0" max="100" value="50"></div>
-              <div><label class="admin-label">💨 Швидкість</label><input class="admin-input" id="te-speed" type="number" min="0" max="100" value="50"></div>
-              <div><label class="admin-label">👁️ Огляд</label><input class="admin-input" id="te-view" type="number" min="0" max="100" value="50"></div>
-              <div><label class="admin-label">👻 Маскування</label><input class="admin-input" id="te-masking" type="number" min="0" max="100" value="50"></div>
-            </div>
-            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ОСОБЛИВОСТІ (до 3)</div>
-            ${[0,1,2].map(i=>`
-            <div style="display:grid;grid-template-columns:50px 1fr 2fr;gap:8px;margin-bottom:8px;align-items:center">
-              <input class="admin-input" id="te-perk${i}-icon" placeholder="⭐" maxlength="4" style="text-align:center">
-              <input class="admin-input" id="te-perk${i}-name" placeholder="Назва">
-              <input class="admin-input" id="te-perk${i}-desc" placeholder="Опис особливості">
-            </div>`).join('')}
-            <div id="te-msg" style="display:none;padding:10px;font-size:12px;margin-bottom:12px;border:1px solid"></div>
-            <div style="display:flex;gap:10px">
-              <button class="admin-btn" onclick="saveTank()" style="flex:1">💾 Зберегти</button>
-              <button class="admin-btn secondary" onclick="closeTankEditor()">Скасувати</button>
-            </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:20px">
+            <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">ТОП КЛАНІВ</div>
+            <div id="an-top-clans" style="color:var(--dim);font-size:12px">Завантаження...</div>
           </div>
         </div>
       </div>
 
-      <!-- STREAMERS -->
-      <div id="section-streamers" class="admin-section">
-        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>🎥 Партнери-стрімери</span>
-          <select id="streamers-filter" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadStreamers()">
-            <option value="pending">⏳ Заявки</option>
-            <option value="bronze">🥉 Партнер</option>
-            <option value="silver">🥈 Срібний</option>
-            <option value="gold">🥇 Золотий</option>
-            <option value="all">Всі</option>
-          </select>
-        </div>
-        <div id="streamers-list" class="admin-table-wrap">
-          <div class="loading-row">Завантаження...</div>
-        </div>
-      </div>
-
-      <!-- STREAMER MODAL -->
-      <div id="streamer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeStreamerModal()">
-        <div style="background:var(--card);border:1px solid var(--border);width:min(600px,95vw);max-height:90vh;overflow-y:auto;">
-          <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="sm-nick">—</span>
-            <button onclick="closeStreamerModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
-          </div>
-          <div style="padding:24px" id="sm-body"></div>
-        </div>
-      </div>
-
-      <!-- TICKETS -->
-      <div id="section-tickets" class="admin-section">
-        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>🎫 Заявки підтримки</span>
-          <div style="display:flex;gap:8px">
-            <select id="tickets-filter" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadTickets()">
-              <option value="all">Всі</option>
-              <option value="open">🟡 Відкриті</option>
-              <option value="inprogress">🔵 В роботі</option>
-              <option value="resolved">✅ Вирішені</option>
-            </select>
-            <select id="tickets-type" class="admin-input" style="padding:6px 10px;font-size:12px" onchange="loadTickets()">
-              <option value="all">Всі типи</option>
-              <option value="bug">🐛 Баг</option>
-              <option value="report">🚨 Скарга</option>
-              <option value="idea">💡 Ідея</option>
-              <option value="payment">💳 Платіж</option>
-              <option value="account">👤 Акаунт</option>
-              <option value="other">📝 Інше</option>
-            </select>
-          </div>
-        </div>
-        <div id="tickets-list" class="admin-table-wrap">
-          <div class="loading-row">Завантаження...</div>
-        </div>
-      </div>
-
-      <!-- TICKET MODAL -->
-      <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeTicketModal()">
-        <div style="background:var(--card);border:1px solid var(--border);width:min(640px,95vw);max-height:90vh;overflow-y:auto;">
-          <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="tm-id">—</span>
-            <button onclick="closeTicketModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
-          </div>
-          <div style="padding:24px" id="tm-body"></div>
-        </div>
+      <!-- TOURNAMENTS -->
+      <div id="section-tournaments-admin" class="admin-section">
+        <div class="section-title">🏆 Турніри <button class="admin-btn" onclick="openTournamentEditor(null)">+ Новий</button></div>
+        <div id="tournaments-admin-list"><div class="loading-row">Завантаження...</div></div>
       </div>
 
       <!-- GIVE RESOURCES -->
       <div id="section-give-resources" class="admin-section">
-        <div class="section-title">💰 Видача ресурсів гравцю</div>
+        <div class="section-title">💰 Видача ресурсів</div>
         <div class="form-section">
           <div class="form-section-title">Знайти гравця</div>
-          <div style="display:flex;gap:10px;margin-bottom:16px;">
-            <input class="admin-input" id="gr-search" type="text" placeholder="Нікнейм або UID..." style="flex:1">
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <input class="admin-input" id="gr-search" type="text" placeholder="Нікнейм або UID..." style="flex:1" onkeydown="if(event.key==='Enter') searchForGive('gr')">
             <button class="admin-btn" onclick="searchForGive('gr')">Знайти</button>
           </div>
-          <div id="gr-player-found" style="display:none;background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px;display:none;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="font-size:24px;width:44px;height:44px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);color:var(--gold)" id="gr-avatar">?</div>
-              <div>
-                <div style="font-size:14px;color:#fff" id="gr-nick">—</div>
-                <div style="font-size:11px;color:var(--dim)" id="gr-uid-show">—</div>
-              </div>
-              <div style="margin-left:auto;font-size:12px;color:var(--dim)">
-                ⭐ <span id="gr-cur-gold">0</span> &nbsp;
-                🪙 <span id="gr-cur-coins">0</span> &nbsp;
-                🛢️ <span id="gr-cur-oil">0</span>
-              </div>
+          <div id="gr-player-found" style="display:none;background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:24px;width:44px;height:44px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold)" id="gr-avatar">?</div>
+              <div><div style="font-size:14px;color:#fff" id="gr-nick">—</div><div style="font-size:11px;color:var(--dim)" id="gr-uid-show">—</div></div>
+              <div style="margin-left:auto;font-size:12px;color:var(--dim)">⭐ <span id="gr-cur-gold">0</span> &nbsp; 🪙 <span id="gr-cur-coins">0</span> &nbsp; 🛢️ <span id="gr-cur-oil">0</span></div>
             </div>
           </div>
         </div>
-
         <div class="form-section">
-          <div class="form-section-title">Ресурси для видачі</div>
+          <div class="form-section-title">Ресурси</div>
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">⭐ Золото</label>
-              <input class="admin-input" id="gr-gold" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🪙 Монети</label>
-              <input class="admin-input" id="gr-coins" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">⛽ Паливо</label>
-              <input class="admin-input" id="gr-fuel" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🛢️ Нафта</label>
-              <input class="admin-input" id="gr-oil" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🔩 Метал</label>
-              <input class="admin-input" id="gr-metal" type="number" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">💎 Діаманти</label>
-              <input class="admin-input" id="gr-diamonds" type="number" placeholder="0" min="0">
-            </div>
+            <div class="form-group"><label class="form-label">⭐ Золото</label><input class="admin-input" id="gr-gold" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🪙 Монети</label><input class="admin-input" id="gr-coins" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">⛽ Паливо</label><input class="admin-input" id="gr-fuel" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🛢️ Нафта</label><input class="admin-input" id="gr-oil" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🔩 Метал</label><input class="admin-input" id="gr-metal" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">💎 Діаманти</label><input class="admin-input" id="gr-diamonds" type="number" placeholder="0" min="0"></div>
           </div>
-          <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label">Причина (для логу)</label>
-            <input class="admin-input" id="gr-reason" type="text" placeholder="Компенсація / Турнір / Тест...">
-          </div>
-          <button class="admin-btn" onclick="giveResources()" id="gr-btn" disabled>💰 Видати ресурси</button>
+          <div class="form-group" style="margin-bottom:16px"><label class="form-label">Причина</label><input class="admin-input" id="gr-reason" type="text" placeholder="Причина..." style="width:100%"></div>
+          <button class="admin-btn" onclick="giveResources()" id="gr-btn" disabled>💰 Видати</button>
         </div>
       </div>
 
       <!-- GIVE ITEMS -->
       <div id="section-give-items" class="admin-section">
-        <div class="section-title">📦 Видача айтемів гравцю</div>
+        <div class="section-title">📦 Видача айтемів</div>
         <div class="form-section">
           <div class="form-section-title">Знайти гравця</div>
-          <div style="display:flex;gap:10px;margin-bottom:16px;">
-            <input class="admin-input" id="gi-search" type="text" placeholder="Нікнейм або UID..." style="flex:1">
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <input class="admin-input" id="gi-search" type="text" placeholder="Нікнейм або UID..." style="flex:1" onkeydown="if(event.key==='Enter') searchForGive('gi')">
             <button class="admin-btn" onclick="searchForGive('gi')">Знайти</button>
           </div>
-          <div id="gi-player-found" style="display:none;background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="font-size:24px;width:44px;height:44px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);color:var(--gold)" id="gi-avatar">?</div>
-              <div>
-                <div style="font-size:14px;color:#fff" id="gi-nick">—</div>
-                <div style="font-size:11px;color:var(--dim)" id="gi-uid-show">—</div>
-              </div>
+          <div id="gi-player-found" style="display:none;background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:24px;width:44px;height:44px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold)" id="gi-avatar">?</div>
+              <div><div style="font-size:14px;color:#fff" id="gi-nick">—</div><div style="font-size:11px;color:var(--dim)" id="gi-uid-show">—</div></div>
             </div>
           </div>
         </div>
-
         <div class="form-section">
-          <div class="form-section-title">Айтем для видачі</div>
+          <div class="form-section-title">Айтем</div>
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Тип айтему</label>
+            <div class="form-group"><label class="form-label">Тип</label>
               <select class="admin-input" id="gi-type" onchange="updateItemFields()">
-                <option value="nickname_change">✏️ Зміна нікнейму</option>
-                <option value="tank">🚀 Танк</option>
-                <option value="camo">🎨 Камуфляж</option>
-                <option value="exp_boost">⚡ Буст досвіду x2</option>
-                <option value="fuel_refill">⛽ Заправка палива</option>
-                <option value="premium_camo">💎 Преміум камуфляж</option>
+                <option value="nickname_change">✏️ Зміна нікнейму</option><option value="tank">🚀 Танк</option>
+                <option value="camo">🎨 Камуфляж</option><option value="exp_boost">⚡ Буст x2</option>
+                <option value="fuel_refill">⛽ Заправка</option><option value="premium_camo">💎 Преміум камуфляж</option>
               </select>
             </div>
-            <div class="form-group" id="gi-name-wrap">
-              <label class="form-label">Назва</label>
-              <input class="admin-input" id="gi-name" type="text" placeholder="Наприклад: Tiger I">
-            </div>
-            <div class="form-group" id="gi-rarity-wrap">
-              <label class="form-label">Рідкість</label>
+            <div class="form-group" id="gi-name-wrap"><label class="form-label">Назва</label><input class="admin-input" id="gi-name" type="text" placeholder="Tiger I"></div>
+            <div class="form-group" id="gi-rarity-wrap"><label class="form-label">Рідкість</label>
               <select class="admin-input" id="gi-rarity">
-                <option value="common">Звичайний</option>
-                <option value="rare">Рідкісний</option>
-                <option value="epic">Епічний</option>
-                <option value="legendary">Легендарний</option>
+                <option value="common">Звичайний</option><option value="rare">Рідкісний</option>
+                <option value="epic">Епічний</option><option value="legendary">Легендарний</option>
               </select>
             </div>
-            <div class="form-group" id="gi-tier-wrap">
-              <label class="form-label">Рівень (для танків)</label>
-              <input class="admin-input" id="gi-tier" type="number" placeholder="1-10" min="1" max="10">
-            </div>
-            <div class="form-group" id="gi-image-wrap">
-              <label class="form-label">Image key</label>
-              <input class="admin-input" id="gi-image" type="text" placeholder="tiger / t34 / hellcat...">
-            </div>
-            <div class="form-group" id="gi-nation-wrap">
-              <label class="form-label">Нація</label>
+            <div class="form-group" id="gi-tier-wrap" style="display:none"><label class="form-label">Рівень</label><input class="admin-input" id="gi-tier" type="number" placeholder="1-10" min="1" max="10"></div>
+            <div class="form-group" id="gi-image-wrap"><label class="form-label">Image key</label><input class="admin-input" id="gi-image" type="text" placeholder="tiger / t34..."></div>
+            <div class="form-group" id="gi-nation-wrap" style="display:none"><label class="form-label">Нація</label>
               <select class="admin-input" id="gi-nation">
-                <option value="">—</option>
-                <option value="de">🇩🇪 Німеччина</option>
-                <option value="su">🛡 СРСР</option>
-                <option value="us">🇺🇸 США</option>
-                <option value="fr">🇫🇷 Франція</option>
-                <option value="gb">🇬🇧 Великобританія</option>
+                <option value="">—</option><option value="de">🇩🇪 Німеччина</option>
+                <option value="su">🛡 СРСР</option><option value="us">🇺🇸 США</option>
+                <option value="fr">🇫🇷 Франція</option><option value="gb">🇬🇧 Великобританія</option>
               </select>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label">Причина (для логу)</label>
-            <input class="admin-input" id="gi-reason" type="text" placeholder="Турнірна нагорода / Компенсація...">
-          </div>
-          <button class="admin-btn" onclick="giveItem()" id="gi-btn" disabled>📦 Видати айтем</button>
+          <div class="form-group" style="margin-bottom:16px"><label class="form-label">Причина</label><input class="admin-input" id="gi-reason" type="text" placeholder="Турнірна нагорода..." style="width:100%"></div>
+          <button class="admin-btn" onclick="giveItem()" id="gi-btn" disabled>📦 Видати</button>
         </div>
-
-        <!-- Останні видачі -->
         <div class="form-section">
-          <div class="form-section-title">Останні видачі айтемів</div>
-          <div id="gi-history" style="color:var(--dim);font-size:13px">Завантаження...</div>
+          <div class="form-section-title">Останні видачі</div>
+          <div id="gi-history" style="color:var(--dim);font-size:12px">Завантаження...</div>
         </div>
+      </div>
+
+      <!-- STREAMERS -->
+      <div id="section-streamers" class="admin-section">
+        <div class="section-title">
+          🎥 Стрімери
+          <select id="streamers-filter" class="admin-input" onchange="loadStreamers()" style="padding:6px 10px;font-size:12px">
+            <option value="pending">⏳ Заявки</option><option value="bronze">🥉 Партнер</option>
+            <option value="silver">🥈 Срібний</option><option value="gold">🥇 Золотий</option><option value="all">Всі</option>
+          </select>
+        </div>
+        <div id="streamers-list" class="admin-table-wrap"><div class="loading-row">Завантаження...</div></div>
+      </div>
+
+      <!-- TANKS DB -->
+      <div id="section-tanks" class="admin-section">
+        <div class="section-title">🚀 База танків <button class="admin-btn" onclick="openTankEditor(null)">+ Додати танк</button></div>
+        <div id="tanks-db-list" class="admin-table-wrap"><div class="loading-row">Завантаження...</div></div>
+      </div>
+
+      <!-- PROMOCODES -->
+      <div id="section-promocodes" class="admin-section">
+        <div class="section-title">🎁 Промокоди</div>
+        <div class="form-section">
+          <div class="form-section-title">Створити промокод</div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Код</label><input class="admin-input" id="new-promo-code" type="text" placeholder="BT8BIT2026" maxlength="32"></div>
+            <div class="form-group"><label class="form-label">Опис</label><input class="admin-input" id="new-promo-desc" type="text" placeholder="Опис"></div>
+            <div class="form-group"><label class="form-label">⭐ Золото</label><input class="admin-input" id="new-promo-gold" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🪙 Монети</label><input class="admin-input" id="new-promo-coins" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">⛽ Паливо</label><input class="admin-input" id="new-promo-fuel" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🛢️ Нафта</label><input class="admin-input" id="new-promo-oil" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">🔩 Метал</label><input class="admin-input" id="new-promo-metal" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label class="form-label">Макс. активацій</label><input class="admin-input" id="new-promo-maxuses" type="number" value="99999" min="1"></div>
+            <div class="form-group"><label class="form-label">Діє (днів)</label><input class="admin-input" id="new-promo-days" type="number" value="30" min="1"></div>
+          </div>
+          <button class="admin-btn" onclick="createPromo()">+ Створити</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table>
+            <thead><tr><th>Код</th><th>Нагорода</th><th>Використано</th><th>Діє до</th><th>Статус</th><th>Дії</th></tr></thead>
+            <tbody id="promo-list"><tr><td colspan="6" class="loading-row">Завантаження...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NEWS -->
+      <div id="section-news" class="admin-section">
+        <div class="section-title">📰 Новини</div>
+        <div class="form-section">
+          <div class="form-section-title">Опублікувати новину</div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Заголовок</label><input class="admin-input" id="news-title" type="text" placeholder="Заголовок" style="width:100%"></div>
+            <div class="form-group"><label class="form-label">Тег</label><input class="admin-input" id="news-tag" type="text" placeholder="Оновлення / Турнір"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px"><label class="form-label">Текст</label><textarea class="admin-input" id="news-text" placeholder="Текст..."></textarea></div>
+          <button class="admin-btn" onclick="createNews()">📢 Опублікувати</button>
+        </div>
+        <div id="news-list"><div class="loading-row">Завантаження...</div></div>
       </div>
 
       <!-- LOGS -->
       <div id="section-logs" class="admin-section">
-        <div class="section-title">📋 Логи модерації</div>
-        <div id="logs-list">
-          <div class="loading-row" style="color:var(--dim)">Завантаження логів...</div>
+        <div class="section-title">
+          📋 Логи
+          <select class="admin-input" id="log-action-filter" onchange="loadLogs()" style="padding:6px 10px;font-size:12px">
+            <option value="all">Всі дії</option>
+            <option value="ban">🚫 Бани</option>
+            <option value="give">💰 Видачі</option>
+            <option value="forum">💬 Форум</option>
+          </select>
         </div>
+        <div id="logs-list"><div class="loading-row">Завантаження...</div></div>
       </div>
 
-    </div>
-  </div>
-</div>
+    </div><!-- /admin-main -->
+  </div><!-- /admin-layout -->
+</div><!-- /admin-panel -->
 
 <!-- PLAYER MODAL -->
-<div id="player-modal" onclick="if(event.target===this)closePlayerModal()">
+<div id="player-modal" onclick="if(event.target===this)closePlayerModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
   <div class="pm-box">
     <div class="pm-header">
-      <div>
-        <div class="pm-nick" id="pm-nick">—</div>
-        <div class="pm-uid" id="pm-uid">—</div>
-      </div>
+      <div><div class="pm-nick" id="pm-nick">—</div><div class="pm-uid" id="pm-uid">—</div></div>
       <button class="pm-close" onclick="closePlayerModal()">✕</button>
     </div>
     <div class="pm-body">
-      <div style="margin-bottom:16px">
-        <span id="pm-banned-status" style="font-size:13px">—</span>
-      </div>
-
-      <!-- Ресурси -->
+      <div style="margin-bottom:16px"><span id="pm-banned-status" style="font-size:13px">—</span></div>
       <div style="font-family:var(--px);font-size:9px;color:var(--gold);margin-bottom:12px">РЕСУРСИ</div>
       <div class="pm-grid">
         <div class="form-group"><label class="form-label">⭐ Золото</label><input class="admin-input" id="pm-gold" type="number" min="0"></div>
@@ -1783,31 +502,983 @@ select.admin-input{cursor:pointer;}
         <div class="form-group"><label class="form-label">⛽ Паливо</label><input class="admin-input" id="pm-fuel" type="number" min="0"></div>
         <div class="form-group"><label class="form-label">🛢️ Нафта</label><input class="admin-input" id="pm-oil" type="number" min="0"></div>
         <div class="form-group"><label class="form-label">🔩 Метал</label><input class="admin-input" id="pm-metal" type="number" min="0"></div>
-        <div class="form-group">
-          <label class="form-label">Роль</label>
+        <div class="form-group"><label class="form-label">Роль</label>
           <select class="admin-input" id="pm-role">
-            <option value="user">user</option>
-            <option value="moderator">moderator</option>
-            <option value="admin">admin</option>
+            <option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option>
           </select>
         </div>
       </div>
-
-      <!-- Бан -->
       <div style="font-family:var(--px);font-size:9px;color:var(--gold);margin-bottom:12px;margin-top:4px">БАН</div>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Причина бану</label>
-        <input class="admin-input" id="pm-ban-reason" type="text" placeholder="Причина...">
+        <input class="admin-input" id="pm-ban-reason" type="text" placeholder="Причина..." style="width:100%">
       </div>
-
+      <div style="font-family:var(--px);font-size:9px;color:var(--gold);margin-bottom:8px;margin-top:4px">НОТАТКА (тільки стаф)</div>
+      <textarea class="admin-input" id="pm-note" placeholder="Внутрішня нотатка..." style="width:100%;min-height:60px;resize:vertical;margin-bottom:12px;"></textarea>
       <div class="pm-actions">
         <button class="admin-btn" id="pm-save-btn">💾 Зберегти</button>
         <button class="admin-btn secondary" id="pm-ban-btn">🚫 Заблокувати</button>
-        <button class="admin-btn secondary" onclick="closePlayerModal()">Скасувати</button>
+        <button class="admin-btn secondary" onclick="closePlayerModal()">Закрити</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- TANK EDITOR MODAL -->
+<div id="tank-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:600;align-items:flex-start;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0" onclick="if(event.target===this)closeTankEditor()">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(620px,96vw);margin:auto">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="te-title">Новий танк</span>
+      <button onclick="closeTankEditor()" style="background:none;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">ID (латиниця)</label><input class="admin-input" id="te-id" placeholder="hellcat" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Назва</label><input class="admin-input" id="te-name" placeholder="M18 Hellcat" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Emoji</label><input class="admin-input" id="te-emoji" placeholder="🚀" maxlength="4" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Нація</label><input class="admin-input" id="te-nation" placeholder="США" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Фракція</label>
+          <select class="admin-input" id="te-faction" style="width:100%">
+            <option value="east">🔴 East Coalition</option><option value="west">🔵 West Alliance</option>
+            <option value="north">⚫ Northern Front</option><option value="euro">🟣 Euro Union</option><option value="asian">🟡 Asian Pact</option>
+          </select>
+        </div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Клас</label>
+          <select class="admin-input" id="te-class" style="width:100%">
+            <option value="assault">⚔️ Штурм</option><option value="support">🛡️ Підтримка</option>
+            <option value="recon">👁️ Розвідка</option><option value="arty">💥 Арта</option><option value="medium">⚙️ Універсал</option>
+          </select>
+        </div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Тір (1-10)</label>
+          <select class="admin-input" id="te-tier" style="width:100%">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+          <label style="font-size:12px;color:var(--dim)">Скоро:</label>
+          <input type="checkbox" id="te-soon" style="width:18px;height:18px;cursor:pointer">
+        </div>
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Опис</label><textarea class="admin-input" id="te-desc" rows="2" placeholder="Короткий опис..." style="width:100%"></textarea></div>
+      <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:5px">Роль в бою</label><input class="admin-input" id="te-role" placeholder="Як грати..." style="width:100%"></div>
+      <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ЗОБРАЖЕННЯ</div>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input class="admin-input" id="te-img-url" type="url" placeholder="https://..." style="flex:1" oninput="previewTankImg(this.value)">
+          <label style="padding:8px 14px;background:var(--gold);color:var(--bg);font-size:11px;cursor:pointer;white-space:nowrap;display:flex;align-items:center">📁 Файл<input type="file" accept="image/*" style="display:none" onchange="uploadTankImg(this)"></label>
+        </div>
+        <img id="te-img-preview" src="" alt="" style="display:none;max-width:100%;max-height:150px;border:1px solid var(--border);object-fit:contain;background:var(--surf)">
+        <div style="font-size:11px;color:var(--dim);margin-top:6px">PNG 400×300px з прозорим фоном</div>
+      </div>
+      <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ХАРАКТЕРИСТИКИ (0-100)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">❤️ HP</label><input class="admin-input" id="te-hp" type="number" min="0" max="100" value="50" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">🔫 Урон</label><input class="admin-input" id="te-damage" type="number" min="0" max="100" value="50" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">🛡️ Броня</label><input class="admin-input" id="te-armor" type="number" min="0" max="100" value="50" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">💨 Швидкість</label><input class="admin-input" id="te-speed" type="number" min="0" max="100" value="50" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">👁️ Огляд</label><input class="admin-input" id="te-view" type="number" min="0" max="100" value="50" style="width:100%"></div>
+        <div><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">👻 Маскування</label><input class="admin-input" id="te-masking" type="number" min="0" max="100" value="50" style="width:100%"></div>
+      </div>
+      <div style="font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ОСОБЛИВОСТІ (до 3)</div>
+      <!-- PERKS: генеруються через JS в openTankEditor() щоб уникнути template literal в HTML -->
+      <div id="te-perks-wrap"></div>
+      <div id="te-msg" style="display:none;padding:10px;font-size:12px;margin-bottom:12px;border:1px solid"></div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="saveTank()" style="flex:1">💾 Зберегти</button>
+        <button class="admin-btn secondary" onclick="closeTankEditor()">Скасувати</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STREAMER MODAL -->
+<div id="streamer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeStreamerModal()">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(600px,95vw);max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="sm-nick">—</span>
+      <button onclick="closeStreamerModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:24px" id="sm-body"></div>
+  </div>
+</div>
+
+<!-- TICKET MODAL -->
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeTicketModal()">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(640px,95vw);max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="tm-id">—</span>
+      <button onclick="closeTicketModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:24px" id="tm-body"></div>
+  </div>
+</div>
+
+<!-- TOURNAMENT MODAL -->
+<div id="tournament-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeTournamentEditor()">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(540px,96vw);max-height:90vh;overflow-y:auto">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-family:var(--px);font-size:10px;color:var(--gold)" id="tourn-modal-title">Новий турнір</span>
+      <button onclick="closeTournamentEditor()" style="background:none;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div style="padding:24px">
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Назва</label><input class="admin-input" id="tourn-name" type="text" placeholder="Відкрита ліга BT 8BIT" style="width:100%"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Формат</label><input class="admin-input" id="tourn-format" type="text" placeholder="6v6 Solo"></div>
+        <div class="form-group"><label class="form-label">Макс. учасників</label><input class="admin-input" id="tourn-maxp" type="number" placeholder="32" min="2"></div>
+        <div class="form-group"><label class="form-label">Призовий (⭐ золото)</label><input class="admin-input" id="tourn-prize" type="number" placeholder="5000" min="0"></div>
+        <div class="form-group"><label class="form-label">Дата</label><input class="admin-input" id="tourn-date" type="date"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Опис</label><textarea class="admin-input" id="tourn-desc" placeholder="Опис турніру..." style="width:100%;min-height:80px;resize:vertical"></textarea></div>
+      <div class="form-group" style="margin-bottom:16px"><label class="form-label">Статус</label>
+        <select class="admin-input" id="tourn-status" style="width:100%">
+          <option value="upcoming">Незабаром</option><option value="registration">Реєстрація відкрита</option>
+          <option value="active">Активний</option><option value="finished">Завершено</option>
+        </select>
+      </div>
+      <div id="tourn-msg" style="display:none;padding:10px;font-size:12px;margin-bottom:12px;border:1px solid"></div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="saveTournament()" style="flex:1">💾 Зберегти</button>
+        <button class="admin-btn secondary" onclick="closeTournamentEditor()">Скасувати</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, query, orderBy, limit, getDocs, where, increment,
+  onSnapshot, addDoc }
+  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+  authDomain:"tanksbattles3d.firebaseapp.com", projectId:"tanksbattles3d",
+  storageBucket:"tanksbattles3d.firebasestorage.app",
+  messagingSenderId:"626439210789",
+  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+window._db = db;
+
+let currentAdmin = null;
+let isAdmin = false;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'profile.html'; return; }
+  const snap = await getDoc(doc(db,'players',user.uid));
+  if (!snap.exists() || !['admin','moderator'].includes(snap.data().role)) {
+    document.getElementById('access-denied').style.display = 'flex';
+    return;
+  }
+  currentAdmin = { uid: user.uid, ...snap.data() };
+  isAdmin = snap.data().role === 'admin';
+  window._isAdmin = isAdmin;
+
+  document.getElementById('admin-panel').style.display = 'block';
+  document.getElementById('admin-nick').textContent = snap.data().nickname || user.email;
+  document.getElementById('admin-role').textContent = isAdmin ? '👑 Адміністратор' : '🛡 Модератор';
+  document.getElementById('nav-role-badge').textContent = isAdmin ? 'ADMIN' : 'MOD';
+  if (!isAdmin) {
+    document.getElementById('nav-role-badge').style.color = '#8eb0cc';
+    document.getElementById('nav-role-badge').style.borderColor = '#8eb0cc';
+  }
+
+  // Показати admin-only елементи тільки для адмінів
+  if (isAdmin) {
+    document.querySelectorAll('.admin-only').forEach(el => { el.style.display = el.tagName==='DIV'&&el.classList.contains('sidebar-item') ? 'flex' : 'block'; });
+    document.getElementById('sb-admin-tools').style.display = 'block';
+    document.getElementById('sb-admin-base').style.display = 'block';
+    document.getElementById('sb-admin-content').style.display = 'block';
+    document.getElementById('dash-forum-card').style.display = 'block';
+  }
+
+  loadDashboard();
+  loadPlayers();
+  if (isAdmin) loadPromocodes();
+});
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    try { onSnapshot(doc(db,'siteStats','main'), s => {
+      if (!s.exists()) return;
+      const d = s.data();
+      setText('dash-total-visits',(d.totalVisits||0).toLocaleString());
+      setText('dash-unique-visits',(d.uniqueVisitors||0).toLocaleString());
+    }); } catch(e) {}
+    const today = new Date().toISOString().slice(0,10);
+    try { onSnapshot(doc(db,'siteStats','daily_'+today), s => {
+      setText('dash-today-visits', s.exists() ? (s.data().visits||0).toLocaleString() : '0');
+    }); } catch(e) {}
+
+    const [pS,cS,bS,tS,rS,fS] = await Promise.allSettled([
+      getDocs(collection(db,'players')),
+      getDocs(collection(db,'clans')),
+      getDocs(query(collection(db,'players'),where('banned','==',true))),
+      getDocs(query(collection(db,'support_tickets'),where('status','==','open'))),
+      getDocs(query(collection(db,'support_tickets'),where('type','==','report'),where('status','==','open'))),
+      getDocs(collection(db,'forum_posts')),
+    ]);
+    if(pS.status==='fulfilled') setText('dash-players',pS.value.size.toLocaleString());
+    if(cS.status==='fulfilled') setText('dash-clans',cS.value.size.toLocaleString());
+    if(bS.status==='fulfilled') setText('dash-banned',bS.value.size.toLocaleString());
+    if(tS.status==='fulfilled') setText('dash-open-tickets',tS.value.size.toLocaleString());
+    if(rS.status==='fulfilled') setText('dash-reports',rS.value.size.toLocaleString());
+    if(fS.status==='fulfilled') setText('dash-forum-posts',fS.value.size.toLocaleString());
+
+    try {
+      const topS = await getDocs(query(collection(db,'players'),orderBy('rating','desc'),limit(1)));
+      if(!topS.empty) { const t=topS.docs[0].data(); setText('dash-top-player',(t.nickname||'—')+' · ⭐ '+(t.rating||0).toLocaleString()); }
+    } catch(e) { setText('dash-top-player','Індекс будується...'); }
+
+    try {
+      const logS = await getDocs(query(collection(db,'moderation_log'),orderBy('createdAt','desc'),limit(5)));
+      const el = document.getElementById('dash-recent-logs');
+      if(logS.empty) { el.innerHTML='<div style="color:var(--dim);font-size:12px">Логів немає</div>'; return; }
+      const ac = a=>a.includes('ban')?'#c07070':a.includes('give')?'#4aaa5a':'var(--gold)';
+      el.innerHTML = logS.docs.map(d=>{
+        const l=d.data(), t=l.createdAt?.toDate?l.createdAt.toDate().toLocaleString('uk-UA'):'—';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border:1px solid var(--border);font-size:12px">
+          <span style="color:${ac(l.action||'')}">●</span><span>${l.action||'—'}</span>
+          <span style="color:var(--text)">${l.adminNick||'—'}</span>
+          <span style="color:var(--dim)">→ ${l.targetNick||l.target||'—'}</span>
+          <span style="margin-left:auto;color:var(--dim);font-size:10px">${t}</span></div>`;
+      }).join('');
+    } catch(e) {}
+  } catch(e) { console.error('Dashboard:',e); }
+}
+
+// ── PLAYERS ───────────────────────────────────────────────────
+let playersCache = [];
+
+window.loadPlayers = async function(searchQ='') {
+  const list = document.getElementById('players-list');
+  const fv = document.getElementById('player-filter')?.value||'all';
+  list.innerHTML = '<tr><td colspan="9" class="loading-row">Завантаження...</td></tr>';
+  try {
+    let q;
+    if (searchQ) {
+      q = query(collection(db,'players'),where('nickname','>=',searchQ),where('nickname','<=',searchQ+'\uf8ff'),limit(50));
+    } else if (fv==='banned') {
+      q = query(collection(db,'players'),where('banned','==',true),limit(50));
+    } else if (fv==='staff') {
+      q = query(collection(db,'players'),where('role','in',['admin','moderator']),limit(50));
+    } else {
+      q = query(collection(db,'players'),orderBy('createdAt','desc'),limit(50));
+    }
+    const snap = await getDocs(q);
+    playersCache = [];
+    snap.forEach(d => playersCache.push({id:d.id,...d.data()}));
+    renderPlayers(playersCache);
+  } catch(e) { list.innerHTML=`<tr><td colspan="9" class="loading-row" style="color:#c07070">${e.message}</td></tr>`; }
+};
+
+function renderPlayers(players) {
+  const list = document.getElementById('players-list');
+  if (!players.length) { list.innerHTML='<tr><td colspan="9" class="loading-row">Не знайдено</td></tr>'; return; }
+  list.innerHTML = players.map(p => {
+    const wr = p.battles>0?Math.round(p.wins/p.battles*100):0;
+    const rc = p.role==='admin'?'#ffd700':p.role==='moderator'?'#a070cc':'var(--dim)';
+    const cr = p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString('uk-UA'):'—';
+    const quickBanBtn = isAdmin
+      ? `<button class="tbl-btn danger" title="${p.banned?'Розблокувати':'Заблокувати'}" onclick="event.stopPropagation();quickBan('${p.id}','${(p.nickname||'').replace(/'/g,"\\'")}',${!!p.banned})">${p.banned?'✅':'🚫'}</button>`
+      : '';
+    return `<tr onclick="openPlayer('${p.id}')" style="cursor:pointer">
+      <td><span class="player-nick">${p.nickname||'—'}</span></td>
+      <td style="font-size:10px;color:${rc}">${p.role||'user'}</td>
+      <td>LVL ${p.level||1}</td>
+      <td style="color:var(--gold)">${(p.rating||0).toLocaleString()}</td>
+      <td>${p.battles||0} · ${wr}%</td>
+      <td style="color:var(--gold)">${(p.gold||0).toLocaleString()}</td>
+      <td style="font-size:11px;color:var(--dim)">${cr}</td>
+      <td><span style="font-size:11px;color:${p.banned?'#c07070':'#4aaa5a'}">${p.banned?'🚫':'✅'}</span></td>
+      <td style="display:flex;gap:4px"><button class="tbl-btn" onclick="event.stopPropagation();openPlayer('${p.id}')">✏️</button>${quickBanBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.quickBan = async function(uid, nick, isBanned) {
+  const reason = isBanned?'':(prompt(`Причина бану для ${nick}:`)||'Порушення');
+  if (!isBanned && reason===null) return;
+  try {
+    await updateDoc(doc(db,'players',uid),{banned:!isBanned,banReason:reason});
+    await addDoc(collection(db,'moderation_log'),{action:isBanned?'unban':'ban',adminNick:currentAdmin?.nickname||'Адмін',target:uid,targetNick:nick,details:reason,createdAt:new Date()});
+    showToast(isBanned?'✅ Розблоковано':'🚫 Заблоковано');
+    loadPlayers();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.openPlayer = function(uid) {
+  const p = playersCache.find(x=>x.id===uid);
+  if (!p) return;
+  document.getElementById('pm-nick').textContent=p.nickname||'—';
+  document.getElementById('pm-uid').textContent=uid;
+  document.getElementById('pm-role').value=p.role||'user';
+  document.getElementById('pm-gold').value=p.gold||0;
+  document.getElementById('pm-coins').value=p.coins||0;
+  document.getElementById('pm-fuel').value=p.fuel||0;
+  document.getElementById('pm-oil').value=p.oil||0;
+  document.getElementById('pm-metal').value=p.metal||0;
+  document.getElementById('pm-ban-reason').value=p.banReason||'';
+  document.getElementById('pm-note').value=p.adminNote||'';
+  document.getElementById('pm-banned-status').textContent=p.banned?'🚫 Заблокований':'✅ Активний';
+  document.getElementById('pm-banned-status').style.color=p.banned?'#c07070':'#4aaa5a';
+  document.getElementById('pm-ban-btn').textContent=p.banned?'✅ Розблокувати':'🚫 Заблокувати';
+  document.getElementById('pm-ban-btn').onclick=()=>toggleBan(uid,p.banned);
+  document.getElementById('pm-save-btn').onclick=()=>savePlayer(uid);
+  document.getElementById('player-modal').style.display='flex';
+  document.body.style.overflow='hidden';
+};
+
+window.savePlayer = async function(uid) {
+  try {
+    await updateDoc(doc(db,'players',uid),{
+      role:document.getElementById('pm-role').value,
+      gold:parseInt(document.getElementById('pm-gold').value)||0,
+      coins:parseInt(document.getElementById('pm-coins').value)||0,
+      fuel:parseInt(document.getElementById('pm-fuel').value)||0,
+      oil:parseInt(document.getElementById('pm-oil').value)||0,
+      metal:parseInt(document.getElementById('pm-metal').value)||0,
+      adminNote:document.getElementById('pm-note').value.trim(),
+    });
+    await addDoc(collection(db,'moderation_log'),{action:'edit_player',adminNick:currentAdmin?.nickname||'Адмін',target:uid,createdAt:new Date()});
+    showToast('✅ Оновлено');
+    closePlayerModal();
+    loadPlayers();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+
+window.toggleBan = async function(uid, isBanned) {
+  const reason = document.getElementById('pm-ban-reason').value;
+  try {
+    await updateDoc(doc(db,'players',uid),{banned:!isBanned,banReason:isBanned?'':reason});
+    await addDoc(collection(db,'moderation_log'),{action:isBanned?'unban':'ban',adminNick:currentAdmin?.nickname||'Адмін',target:uid,targetNick:document.getElementById('pm-nick').textContent,details:reason,createdAt:new Date()});
+    showToast(isBanned?'✅ Розблоковано':'🚫 Заблоковано');
+    closePlayerModal(); loadPlayers();
+  } catch(e) { showToast('Помилка: '+e.message,'error'); }
+};
+window.closePlayerModal=function(){document.getElementById('player-modal').style.display='none';document.body.style.overflow='';};
+
+// ── FORUM MOD ─────────────────────────────────────────────────
+window.loadForumMod = async function() {
+  const list=document.getElementById('forum-mod-list');
+  const cat=document.getElementById('forum-cat-filter')?.value||'all';
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try {
+    const q = cat==='all'
+      ? query(collection(db,'forum_posts'),orderBy('createdAt','desc'),limit(30))
+      : query(collection(db,'forum_posts'),where('category','==',cat),orderBy('createdAt','desc'),limit(30));
+    const snap=await getDocs(q);
+    if(snap.empty){list.innerHTML='<div class="loading-row">Постів немає</div>';return;}
+    const CC={general:'var(--steel)',bug:'#e84040',idea:'#a070cc',clan:'var(--gold)',tournaments:'#4aaa5a'};
+    const CL={general:'💬',bug:'🐛',idea:'💡',clan:'🏰',tournaments:'🏆'};
+    list.innerHTML=snap.docs.map(d=>{
+      const p=d.data(),date=p.createdAt?.toDate?p.createdAt.toDate().toLocaleString('uk-UA'):'—',c=CC[p.category]||'var(--dim)';
+      return`<div class="forum-post-row">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <span class="forum-post-badge" style="color:${c};border-color:${c}44">${CL[p.category]||'📝'} ${p.category||'—'}</span>
+            ${p.pinned?'<span class="forum-post-badge" style="color:var(--gold);border-color:rgba(232,188,56,0.4)">📌</span>':''}
+            ${p.locked?'<span class="forum-post-badge" style="color:var(--dim);border-color:var(--border)">🔒</span>':''}
+          </div>
+          <div class="forum-post-title">${p.title||'—'}</div>
+          <div class="forum-post-meta">👤 ${p.authorNick||'—'} · ${date} · 💬 ${p.replyCount||0} · 👍 ${p.likes||0}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button class="tbl-btn" onclick="togglePin('${d.id}',${!!p.pinned})">${p.pinned?'📌 Зняти':'📌 Закріп'}</button>
+          <button class="tbl-btn" onclick="toggleLock('${d.id}',${!!p.locked})">${p.locked?'🔓 Відкрити':'🔒 Закрити'}</button>
+          <button class="tbl-btn danger" onclick="deleteForumPost('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.togglePin=async function(id,v){try{await updateDoc(doc(db,'forum_posts',id),{pinned:!v});showToast(v?'Відкріплено':'📌 Закріплено');loadForumMod();}catch(e){showToast('Помилка: '+e.message,'error');}};
+window.toggleLock=async function(id,v){try{await updateDoc(doc(db,'forum_posts',id),{locked:!v});showToast(v?'🔓 Відкрито':'🔒 Закрито');loadForumMod();}catch(e){showToast('Помилка: '+e.message,'error');}};
+window.deleteForumPost=async function(id){
+  if(!confirm('Видалити пост?'))return;
+  try{await deleteDoc(doc(db,'forum_posts',id));await addDoc(collection(db,'moderation_log'),{action:'forum_delete',adminNick:currentAdmin?.nickname||'Адмін',target:id,createdAt:new Date()});showToast('✅ Видалено');loadForumMod();}catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+// ── REPORTS ───────────────────────────────────────────────────
+window.loadReports=async function(){
+  const list=document.getElementById('reports-list');
+  const sf=document.getElementById('report-status-filter')?.value||'open';
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const q=sf==='all'
+      ?query(collection(db,'support_tickets'),where('type','==','report'),orderBy('createdAt','desc'),limit(30))
+      :query(collection(db,'support_tickets'),where('type','==','report'),where('status','==',sf),orderBy('createdAt','desc'),limit(30));
+    const snap=await getDocs(q);
+    if(snap.empty){list.innerHTML='<div class="loading-row">Скарг немає</div>';return;}
+    list.innerHTML='<div style="display:flex;flex-direction:column;gap:6px">'+snap.docs.map(d=>{
+      const t=d.data(),date=t.createdAt?.toDate?t.createdAt.toDate().toLocaleDateString('uk-UA'):'—';
+      const sc=t.status==='resolved'?'#4aaa5a':t.status==='inprogress'?'#8eb0cc':'#e8bc38';
+      return`<div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13px;color:#fff;margin-bottom:4px">${t.subject||'Скарга'}</div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:6px">Від: ${t.reporterNick||'—'} · На: <span style="color:#e88038">${t.reportedNick||'—'}</span> · ${date}</div>
+          <div style="font-size:12px;color:var(--dim);line-height:1.6">${(t.description||'').slice(0,120)}${(t.description||'').length>120?'...':''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <span style="font-size:10px;color:${sc};border:1px solid ${sc}44;padding:4px 8px">${t.status||'—'}</span>
+          <button class="tbl-btn" onclick="openTicket('${d.id}')">Відкрити</button>
+          <button class="tbl-btn success" onclick="resolveReport('${d.id}')">✅ Вирішено</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.resolveReport=async function(id){
+  try{await updateDoc(doc(db,'support_tickets',id),{status:'resolved',updatedAt:new Date()});await addDoc(collection(db,'moderation_log'),{action:'resolve_report',adminNick:currentAdmin?.nickname||'Адмін',target:id,createdAt:new Date()});showToast('✅ Вирішено');loadReports();}
+  catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+// ── TICKETS ───────────────────────────────────────────────────
+const TC={bug:'#e84040',report:'#e88038',idea:'#4aaa5a',payment:'#e8bc38',account:'#8eb0cc',other:'#a070cc'};
+const TL={bug:'🐛 Баг',report:'🚨 Скарга',idea:'💡 Ідея',payment:'💳 Платіж',account:'👤 Акаунт',other:'📝 Інше'};
+
+window.loadTickets=async function(){
+  const list=document.getElementById('tickets-list');
+  if(!list)return;
+  const sf=document.getElementById('tickets-filter')?.value||'all';
+  const tf=document.getElementById('tickets-type')?.value||'all';
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const q=sf!=='all'?query(collection(db,'support_tickets'),where('status','==',sf),orderBy('createdAt','desc'),limit(50)):query(collection(db,'support_tickets'),orderBy('createdAt','desc'),limit(50));
+    const snap=await getDocs(q);
+    if(snap.empty){list.innerHTML='<div class="loading-row">Заявок немає</div>';return;}
+    let tickets=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(tf!=='all')tickets=tickets.filter(t=>t.type===tf);
+    list.innerHTML=`<table><thead><tr><th>ID</th><th>Тип</th><th>Гравець</th><th>Тема</th><th>Пріор.</th><th>Дата</th><th>Статус</th><th>Дія</th></tr></thead><tbody>`+
+    tickets.map(t=>{
+      const c=TC[t.type]||'#888',date=t.createdAt?.toDate?t.createdAt.toDate().toLocaleDateString('uk-UA'):'—';
+      const prio=t.priority==='high'?'🔴':t.priority==='medium'?'🟡':'🟢';
+      const sc=t.status==='resolved'?'#4aaa5a':t.status==='inprogress'?'#8eb0cc':t.status==='closed'?'#6a7a8a':'#e8bc38';
+      return`<tr><td style="font-family:var(--px);font-size:9px;color:var(--dim)">${t.ticketId||t.id.slice(0,8)}</td>
+        <td><span style="font-size:10px;color:${c}">${TL[t.type]||t.type}</span></td>
+        <td>${t.reporterNick||'—'}</td>
+        <td style="font-size:12px;max-width:140px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${t.subject||'—'}</td>
+        <td>${prio}</td><td style="font-size:11px;color:var(--dim)">${date}</td>
+        <td><span style="font-size:10px;color:${sc}">${t.status||'—'}</span></td>
+        <td><button class="tbl-btn" onclick="openTicket('${t.id}')">Відкрити</button></td></tr>`;
+    }).join('')+'</tbody></table>';
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.openTicket=async function(docId){
+  try{
+    const snap=await getDoc(doc(db,'support_tickets',docId));
+    if(!snap.exists())return;
+    const t=snap.data(),date=t.createdAt?.toDate?t.createdAt.toDate().toLocaleString('uk-UA'):'—',c=TC[t.type]||'#888';
+    document.getElementById('tm-id').textContent=t.ticketId||docId;
+    document.getElementById('tm-body').innerHTML=`
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+        <span style="font-size:11px;color:${c};border:1px solid ${c}44;padding:4px 10px">${TL[t.type]||t.type}</span>
+        <span style="font-size:11px;color:var(--dim)">📅 ${date}</span>
+        <span style="font-size:11px;color:var(--dim)">${t.priority==='high'?'🔴 Критичний':t.priority==='medium'?'🟡 Середній':'🟢 Низький'}</span>
+      </div>
+      <div style="font-size:16px;color:#fff;margin-bottom:8px">${t.subject||'—'}</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:4px">Від: <span style="color:#fff">${t.reporterNick||'—'}</span>${t.reporterEmail?` · <a href="mailto:${t.reporterEmail}" style="color:var(--gold)">${t.reporterEmail}</a>`:''}${t.reportedNick?` · На: <span style="color:#e88038">${t.reportedNick}</span>`:''}</div>
+      <div style="margin:16px 0;padding:16px;background:var(--surf);border:1px solid var(--border);font-size:13px;line-height:1.8;white-space:pre-wrap">${t.description||'—'}</div>
+      ${t.screenshotUrl?`<div style="margin-bottom:16px"><img src="${t.screenshotUrl}" style="max-width:100%;border:1px solid var(--border)"><br><a href="${t.screenshotUrl}" target="_blank" style="font-size:11px;color:var(--gold)">→ Повний розмір</a></div>`:''}
+      ${t.adminReply?`<div style="margin-bottom:16px;padding:12px;background:rgba(74,170,90,0.08);border:1px solid rgba(74,170,90,0.3);font-size:13px"><span style="font-size:10px;color:#4aaa5a;font-family:var(--px)">ВІДПОВІДЬ АДМІНА</span><br><div style="margin-top:8px">${t.adminReply}</div></div>`:''}
+      <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Відповідь гравцю</label><textarea id="tm-reply" style="width:100%;padding:10px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;resize:vertical;min-height:60px;outline:none" placeholder="Напиши відповідь...">${t.adminReply||''}</textarea></div>
+      <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Статус</label>
+        <select id="tm-status" class="admin-input" style="width:200px">
+          <option value="open" ${t.status==='open'?'selected':''}>🟡 Відкрита</option>
+          <option value="inprogress" ${t.status==='inprogress'?'selected':''}>🔵 В роботі</option>
+          <option value="resolved" ${t.status==='resolved'?'selected':''}>✅ Вирішено</option>
+          <option value="closed" ${t.status==='closed'?'selected':''}>⬜ Закрита</option>
+        </select></div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="updateTicketStatus('${docId}')">💾 Зберегти</button>
+        <button class="admin-btn secondary" onclick="closeTicketModal()">Закрити</button>
+      </div>`;
+    document.getElementById('ticket-modal').style.display='flex';
+    document.body.style.overflow='hidden';
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+window.updateTicketStatus=async function(docId){
+  const status=document.getElementById('tm-status').value;
+  const reply=document.getElementById('tm-reply')?.value.trim();
+  try{
+    const upd={status,updatedAt:new Date(),adminNick:currentAdmin?.nickname};
+    if(reply)upd.adminReply=reply;
+    await updateDoc(doc(db,'support_tickets',docId),upd);
+    await addDoc(collection(db,'moderation_log'),{action:'ticket_'+status,adminNick:currentAdmin?.nickname||'Адмін',target:docId,createdAt:new Date()});
+    showToast('✅ Оновлено');closeTicketModal();loadTickets();
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+window.closeTicketModal=function(){document.getElementById('ticket-modal').style.display='none';document.body.style.overflow='';};
+
+// ── BANS ──────────────────────────────────────────────────────
+window.loadBans=async function(){
+  const list=document.getElementById('bans-list');
+  list.innerHTML='<tr><td colspan="4" class="loading-row">Завантаження...</td></tr>';
+  try{
+    const snap=await getDocs(query(collection(db,'players'),where('banned','==',true),limit(100)));
+    if(snap.empty){list.innerHTML='<tr><td colspan="4" class="loading-row" style="color:#4aaa5a">✅ Немає забанених</td></tr>';return;}
+    list.innerHTML=snap.docs.map(d=>{
+      const p=d.data(),date=p.bannedAt?.toDate?p.bannedAt.toDate().toLocaleDateString('uk-UA'):'—';
+      return`<tr><td><span class="player-nick">${p.nickname||'—'}</span><br><span style="font-size:10px;color:var(--dim)">${d.id.slice(0,12)}...</span></td>
+        <td style="color:#c07070">${p.banReason||'—'}</td><td style="font-size:11px;color:var(--dim)">${date}</td>
+        <td><button class="tbl-btn success" onclick="unbanPlayer('${d.id}','${(p.nickname||'').replace(/'/g,"\\'")}')">✅ Розблокувати</button></td></tr>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<tr><td colspan="4" class="loading-row" style="color:#c07070">${e.message}</td></tr>`;}
+};
+
+window.unbanPlayer=async function(uid,nick){
+  if(!confirm('Розблокувати '+nick+'?'))return;
+  try{await updateDoc(doc(db,'players',uid),{banned:false,banReason:''});await addDoc(collection(db,'moderation_log'),{action:'unban',adminNick:currentAdmin?.nickname||'Адмін',target:uid,targetNick:nick,createdAt:new Date()});showToast('✅ '+nick+' розблоковано');loadBans();}
+  catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+// ── ANNOUNCE ──────────────────────────────────────────────────
+window.updateAnnPreview=function(){
+  const ic={info:'ℹ️',warn:'⚠️',event:'🎉',update:'🔧',promo:'🎁'};
+  const t=document.getElementById('ann-type').value;
+  document.getElementById('ann-preview').textContent=`${ic[t]||'📢'} ${document.getElementById('ann-title').value}\n\n${document.getElementById('ann-text').value}`;
+};
+
+window.sendAnnouncement=async function(){
+  const title=document.getElementById('ann-title').value.trim();
+  const text=document.getElementById('ann-text').value.trim();
+  if(!title||!text){showToast('Заповни заголовок і текст','error');return;}
+  try{
+    await addDoc(collection(db,'announcements'),{title,text,type:document.getElementById('ann-type').value,target:document.getElementById('ann-target').value,pinned:document.getElementById('ann-pin').checked,authorNick:currentAdmin?.nickname||'Адмін',authorUid:currentAdmin?.uid,createdAt:new Date()});
+    await addDoc(collection(db,'mail_global'),{title,text,type:document.getElementById('ann-type').value,pinned:document.getElementById('ann-pin').checked,authorNick:currentAdmin?.nickname||'Адмін',createdAt:new Date(),readBy:[]});
+    await addDoc(collection(db,'moderation_log'),{action:'announcement',adminNick:currentAdmin?.nickname||'Адмін',details:title,createdAt:new Date()});
+    showToast('✅ Надіслано!','success');
+    document.getElementById('ann-title').value='';document.getElementById('ann-text').value='';updateAnnPreview();
+    loadAnnHistory();
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+async function loadAnnHistory(){
+  const el=document.getElementById('ann-history');if(!el)return;
+  try{
+    const snap=await getDocs(query(collection(db,'announcements'),orderBy('createdAt','desc'),limit(10)));
+    if(snap.empty){el.innerHTML='<div style="color:var(--dim);font-size:12px">Немає оголошень</div>';return;}
+    const ic={info:'ℹ️',warn:'⚠️',event:'🎉',update:'🔧',promo:'🎁'};
+    el.innerHTML=snap.docs.map(d=>{
+      const a=d.data(),date=a.createdAt?.toDate?a.createdAt.toDate().toLocaleDateString('uk-UA'):'—';
+      return`<div style="background:var(--card);border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:20px">${ic[a.type]||'📢'}</span>
+        <div style="flex:1"><div style="font-size:13px;color:#fff;margin-bottom:4px">${a.title||'—'}</div><div style="font-size:11px;color:var(--dim)">${date} · ${a.authorNick||'—'} · ${a.target||'all'}</div></div>
+        <button class="tbl-btn danger" onclick="deleteAnn('${d.id}')">🗑️</button></div>`;
+    }).join('');
+  }catch(e){}
+}
+window.deleteAnn=async function(id){if(!confirm('Видалити?'))return;try{await deleteDoc(doc(db,'announcements',id));loadAnnHistory();}catch(e){}};
+
+// ── ANALYTICS ─────────────────────────────────────────────────
+window.loadAnalytics=async function(){
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const dauS=await getDoc(doc(db,'siteStats','daily_'+today));
+    setText('an-dau',dauS.exists()?(dauS.data().uniqueToday||0).toLocaleString():'0');
+
+    const days7=[];
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days7.push(d.toISOString().slice(0,10));}
+    const v7=await Promise.all(days7.map(d=>getDoc(doc(db,'siteStats','daily_'+d))));
+    const vals=v7.map(s=>s.exists()?(s.data().visits||0):0);
+    const mx=Math.max(...vals,1);
+    setText('an-wau',vals.reduce((a,b)=>a+b,0).toLocaleString());
+
+    const chartEl=document.getElementById('visits-chart');
+    const labelsEl=document.getElementById('visits-labels');
+    if(chartEl) chartEl.innerHTML=vals.map((v,i)=>`<div class="mini-bar" title="${days7[i]}: ${v}" style="height:${Math.round(v/mx*56)+4}px;flex:1"></div>`).join('');
+    if(labelsEl) labelsEl.innerHTML=days7.map(d=>`<div style="flex:1;font-size:9px;color:var(--dim);text-align:center">${d.slice(5)}</div>`).join('');
+
+    try{const tp=await getDocs(query(collection(db,'players'),orderBy('rating','desc'),limit(5)));
+      document.getElementById('an-top-players').innerHTML=tp.docs.map((d,i)=>{const p=d.data();return`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(26,48,80,.3);font-size:12px"><span style="color:${i===0?'var(--gold)':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--text)'}">${['🥇','🥈','🥉','4.','5.'][i]} ${p.nickname||'—'}</span><span style="color:var(--gold);font-family:var(--px);font-size:10px">${(p.rating||0).toLocaleString()}</span></div>`;}).join('');}catch(e){}
+    try{const tc=await getDocs(query(collection(db,'clans'),orderBy('rating','desc'),limit(5)));
+      document.getElementById('an-top-clans').innerHTML=tc.docs.map((d,i)=>{const c=d.data();return`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(26,48,80,.3);font-size:12px"><span>[${c.tag||'??'}] ${c.name||'—'}</span><span style="color:var(--gold);font-family:var(--px);font-size:10px">★ ${(c.rating||0).toLocaleString()}</span></div>`;}).join('');}catch(e){}
+
+    const fS=await getDocs(collection(db,'forum_posts'));
+    setText('an-forum',fS.size.toLocaleString());
+    setText('an-new-players','—');
+  }catch(e){console.error('Analytics:',e);}
+};
+
+// ── TOURNAMENTS ───────────────────────────────────────────────
+let editingTournId=null;
+
+window.loadTournamentsAdmin=async function(){
+  const list=document.getElementById('tournaments-admin-list');if(!list)return;
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const snap=await getDocs(query(collection(db,'tournaments'),orderBy('createdAt','desc'),limit(20)));
+    if(snap.empty){list.innerHTML='<div class="loading-row">Турнірів немає. Натисни "+ Новий"</div>';return;}
+    const S={upcoming:'⏳ Незабаром',registration:'📝 Реєстрація',active:'🟢 Активний',finished:'✅ Завершено'};
+    const SC={upcoming:'var(--dim)',registration:'#4aaa5a',active:'var(--gold)',finished:'var(--steel)'};
+    list.innerHTML=snap.docs.map(d=>{
+      const t=d.data();
+      return`<div style="background:var(--card);border:1px solid var(--border);padding:16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:14px;color:#fff;margin-bottom:4px">${t.name||'—'}</div>
+          <div style="font-size:11px;color:var(--dim)">${t.date||'—'} · ${t.format||'—'} · 🏆 ${(t.prize||0).toLocaleString()} ⭐</div>
+        </div>
+        <span style="font-size:10px;color:${SC[t.status]||'var(--dim)'};border:1px solid ${SC[t.status]||'var(--border)'}44;padding:4px 8px">${S[t.status]||t.status}</span>
+        <div style="display:flex;gap:6px">
+          <button class="tbl-btn" onclick="openTournamentEditor('${d.id}')">✏️ Редагувати</button>
+          <button class="tbl-btn danger" onclick="deleteTournament('${d.id}')">🗑️</button>
+        </div></div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.openTournamentEditor=function(id){
+  editingTournId=id;
+  document.getElementById('tourn-modal-title').textContent=id?'Редагувати турнір':'Новий турнір';
+  ['name','format','desc'].forEach(f=>{const el=document.getElementById('tourn-'+f);if(el)el.value='';});
+  document.getElementById('tourn-maxp').value='32';
+  document.getElementById('tourn-prize').value='0';
+  document.getElementById('tourn-status').value='upcoming';
+  document.getElementById('tourn-msg').style.display='none';
+  if(id){getDoc(doc(db,'tournaments',id)).then(snap=>{if(!snap.exists())return;const t=snap.data();document.getElementById('tourn-name').value=t.name||'';document.getElementById('tourn-format').value=t.format||'';document.getElementById('tourn-maxp').value=t.maxParticipants||32;document.getElementById('tourn-prize').value=t.prize||0;document.getElementById('tourn-desc').value=t.description||'';document.getElementById('tourn-status').value=t.status||'upcoming';if(t.date)document.getElementById('tourn-date').value=t.date;});}
+  document.getElementById('tournament-modal').style.display='flex';document.body.style.overflow='hidden';
+};
+window.closeTournamentEditor=function(){document.getElementById('tournament-modal').style.display='none';document.body.style.overflow='';editingTournId=null;};
+
+window.saveTournament=async function(){
+  const name=document.getElementById('tourn-name').value.trim();
+  const msgEl=document.getElementById('tourn-msg');
+  if(!name){showMsg(msgEl,'Введи назву','err');return;}
+  const data={name,format:document.getElementById('tourn-format').value.trim(),maxParticipants:parseInt(document.getElementById('tourn-maxp').value)||32,prize:parseInt(document.getElementById('tourn-prize').value)||0,description:document.getElementById('tourn-desc').value.trim(),status:document.getElementById('tourn-status').value,date:document.getElementById('tourn-date').value,updatedAt:new Date()};
+  try{
+    if(editingTournId){await updateDoc(doc(db,'tournaments',editingTournId),data);}
+    else{data.createdAt=new Date();data.createdBy=currentAdmin?.uid;await addDoc(collection(db,'tournaments'),data);}
+    showMsg(msgEl,'✅ Збережено!','ok');
+    setTimeout(()=>{closeTournamentEditor();loadTournamentsAdmin();},800);
+  }catch(e){showMsg(msgEl,'Помилка: '+e.message,'err');}
+};
+window.deleteTournament=async function(id){if(!confirm('Видалити?'))return;try{await deleteDoc(doc(db,'tournaments',id));showToast('✅ Видалено');loadTournamentsAdmin();}catch(e){showToast('Помилка: '+e.message,'error');}};
+
+// ── PROMOCODES ────────────────────────────────────────────────
+window.loadPromocodes=async function(){
+  const list=document.getElementById('promo-list');if(!list)return;
+  list.innerHTML='<tr><td colspan="6" class="loading-row">Завантаження...</td></tr>';
+  try{
+    const snap=await getDocs(query(collection(db,'promocodes'),orderBy('createdAt','desc')));
+    if(snap.empty){list.innerHTML='<tr><td colspan="6" class="loading-row">Промокодів немає</td></tr>';return;}
+    list.innerHTML=snap.docs.map(d=>{
+      const p=d.data(),exp=p.expiresAt?.toDate?p.expiresAt.toDate().toLocaleDateString('uk-UA'):'—';
+      const reward=Object.entries(p.reward||{}).map(([k,v])=>`${v} ${k}`).join(', ');
+      return`<tr><td><span class="promo-code">${d.id}</span></td><td style="color:var(--gold)">${reward}</td>
+        <td>${(p.usedBy||[]).length} / ${p.maxUses||'∞'}</td><td style="font-size:11px;color:var(--dim)">${exp}</td>
+        <td><span style="color:${p.active?'#4aaa5a':'#c07070'}">${p.active?'✅':'❌'}</span></td>
+        <td style="display:flex;gap:6px"><button class="tbl-btn" onclick="togglePromo('${d.id}',${p.active})">${p.active?'Вимк':'Увімк'}</button><button class="tbl-btn danger" onclick="deletePromo('${d.id}')">🗑️</button></td></tr>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<tr><td colspan="6" class="loading-row" style="color:#c07070">${e.message}</td></tr>`;}
+};
+
+window.createPromo=async function(){
+  const code=document.getElementById('new-promo-code').value.trim().toUpperCase();
+  if(!code||code.length<3){showToast('Мін. 3 символи','error');return;}
+  const r={};
+  ['gold','coins','fuel','oil','metal'].forEach(k=>{const v=parseInt(document.getElementById('new-promo-'+k).value)||0;if(v)r[k]=v;});
+  if(!Object.keys(r).length){showToast('Вкажи нагороду','error');return;}
+  const days=parseInt(document.getElementById('new-promo-days').value)||30;
+  const exp=new Date();exp.setDate(exp.getDate()+days);
+  try{
+    await setDoc(doc(db,'promocodes',code),{code,reward:r,usedBy:[],active:true,maxUses:parseInt(document.getElementById('new-promo-maxuses').value)||99999,description:document.getElementById('new-promo-desc').value.trim(),expiresAt:exp,createdAt:new Date(),createdBy:currentAdmin?.uid});
+    showToast('✅ Промокод '+code+' створено!','success');
+    ['code','gold','coins','fuel','oil','metal','desc'].forEach(f=>{const el=document.getElementById('new-promo-'+f);if(el)el.value='';});
+    loadPromocodes();
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+window.togglePromo=async function(code,v){try{await updateDoc(doc(db,'promocodes',code),{active:!v});loadPromocodes();}catch(e){}};
+window.deletePromo=async function(code){if(!confirm('Видалити '+code+'?'))return;try{await deleteDoc(doc(db,'promocodes',code));loadPromocodes();}catch(e){}};
+
+// ── NEWS ──────────────────────────────────────────────────────
+window.loadNews=async function(){
+  const list=document.getElementById('news-list');if(!list)return;
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const snap=await getDocs(query(collection(db,'news'),orderBy('createdAt','desc'),limit(20)));
+    if(snap.empty){list.innerHTML='<div class="loading-row">Новин немає</div>';return;}
+    list.innerHTML=snap.docs.map(d=>{const n=d.data(),date=n.createdAt?.toDate?n.createdAt.toDate().toLocaleDateString('uk-UA'):'—';
+      return`<div class="news-admin-row"><div><div class="news-admin-title">${n.title||'—'}</div><div style="font-size:11px;color:var(--dim)">${date} · ${n.tag||'—'} · ${n.authorNick||'Адмін'}</div></div><button class="tbl-btn danger" onclick="deleteNews('${d.id}')">Видалити</button></div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+window.createNews=async function(){
+  const title=document.getElementById('news-title').value.trim(),text=document.getElementById('news-text').value.trim();
+  if(!title||!text){showToast('Заповни заголовок і текст','error');return;}
+  try{await addDoc(collection(db,'news'),{title,tag:document.getElementById('news-tag').value.trim()||'Оновлення',text,pinned:false,createdAt:new Date(),authorId:currentAdmin?.uid,authorNick:currentAdmin?.nickname||'Адмін'});showToast('✅ Опубліковано!','success');document.getElementById('news-title').value='';document.getElementById('news-tag').value='';document.getElementById('news-text').value='';loadNews();}catch(e){showToast('Помилка: '+e.message,'error');}
+};
+window.deleteNews=async function(id){if(!confirm('Видалити?'))return;try{await deleteDoc(doc(db,'news',id));loadNews();}catch(e){}};
+
+// ── GIVE ──────────────────────────────────────────────────────
+let giveTargetUID={gr:null,gi:null};
+window.searchForGive=async function(prefix){
+  const q=document.getElementById(prefix+'-search').value.trim();
+  if(!q){showToast('Введи нікнейм або UID','error');return;}
+  try{
+    let data=null,uid=null;
+    if(q.length>20){const s=await getDoc(doc(db,'players',q));if(s.exists()){uid=q;data=s.data();}}
+    if(!data){const s=await getDocs(query(collection(db,'players'),where('nickname','>=',q),where('nickname','<=',q+'\uf8ff'),limit(1)));if(!s.empty){uid=s.docs[0].id;data=s.docs[0].data();}}
+    if(!data){showToast('Не знайдено','error');return;}
+    giveTargetUID[prefix]=uid;
+    const nick=data.nickname||'—';
+    document.getElementById(prefix+'-avatar').textContent=nick[0].toUpperCase();
+    document.getElementById(prefix+'-nick').textContent=nick;
+    document.getElementById(prefix+'-uid-show').textContent=uid;
+    document.getElementById(prefix+'-player-found').style.display='block';
+    document.getElementById(prefix+'-btn').disabled=false;
+    if(prefix==='gr'){setText('gr-cur-gold',(data.gold||0).toLocaleString());setText('gr-cur-coins',(data.coins||0).toLocaleString());setText('gr-cur-oil',(data.oil||0).toLocaleString());}
+    showToast('✅ '+nick);
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+window.giveResources=async function(){
+  const uid=giveTargetUID['gr'];if(!uid){showToast('Знайди гравця','error');return;}
+  const g=parseInt(document.getElementById('gr-gold').value)||0,c=parseInt(document.getElementById('gr-coins').value)||0,f=parseInt(document.getElementById('gr-fuel').value)||0,o=parseInt(document.getElementById('gr-oil').value)||0,m=parseInt(document.getElementById('gr-metal').value)||0,d=parseInt(document.getElementById('gr-diamonds').value)||0;
+  const reason=document.getElementById('gr-reason').value.trim()||'Видача адміном';
+  if(!g&&!c&&!f&&!o&&!m&&!d){showToast('Вкажи ресурс','error');return;}
+  const btn=document.getElementById('gr-btn');btn.disabled=true;btn.textContent='...';
+  try{
+    const upd={};if(g)upd.gold=increment(g);if(c)upd.coins=increment(c);if(f)upd.fuel=increment(f);if(o)upd.oil=increment(o);if(m)upd.metal=increment(m);if(d)upd.diamonds=increment(d);
+    await updateDoc(doc(db,'players',uid),upd);
+    const nick=document.getElementById('gr-nick').textContent;
+    const res=[g?`+${g}⭐`:'',c?`+${c}🪙`:'',f?`+${f}⛽`:'',o?`+${o}🛢`:'',m?`+${m}🔩`:'',d?`+${d}💎`:''].filter(Boolean).join(' ');
+    await addDoc(collection(db,'moderation_log'),{action:'give_resources',adminNick:currentAdmin?.nickname||'Адмін',target:uid,targetNick:nick,details:res,reason,createdAt:new Date()});
+    showToast('✅ '+nick+': '+res,'success');
+    ['gr-gold','gr-coins','gr-fuel','gr-oil','gr-metal','gr-diamonds'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const fresh=await getDoc(doc(db,'players',uid));if(fresh.exists()){const fd=fresh.data();setText('gr-cur-gold',(fd.gold||0).toLocaleString());setText('gr-cur-coins',(fd.coins||0).toLocaleString());setText('gr-cur-oil',(fd.oil||0).toLocaleString());}
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+  finally{btn.disabled=false;btn.textContent='💰 Видати';}
+};
+
+window.updateItemFields=function(){
+  const type=document.getElementById('gi-type').value,isSp=['nickname_change','exp_boost','fuel_refill'].includes(type);
+  document.getElementById('gi-name-wrap').style.display=isSp?'none':'block';
+  document.getElementById('gi-rarity-wrap').style.display=isSp?'none':'block';
+  document.getElementById('gi-tier-wrap').style.display=type==='tank'?'block':'none';
+  document.getElementById('gi-image-wrap').style.display=isSp?'none':'block';
+  document.getElementById('gi-nation-wrap').style.display=type==='tank'?'block':'none';
+};
+
+window.giveItem=async function(){
+  const uid=giveTargetUID['gi'];if(!uid){showToast('Знайди гравця','error');return;}
+  const type=document.getElementById('gi-type').value,name=document.getElementById('gi-name').value.trim();
+  const isSp=['nickname_change','exp_boost','fuel_refill'].includes(type);
+  if(!isSp&&!name){showToast('Введи назву','error');return;}
+  const SP={nickname_change:'Зміна нікнейму',exp_boost:'Буст x2',fuel_refill:'Заправка'};
+  const btn=document.getElementById('gi-btn');btn.disabled=true;btn.textContent='...';
+  try{
+    const itemData={itemType:type,itemName:isSp?SP[type]:name,itemRarity:isSp?'epic':document.getElementById('gi-rarity').value,itemTier:parseInt(document.getElementById('gi-tier').value)||0,itemImage:document.getElementById('gi-image').value.trim()||type,itemNation:document.getElementById('gi-nation').value||'',isListed:false,isRented:false,acquiredBy:'admin',acquiredReason:document.getElementById('gi-reason').value.trim()||'Видача',acquiredAt:new Date()};
+    const nick=document.getElementById('gi-nick').textContent;
+    await setDoc(doc(db,'inventory',uid,'items',type+'_'+Date.now()),itemData);
+    await addDoc(collection(db,'moderation_log'),{action:'give_item',adminNick:currentAdmin?.nickname||'Адмін',target:uid,targetNick:nick,details:itemData.itemName,createdAt:new Date()});
+    showToast('✅ '+nick+': '+itemData.itemName,'success');
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+  finally{btn.disabled=false;btn.textContent='📦 Видати';}
+};
+
+// ── TANKS DB ──────────────────────────────────────────────────
+const FL={east:'🔴 East',west:'🔵 West',north:'⚫ North',euro:'🟣 Euro',asian:'🟡 Asian'};
+const CL={assault:'⚔️ Штурм',support:'🛡️ Підт.',recon:'👁️ Розв.',arty:'💥 Арта',medium:'⚙️ Унів.'};
+let editingTankId=null;
+
+window.loadTanksDB=async function(){
+  const list=document.getElementById('tanks-db-list');list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const snap=await getDocs(collection(db,'tanks_db'));
+    if(snap.empty){list.innerHTML='<div class="loading-row">База порожня</div>';return;}
+    list.innerHTML=`<table><thead><tr><th>Emoji</th><th>Назва</th><th>Фракція</th><th>Клас</th><th>Тір</th><th>Статус</th><th>Дії</th></tr></thead><tbody>`+
+    snap.docs.map(d=>{const t=d.data();return`<tr>
+      <td style="font-size:20px;text-align:center">${t.emoji||'🚀'}</td>
+      <td><strong>${t.name||'—'}</strong><br><span style="font-size:10px;color:var(--dim)">${t.nation||''}</span></td>
+      <td style="font-size:12px">${FL[t.faction]||t.faction||'—'}</td>
+      <td style="font-size:12px">${CL[t.tankClass]||t.tankClass||'—'}</td>
+      <td style="font-family:var(--px);font-size:11px;color:var(--gold)">${t.tier||'—'}</td>
+      <td>${t.comingSoon?'<span style="color:var(--gold);font-size:11px">⏳</span>':'<span style="color:#4aaa5a;font-size:11px">✅</span>'}</td>
+      <td style="display:flex;gap:6px"><button class="tbl-btn" onclick="openTankEditor('${d.id}')">✏️</button><button class="tbl-btn danger" onclick="deleteTank('${d.id}','${(t.name||'').replace(/'/g,"\\'")}')">🗑️</button></td></tr>`;
+    }).join('')+'</tbody></table>';
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.openTankEditor=async function(tankId){
+  editingTankId=tankId;
+  document.getElementById('te-title').textContent=tankId?'Редагувати танк':'Новий танк';
+  document.getElementById('te-msg').style.display='none';
+  ['id','name','emoji','nation','desc','role'].forEach(f=>{const el=document.getElementById('te-'+f);if(el)el.value='';});
+  ['hp','damage','armor','speed','view','masking'].forEach(f=>{const el=document.getElementById('te-'+f);if(el)el.value='50';});
+  document.getElementById('te-soon').checked=false;
+  document.getElementById('te-img-preview').style.display='none';
+  document.getElementById('te-img-url').value='';
+
+  // Будуємо поля особливостей через JS (виправляє баг з template literal в HTML)
+  const pw=document.getElementById('te-perks-wrap');
+  pw.innerHTML='';
+  for(let i=0;i<3;i++){
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:50px 1fr 2fr;gap:8px;margin-bottom:8px;align-items:center';
+    ['icon','name','desc'].forEach((f,fi)=>{
+      const inp=document.createElement('input');
+      inp.className='admin-input';inp.id=`te-perk${i}-${f}`;
+      inp.placeholder=['⭐','Назва','Опис'][fi];inp.style.width='100%';
+      if(f==='icon'){inp.maxLength=4;inp.style.textAlign='center';}
+      row.appendChild(inp);
+    });
+    pw.appendChild(row);
+  }
+
+  if(tankId){
+    try{
+      const snap=await getDoc(doc(db,'tanks_db',tankId));
+      if(snap.exists()){
+        const t=snap.data();
+        document.getElementById('te-id').value=tankId;document.getElementById('te-id').disabled=true;
+        document.getElementById('te-name').value=t.name||'';document.getElementById('te-emoji').value=t.emoji||'';
+        document.getElementById('te-nation').value=t.nation||'';document.getElementById('te-faction').value=t.faction||'west';
+        document.getElementById('te-class').value=t.tankClass||'medium';document.getElementById('te-tier').value=t.tier||1;
+        document.getElementById('te-soon').checked=!!t.comingSoon;document.getElementById('te-desc').value=t.desc||'';document.getElementById('te-role').value=t.role||'';
+        if(t.imageUrl){document.getElementById('te-img-url').value=t.imageUrl;const prev=document.getElementById('te-img-preview');prev.src=t.imageUrl;prev.style.display='block';}
+        const s=t.stats||{};['hp','damage','armor','speed','view','masking'].forEach(f=>{const el=document.getElementById('te-'+f);if(el)el.value=s[f]||50;});
+        (t.perks||[]).forEach((p,i)=>{if(i>2)return;['icon','name','desc'].forEach(f=>{const el=document.getElementById(`te-perk${i}-${f}`);if(el)el.value=p[f]||'';});});
+      }
+    }catch(e){console.error(e);}
+  }else{document.getElementById('te-id').disabled=false;}
+  document.getElementById('tank-editor-modal').style.display='flex';document.body.style.overflow='hidden';
+};
+
+window.closeTankEditor=function(){document.getElementById('tank-editor-modal').style.display='none';document.body.style.overflow='';editingTankId=null;};
+window.previewTankImg=function(url){const prev=document.getElementById('te-img-preview');if(url){prev.src=url;prev.style.display='block';}else prev.style.display='none';};
+
+window.uploadTankImg=async function(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>5*1024*1024){showToast('Макс 5MB','error');return;}
+  const msgEl=document.getElementById('te-msg');showMsg(msgEl,'⏳ Завантаження...','ok');
+  try{
+    const {getStorage,ref,uploadBytesResumable,getDownloadURL}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js');
+    const storage=getStorage();const tankId=document.getElementById('te-id').value.trim()||'tank_'+Date.now();
+    const sRef=ref(storage,`tanks/${tankId}_${file.name}`);
+    const task=uploadBytesResumable(sRef,file);
+    const url=await new Promise((res,rej)=>task.on('state_changed',null,rej,async()=>res(await getDownloadURL(task.snapshot.ref))));
+    document.getElementById('te-img-url').value=url;const prev=document.getElementById('te-img-preview');prev.src=url;prev.style.display='block';
+    showMsg(msgEl,'✅ Завантажено!','ok');
+  }catch(e){showMsg(msgEl,'Помилка: '+e.message,'err');}
+};
+
+window.saveTank=async function(){
+  const msgEl=document.getElementById('te-msg');
+  const rawId=document.getElementById('te-id').value.trim();
+  const id=editingTankId||rawId.toLowerCase().replace(/\s+/g,'-');
+  const name=document.getElementById('te-name').value.trim();
+  if(!id){showMsg(msgEl,'Введи ID','err');return;}if(!name){showMsg(msgEl,'Введи назву','err');return;}
+  const perks=[0,1,2].map(i=>({icon:document.getElementById(`te-perk${i}-icon`)?.value.trim()||'',name:document.getElementById(`te-perk${i}-name`)?.value.trim()||'',desc:document.getElementById(`te-perk${i}-desc`)?.value.trim()||''})).filter(p=>p.name);
+  const data={name,emoji:document.getElementById('te-emoji').value.trim()||'🚀',nation:document.getElementById('te-nation').value.trim(),faction:document.getElementById('te-faction').value,tankClass:document.getElementById('te-class').value,tier:parseInt(document.getElementById('te-tier').value),comingSoon:document.getElementById('te-soon').checked,desc:document.getElementById('te-desc').value.trim(),role:document.getElementById('te-role').value.trim(),imageUrl:document.getElementById('te-img-url').value.trim()||null,stats:{hp:parseInt(document.getElementById('te-hp').value)||50,damage:parseInt(document.getElementById('te-damage').value)||50,armor:parseInt(document.getElementById('te-armor').value)||50,speed:parseInt(document.getElementById('te-speed').value)||50,view:parseInt(document.getElementById('te-view').value)||50,masking:parseInt(document.getElementById('te-masking').value)||50},perks,updatedAt:new Date()};
+  try{await setDoc(doc(db,'tanks_db',id),data,{merge:true});showMsg(msgEl,'✅ Збережено!','ok');setTimeout(()=>{closeTankEditor();loadTanksDB();},800);}
+  catch(e){showMsg(msgEl,'Помилка: '+e.message,'err');}
+};
+window.deleteTank=async function(id,name){if(!confirm(`Видалити "${name}"?`))return;try{await deleteDoc(doc(db,'tanks_db',id));showToast('✅ Видалено');loadTanksDB();}catch(e){showToast('Помилка: '+e.message,'error');}};
+
+// ── STREAMERS ─────────────────────────────────────────────────
+const TIER_LABELS={pending:'⏳ Заявка',bronze:'🥉 Партнер',silver:'🥈 Срібний',gold:'🥇 Золотий'};
+const TIER_COLORS={pending:'#e8bc38',bronze:'#cd7f32',silver:'#c0c0c0',gold:'#e8bc38'};
+
+window.loadStreamers=async function(){
+  const list=document.getElementById('streamers-list');if(!list)return;
+  const filter=document.getElementById('streamers-filter')?.value||'pending';
+  list.innerHTML='<div class="loading-row">Завантаження...</div>';
+  try{
+    const q=filter==='all'?query(collection(db,'streamer_applications'),orderBy('createdAt','desc'),limit(50)):query(collection(db,'streamer_applications'),where('status','==',filter),orderBy('createdAt','desc'),limit(50));
+    const snap=await getDocs(q);
+    if(snap.empty){list.innerHTML='<div class="loading-row">Нічого немає</div>';return;}
+    list.innerHTML=`<table><thead><tr><th>Нік</th><th>Аудиторія</th><th>Соцмережі</th><th>Дата</th><th>Статус</th><th>Дія</th></tr></thead><tbody>`+
+    snap.docs.map(d=>{const s=d.data(),date=s.createdAt?.toDate?s.createdAt.toDate().toLocaleDateString('uk-UA'):'—',color=TIER_COLORS[s.status]||'#888';
+      const socials=[s.youtube?`<a href="${s.youtube}" target="_blank" style="color:var(--gold)">YT</a>`:'',s.tiktok?`<a href="${s.tiktok}" target="_blank" style="color:var(--gold)">TK</a>`:'',s.telegram?`<a href="${s.telegram}" target="_blank" style="color:var(--gold)">TG</a>`:''].filter(Boolean).join(' · ');
+      return`<tr><td>${s.nickname||'—'}</td><td style="font-size:12px;color:var(--dim)">${s.audience||'—'}</td><td style="font-size:12px">${socials||'—'}</td><td style="font-size:11px;color:var(--dim)">${date}</td><td><span style="font-size:10px;color:${color}">${TIER_LABELS[s.status]||s.status}</span></td><td><button class="tbl-btn" onclick="openStreamerModal('${d.id}','${s.uid||''}')">Відкрити</button></td></tr>`;
+    }).join('')+'</tbody></table>';
+  }catch(e){list.innerHTML=`<div class="loading-row" style="color:#c07070">${e.message}</div>`;}
+};
+
+window.openStreamerModal=async function(docId,uid){
+  try{
+    const snap=await getDoc(doc(db,'streamer_applications',docId));if(!snap.exists())return;const s=snap.data();
+    document.getElementById('sm-nick').textContent=s.nickname||'—';
+    document.getElementById('sm-body').innerHTML=`
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Аудиторія: ${s.audience||'—'}</div>
+        ${s.youtube?`<div style="font-size:12px;margin-bottom:4px">📺 <a href="${s.youtube}" target="_blank" style="color:var(--gold)">${s.youtube}</a></div>`:''}
+        ${s.tiktok?`<div style="font-size:12px;margin-bottom:4px">📱 <a href="${s.tiktok}" target="_blank" style="color:var(--gold)">${s.tiktok}</a></div>`:''}
+        ${s.telegram?`<div style="font-size:12px;margin-bottom:4px">✈️ <a href="${s.telegram}" target="_blank" style="color:var(--gold)">${s.telegram}</a></div>`:''}
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--border);padding:14px;margin-bottom:20px;font-size:13px;line-height:1.7">${s.about||'—'}</div>
+      <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Рівень партнера</label>
+        <select id="sm-tier" class="admin-input" style="width:200px">
+          <option value="pending" ${s.status==='pending'?'selected':''}>⏳ Заявка</option>
+          <option value="bronze" ${s.status==='bronze'?'selected':''}>🥉 Партнер</option>
+          <option value="silver" ${s.status==='silver'?'selected':''}>🥈 Срібний</option>
+          <option value="gold" ${s.status==='gold'?'selected':''}>🥇 Золотий</option>
+          <option value="rejected" ${s.status==='rejected'?'selected':''}>❌ Відхилено</option>
+        </select></div>
+      <div style="display:flex;gap:10px">
+        <button class="admin-btn" onclick="approveStreamer('${docId}','${uid}')">💾 Зберегти</button>
+        <button class="admin-btn secondary" onclick="closeStreamerModal()">Закрити</button>
+      </div>`;
+    document.getElementById('streamer-modal').style.display='flex';document.body.style.overflow='hidden';
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+
+window.approveStreamer=async function(docId,uid){
+  const tier=document.getElementById('sm-tier').value;
+  try{
+    await updateDoc(doc(db,'streamer_applications',docId),{status:tier,updatedAt:new Date()});
+    if(uid&&tier!=='pending'&&tier!=='rejected'){const pSnap=await getDoc(doc(db,'players',uid));if(pSnap.exists()){const pd=pSnap.data();const code=pd.streamerCode||('STREAM_'+(pd.nickname||'').toUpperCase().slice(0,8));await updateDoc(doc(db,'players',uid),{streamerStatus:tier,streamerCode:code,streamerApprovedAt:new Date()});}}
+    else if(uid&&tier==='rejected'){await updateDoc(doc(db,'players',uid),{streamerStatus:'none'});}
+    await addDoc(collection(db,'moderation_log'),{action:'streamer_'+tier,adminNick:currentAdmin?.nickname||'Адмін',target:uid,details:TIER_LABELS[tier]||tier,createdAt:new Date()});
+    showToast('✅ Оновлено');closeStreamerModal();loadStreamers();
+  }catch(e){showToast('Помилка: '+e.message,'error');}
+};
+window.closeStreamerModal=function(){document.getElementById('streamer-modal').style.display='none';document.body.style.overflow='';};
+
+// ── LOGS ──────────────────────────────────────────────────────
+window.loadLogs=async function(){
+  const list=document.getElementById('logs-list');if(!list)return;
+  const fv=document.getElementById('log-action-filter')?.value||'all';
+  try{
+    const q=fv==='all'?query(collection(db,'moderation_log'),orderBy('createdAt','desc'),limit(50)):query(collection(db,'moderation_log'),where('action','>=',fv),where('action','<=',fv+'\uf8ff'),orderBy('action'),limit(50));
+    const snap=await getDocs(q);
+    if(snap.empty){list.innerHTML='<div class="loading-row">Логів немає</div>';return;}
+    const ac=a=>a.includes('ban')?'#c07070':a.includes('give')?'#4aaa5a':a.includes('forum')?'#a070cc':'var(--gold)';
+    list.innerHTML='<table><thead><tr><th>Час</th><th>Адмін</th><th>Дія</th><th>Ціль</th><th>Деталі</th></tr></thead><tbody>'+
+    snap.docs.map(d=>{const l=d.data(),t=l.createdAt?.toDate?l.createdAt.toDate().toLocaleString('uk-UA'):'—';
+      return`<tr><td style="font-size:11px;color:var(--dim)">${t}</td><td style="font-size:12px">${l.adminNick||'—'}</td><td style="color:${ac(l.action||'')};font-size:11px">${l.action||'—'}</td><td style="font-size:12px">${l.targetNick||l.target||'—'}</td><td style="font-size:11px;color:var(--dim)">${l.details||l.reason||'—'}</td></tr>`;
+    }).join('')+'</tbody></table>';
+  }catch(e){list.innerHTML='<div class="loading-row" style="color:#c07070">'+e.message+'</div>';}
+};
+
+// ── HELPERS ───────────────────────────────────────────────────
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(type?' '+type:'');setTimeout(()=>t.className='',3000);}
+function showMsg(el,text,type){el.textContent=text;el.style.display='block';el.style.cssText+=type==='ok'?';color:#4aaa5a;background:rgba(30,80,30,0.2);border-color:#4aaa5a':';color:#c07070;background:rgba(120,30,30,0.15);border-color:#aa2020';}
+window.showToast=showToast;
+window.adminSignOut=()=>signOut(auth).then(()=>window.location.href='profile.html');
+
+window.showSection=function(name){
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('section-'+name);if(el)el.classList.add('active');
+  const btn=document.querySelector(`.sidebar-item[data-section="${name}"]`);if(btn)btn.classList.add('active');
+  if(name==='logs')loadLogs();
+  if(name==='bans')loadBans();
+  if(name==='announce')loadAnnHistory();
+  if(name==='analytics')loadAnalytics();
+};
+
+setTimeout(loadAnnHistory,2000);
+</script>
 </body>
 </html>
