@@ -252,12 +252,28 @@
       // 2) fallback: query players where clanId == clanId
       const mEl=document.getElementById('clan-members-list');
 
+      // Права управління
+      const isLeader = c.leaderId === myUid;
+      const isOfficer = c.officers?.includes(myUid);
+      const canManage = isLeader || isOfficer;
+      window._clanId = clanId;
+      window._clanData = c;
+      window._isLeader = isLeader;
+      window._isOfficer = isOfficer;
+
+      // Показати/сховати кнопку управління кланом
+      const mgmtBtn = document.getElementById('clan-manage-btn');
+      if(mgmtBtn) mgmtBtn.style.display = canManage ? 'inline-flex' : 'none';
+
       function renderMembersTable(members){
         if(!members.length){
           mEl.innerHTML='<div style="font-size:12px;color:var(--dim)">Список порожній</div>';
           return;
         }
         members.sort((a,b)=>(b.rating||0)-(a.rating||0));
+        const actTh = canManage
+          ? `<th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">Дії</th>`
+          : '';
         mEl.innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:380px">
           <thead><tr>
             <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px">Гравець</th>
@@ -265,6 +281,7 @@
             <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Рейтинг</th>
             <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Бої</th>
             <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">WR</th>
+            ${actTh}
           </tr></thead><tbody>`+
           members.map(m=>{
             const isL=c.leaderId===m.uid,isO=c.officers?.includes(m.uid);
@@ -272,15 +289,23 @@
             const rc=isL?'var(--gold)':isO?'var(--steel)':'var(--dim)';
             const isMe=m.uid===myUid;
             const wr=m.battles>0?Math.round(m.wins/m.battles*100):0;
+            const canAct = canManage && !isMe && (isLeader || (!isL && !isO));
+            const nick_esc = (m.nickname||'').replace(/'/g,"\\'");
+            const actTd = canManage
+              ? `<td style="padding:8px 10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:center">${canAct
+                  ? `<button onclick="openClanMemberModal('${m.uid}','${nick_esc}','${clanId}')" style="padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:10px;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">Профіль ↗</button>`
+                  : ''}</td>`
+              : '';
             return`<tr style="${isMe?'background:rgba(232,188,56,0.04)':''}">
               <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3)">
                 <span style="font-size:13px;color:${isMe?'var(--gold)':'#fff'}">${m.nickname||'—'}${isMe?' ✦':''}</span>
-                <div style="font-size:10px;color:var(--dim)">LVL ${m.level||1}</div>
+                <div style="font-size:10px;color:var(--dim)">LVL ${m.level||1} · ${m.clanContrib?'⭐ '+m.clanContrib:'нема вкладу'}</div>
               </td>
               <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);font-size:11px;color:${rc}">${role}</td>
               <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-family:var(--font-d);font-size:10px;color:var(--gold)">${(m.rating||0).toLocaleString()}</td>
               <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:var(--dim)">${m.battles||0}</td>
               <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:${wr>=50?'#4aaa5a':'var(--dim)'}">${wr}%</td>
+              ${actTd}
             </tr>`;
           }).join('')+
         '</tbody></table>';
@@ -1349,7 +1374,10 @@
 
           <!-- Members -->
           <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:2px;">
-            <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">👥 ЧЛЕНИ КЛАНУ</div>
+            <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+              <span>👥 ЧЛЕНИ КЛАНУ</span>
+              <button id="clan-manage-btn" onclick="openClanManagePanel()" style="display:none;align-items:center;gap:6px;padding:5px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-size:10px;cursor:pointer;font-family:inherit;transition:background .2s" onmouseover="this.style.background='rgba(232,188,56,0.1)'" onmouseout="this.style.background='transparent'">⚙️ Управляти</button>
+            </div>
             <div id="clan-members-list" style="overflow-x:auto;">
               <div style="color:var(--dim);font-size:12px">Завантаження...</div>
             </div>
@@ -3515,6 +3543,371 @@ window.showTab = function(name) {
     </button>
   </div>
 </div>
+
+
+<!-- ═══ CLAN MEMBER MODAL ═══ -->
+<div id="clan-member-modal" onclick="if(event.target===this)closeClanMemberModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(520px,96vw);max-height:90vh;overflow-y:auto;">
+
+    <!-- Header -->
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1">
+      <div>
+        <div style="font-family:var(--font-d);font-size:13px;color:#fff" id="cmm-nick">—</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:3px" id="cmm-role-label">Член</div>
+      </div>
+      <button onclick="closeClanMemberModal()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">✕</button>
+    </div>
+
+    <div style="padding:20px 24px">
+
+      <!-- Внесок у клан -->
+      <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ВНЕСОК У КЛАН</div>
+      <div id="cmm-contrib-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--gold)" id="cmm-contrib">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">⭐ Внесок</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--steel)" id="cmm-clan-battles">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">⚔️ Кланові бої</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:#4aaa5a" id="cmm-clan-wins">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">🏆 Перемог</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:#e88038" id="cmm-donated">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">🏦 Донатів</div>
+        </div>
+      </div>
+
+      <!-- Загальна статистика -->
+      <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ЗАГАЛЬНА СТАТИСТИКА</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--gold)" id="cmm-rating">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">🏆 Рейтинг</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--text)" id="cmm-lvl">1</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">⚡ Рівень</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--text)" id="cmm-battles">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">🎮 Всього боїв</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:#4aaa5a" id="cmm-wr">0%</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">📊 WR</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--steel)" id="cmm-kills">0</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">💀 Знищено</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px;text-align:center">
+          <div style="font-family:var(--font-d);font-size:16px;color:var(--dim)" id="cmm-joined">—</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">📅 В клані з</div>
+        </div>
+      </div>
+
+      <!-- Нотатка лідера -->
+      <div id="cmm-note-wrap" style="display:none;margin-bottom:20px">
+        <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">НОТАТКА ЛІДЕРА</div>
+        <textarea id="cmm-note" placeholder="Внутрішня нотатка про гравця..." style="width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;resize:vertical;min-height:60px;outline:none;font-family:inherit;line-height:1.6;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+
+      <!-- Дії (тільки лідер / офіцер) -->
+      <div id="cmm-actions" style="display:none">
+        <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">УПРАВЛІННЯ</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button id="cmm-officer-btn" onclick="toggleOfficer()" style="padding:8px 16px;background:transparent;border:1px solid var(--steel);color:var(--steel);font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(142,176,204,0.1)'" onmouseout="this.style.background='transparent'">⭐ Призначити офіцером</button>
+          <button id="cmm-transfer-btn" onclick="confirmTransferLeader()" style="display:none;padding:8px 16px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(232,188,56,0.1)'" onmouseout="this.style.background='transparent'">👑 Передати лідерство</button>
+          <button onclick="saveClanMemberNote()" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">💾 Зберегти нотатку</button>
+          <button onclick="confirmKickMember()" style="padding:8px 16px;background:transparent;border:1px solid rgba(170,32,32,0.5);color:#c07070;font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit" onmouseover="this.style.background='rgba(170,32,32,0.1)'" onmouseout="this.style.background='transparent'">🚫 Виключити з клану</button>
+        </div>
+        <div id="cmm-msg" style="display:none;margin-top:12px;padding:10px 14px;font-size:12px;border:1px solid var(--border)"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CLAN MANAGE PANEL (quick stats) ═══ -->
+<div id="clan-manage-panel" onclick="if(event.target===this)closeClanManagePanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px">
+  <div style="background:var(--card);border:1px solid var(--border);width:min(480px,96vw);max-height:88vh;overflow-y:auto;">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card)">
+      <span style="font-family:var(--font-d);font-size:10px;color:var(--gold)">⚙️ Управління кланом</span>
+      <button onclick="closeClanManagePanel()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:30px;height:30px;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px 24px">
+      <!-- Швидка статистика по активності -->
+      <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">АКТИВНІСТЬ ЧЛЕНІВ</div>
+      <div id="clan-activity-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+        <div style="color:var(--dim);font-size:12px">Завантаження...</div>
+      </div>
+      <!-- Топ донатери -->
+      <div style="font-family:var(--font-d);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">ТОП ВНЕСКІВ ⭐</div>
+      <div id="clan-donors-list" style="display:flex;flex-direction:column;gap:4px">
+        <div style="color:var(--dim);font-size:12px">Завантаження...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CLAN MEMBER MODAL ─────────────────────────────────────────
+let _cmmUid = null;
+
+window.openClanMemberModal = async function(uid, nick, clanId) {
+  _cmmUid = uid;
+  const c = window._clanData || {};
+  const isLeader = window._isLeader;
+  const isOfficer = window._isOfficer;
+  const canManage = isLeader || isOfficer;
+
+  // Базова інфо
+  document.getElementById('cmm-nick').textContent = nick;
+  const isO = (c.officers||[]).includes(uid);
+  const roleLabel = isO ? '⭐ Офіцер' : 'Член';
+  const roleLabelEl = document.getElementById('cmm-role-label');
+  roleLabelEl.textContent = roleLabel;
+  roleLabelEl.style.color = isO ? 'var(--steel)' : 'var(--dim)';
+
+  // Дії — тільки для лідера/офіцера
+  document.getElementById('cmm-actions').style.display = canManage ? 'block' : 'none';
+  document.getElementById('cmm-note-wrap').style.display = canManage ? 'block' : 'none';
+
+  // Кнопки для лідера
+  if (isLeader) {
+    const offBtn = document.getElementById('cmm-officer-btn');
+    offBtn.textContent = isO ? '⭐ Зняти офіцера' : '⭐ Призначити офіцером';
+    offBtn.style.borderColor = isO ? '#c07070' : 'var(--steel)';
+    offBtn.style.color = isO ? '#c07070' : 'var(--steel)';
+    document.getElementById('cmm-transfer-btn').style.display = 'inline-block';
+  } else {
+    document.getElementById('cmm-transfer-btn').style.display = 'none';
+  }
+
+  document.getElementById('cmm-msg').style.display = 'none';
+
+  // Дефолти
+  ['cmm-contrib','cmm-clan-battles','cmm-clan-wins','cmm-donated','cmm-rating','cmm-battles'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.textContent = '…';
+  });
+  document.getElementById('cmm-lvl').textContent = '…';
+  document.getElementById('cmm-wr').textContent = '…';
+  document.getElementById('cmm-joined').textContent = '…';
+  document.getElementById('cmm-note').value = '';
+
+  document.getElementById('clan-member-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Завантаження даних
+  try {
+    const db = window._db;
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snap = await getDoc(doc(db, 'players', uid));
+    if (!snap.exists()) return;
+    const p = snap.data();
+
+    const wr = p.battles > 0 ? Math.round(p.wins / p.battles * 100) : 0;
+    document.getElementById('cmm-rating').textContent = (p.rating||0).toLocaleString();
+    document.getElementById('cmm-lvl').textContent = p.level||1;
+    document.getElementById('cmm-battles').textContent = (p.battles||0).toLocaleString();
+    document.getElementById('cmm-wr').textContent = wr + '%';
+    document.getElementById('cmm-wr').style.color = wr >= 50 ? '#4aaa5a' : 'var(--dim)';
+    document.getElementById('cmm-kills').textContent = (p.kills||0).toLocaleString();
+
+    // Кланові поля
+    document.getElementById('cmm-contrib').textContent = (p.clanContrib||0).toLocaleString();
+    document.getElementById('cmm-clan-battles').textContent = (p.clanBattles||0).toLocaleString();
+    document.getElementById('cmm-clan-wins').textContent = (p.clanWins||0).toLocaleString();
+    document.getElementById('cmm-donated').textContent = (p.clanDonated||0).toLocaleString();
+
+    // Дата вступу в клан
+    if (p.clanJoinedAt?.toDate) {
+      document.getElementById('cmm-joined').textContent = p.clanJoinedAt.toDate().toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'});
+    } else {
+      document.getElementById('cmm-joined').textContent = '—';
+    }
+
+    // Нотатка лідера
+    if (canManage) {
+      document.getElementById('cmm-note').value = p.clanLeaderNote || '';
+    }
+  } catch(e) {
+    console.error('openClanMemberModal:', e);
+    showCmmMsg('Помилка завантаження: ' + e.message, false);
+  }
+};
+
+window.closeClanMemberModal = function() {
+  document.getElementById('clan-member-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  _cmmUid = null;
+};
+
+window.saveClanMemberNote = async function() {
+  if (!_cmmUid) return;
+  const note = document.getElementById('cmm-note').value.trim();
+  try {
+    const db = window._db;
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(db, 'players', _cmmUid), { clanLeaderNote: note });
+    showCmmMsg('✅ Нотатку збережено', true);
+  } catch(e) { showCmmMsg('Помилка: ' + e.message, false); }
+};
+
+window.toggleOfficer = async function() {
+  if (!_cmmUid || !window._isLeader) return;
+  const clanId = window._clanId;
+  const c = window._clanData || {};
+  const officers = c.officers || [];
+  const isO = officers.includes(_cmmUid);
+  const newOfficers = isO ? officers.filter(u => u !== _cmmUid) : [...officers, _cmmUid];
+  try {
+    const db = window._db;
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(db, 'clans', clanId), { officers: newOfficers });
+    window._clanData.officers = newOfficers;
+    const btn = document.getElementById('cmm-officer-btn');
+    const nowO = !isO;
+    btn.textContent = nowO ? '⭐ Зняти офіцера' : '⭐ Призначити офіцером';
+    btn.style.borderColor = nowO ? '#c07070' : 'var(--steel)';
+    btn.style.color = nowO ? '#c07070' : 'var(--steel)';
+    const roleEl = document.getElementById('cmm-role-label');
+    roleEl.textContent = nowO ? '⭐ Офіцер' : 'Член';
+    roleEl.style.color = nowO ? 'var(--steel)' : 'var(--dim)';
+    showCmmMsg(nowO ? '✅ Призначено офіцером' : '✅ Знято з офіцера', true);
+    // Оновлюємо таблицю
+    setTimeout(() => { if(window._clanId) document.querySelector('[onclick*="loadClanData"]')?.click(); }, 800);
+  } catch(e) { showCmmMsg('Помилка: ' + e.message, false); }
+};
+
+window.confirmTransferLeader = function() {
+  const nick = document.getElementById('cmm-nick').textContent;
+  if (!confirm(`Передати лідерство гравцю ${nick}? Ти стаєш офіцером. Це незворотно!`)) return;
+  transferLeader();
+};
+
+window.transferLeader = async function() {
+  if (!_cmmUid || !window._isLeader) return;
+  const clanId = window._clanId;
+  const myUid = window._currentUser?.uid;
+  const c = window._clanData || {};
+  // Новий лідер, старий лідер стає офіцером
+  const officers = [...(c.officers||[]).filter(u => u !== _cmmUid), myUid];
+  try {
+    const db = window._db;
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(db, 'clans', clanId), { leaderId: _cmmUid, officers });
+    showCmmMsg('✅ Лідерство передано! Перезавантаж сторінку.', true);
+    window._clanData.leaderId = _cmmUid;
+    window._isLeader = false;
+    window._isOfficer = true;
+    document.getElementById('cmm-transfer-btn').style.display = 'none';
+  } catch(e) { showCmmMsg('Помилка: ' + e.message, false); }
+};
+
+window.confirmKickMember = function() {
+  const nick = document.getElementById('cmm-nick').textContent;
+  if (!confirm(`Виключити ${nick} з клану?`)) return;
+  kickMember();
+};
+
+window.kickMember = async function() {
+  if (!_cmmUid) return;
+  const clanId = window._clanId;
+  const c = window._clanData || {};
+  const newMembers = (c.members||[]).filter(u => u !== _cmmUid);
+  const newOfficers = (c.officers||[]).filter(u => u !== _cmmUid);
+  try {
+    const db = window._db;
+    const { doc, updateDoc, deleteField } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(db, 'clans', clanId), { members: newMembers, officers: newOfficers });
+    await updateDoc(doc(db, 'players', _cmmUid), { clanId: deleteField() });
+    window._clanData.members = newMembers;
+    window._clanData.officers = newOfficers;
+    showCmmMsg('✅ Гравця виключено з клану', true);
+    setTimeout(() => closeClanMemberModal(), 1200);
+    // Оновити рахунок членів
+    const el = document.getElementById('clan-members');
+    if (el) el.textContent = newMembers.length + '/' + (10 + (c.level||1)*5);
+  } catch(e) { showCmmMsg('Помилка: ' + e.message, false); }
+};
+
+function showCmmMsg(text, ok) {
+  const el = document.getElementById('cmm-msg');
+  el.textContent = text;
+  el.style.display = 'block';
+  el.style.color = ok ? '#4aaa5a' : '#c07070';
+  el.style.borderColor = ok ? 'rgba(74,170,90,0.4)' : 'rgba(170,32,32,0.4)';
+  el.style.background = ok ? 'rgba(30,80,30,0.15)' : 'rgba(120,30,30,0.1)';
+}
+
+// ── CLAN MANAGE PANEL ─────────────────────────────────────────
+window.openClanManagePanel = async function() {
+  document.getElementById('clan-manage-panel').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  const c = window._clanData || {};
+  const clanId = window._clanId;
+  const memberUids = (c.members||[]).filter(u => typeof u === 'string');
+
+  if (!memberUids.length) {
+    document.getElementById('clan-activity-list').innerHTML = '<div style="color:var(--dim);font-size:12px">Немає членів</div>';
+    document.getElementById('clan-donors-list').innerHTML = '<div style="color:var(--dim);font-size:12px">—</div>';
+    return;
+  }
+
+  try {
+    const db = window._db;
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snaps = await Promise.all(memberUids.slice(0,25).map(uid => getDoc(doc(db,'players',uid))));
+    const members = snaps.filter(s => s.exists()).map(s => ({uid:s.id,...s.data()}));
+
+    // Активність — сортуємо по кількості боїв
+    const byBattles = [...members].sort((a,b) => (b.battles||0) - (a.battles||0));
+    const actEl = document.getElementById('clan-activity-list');
+    actEl.innerHTML = byBattles.map((m,i) => {
+      const wr = m.battles > 0 ? Math.round(m.wins/m.battles*100) : 0;
+      const isL = c.leaderId === m.uid, isO = (c.officers||[]).includes(m.uid);
+      const role = isL ? '👑' : isO ? '⭐' : '';
+      const wrColor = wr >= 55 ? '#4aaa5a' : wr >= 45 ? 'var(--text)' : '#c07070';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border)">
+        <span style="font-family:var(--font-d);font-size:9px;color:var(--dim);width:16px">${i+1}</span>
+        <span style="font-size:13px;color:#fff;flex:1">${role} ${m.nickname||'—'}</span>
+        <span style="font-size:11px;color:var(--dim)">${m.battles||0} боїв</span>
+        <span style="font-size:11px;color:${wrColor}">${wr}%</span>
+        <span style="font-size:11px;color:var(--gold);font-family:var(--font-d)">★ ${(m.rating||0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+
+    // Топ донатери — по clanContrib
+    const byContrib = [...members].filter(m => m.clanContrib > 0).sort((a,b) => (b.clanContrib||0) - (a.clanContrib||0));
+    const donEl = document.getElementById('clan-donors-list');
+    if (!byContrib.length) {
+      donEl.innerHTML = '<div style="color:var(--dim);font-size:12px">Ще нікого не внесено</div>';
+    } else {
+      donEl.innerHTML = byContrib.map((m,i) => {
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border)">
+          <span style="font-size:14px;width:20px">${medal||'·'}</span>
+          <span style="font-size:13px;color:#fff;flex:1">${m.nickname||'—'}</span>
+          <span style="font-family:var(--font-d);font-size:10px;color:var(--gold)">⭐ ${(m.clanContrib||0).toLocaleString()}</span>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {
+    document.getElementById('clan-activity-list').innerHTML = `<div style="color:#c07070;font-size:12px">${e.message}</div>`;
+  }
+};
+
+window.closeClanManagePanel = function() {
+  document.getElementById('clan-manage-panel').style.display = 'none';
+  document.body.style.overflow = '';
+};
+</script>
 
 </body>
 </html>
