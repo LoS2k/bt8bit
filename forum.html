@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<meta name="theme-color" content="#060a10">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="BT 8BIT — Форум гравців. Обговорення, новини, ідеї та звіти про баги.">
+<title>BT 8BIT — Форум</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="192x192" href="favicon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5175223149552960" crossorigin="anonymous"></script>
+
+<style>
+:root {
+  --bg:#060a10; --surf:#0d1520; --card:#111e2e; --border:#1a3050;
+  --gold:#e8bc38; --gold2:#c49a20; --steel:#8eb0cc; --text:#d4cdb8; --dim:#6a7a8a;
+  --green:#4aaa5a; --red:#aa2020;
+  --px:'Press Start 2P',monospace; --rb:'Roboto',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--rb);overflow-x:hidden;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(6,10,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo img{width:40px;height:40px;image-rendering:pixelated;}
+.nav-logo-text{font-family:var(--px);font-size:13px;color:var(--gold);letter-spacing:2px;}
+.nav-links{display:flex;gap:24px;list-style:none;}
+.nav-links a{font-family:var(--px);color:var(--dim);text-decoration:none;font-size:9px;letter-spacing:1px;transition:color .2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.btn-cab{padding:8px 18px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:9px;font-family:var(--px);cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-cab:hover{background:var(--gold);color:var(--bg);}
+.pixel-div{height:3px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 8px,transparent 8px,transparent 16px);opacity:.3;}
+
+/* BURGER */
+.burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+.burger span{display:block;width:22px;height:2px;background:var(--dim);}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(6,10,16,0.98);border-bottom:1px solid var(--border);z-index:99;padding:8px 0;}
+.mobile-menu a{display:block;padding:14px 24px;font-family:var(--px);font-size:9px;color:var(--dim);text-decoration:none;border-bottom:1px solid rgba(26,48,80,0.3);}
+.mobile-menu a:hover{color:var(--gold);}
+.mobile-menu.open{display:block;}
+
+/* LAYOUT */
+.forum-wrap{max-width:1200px;margin:0 auto;padding:32px 40px 60px;display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
+
+/* PAGE HEADER */
+.page-header{margin-bottom:28px;grid-column:1/-1;}
+.page-eye{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:3px;display:block;margin-bottom:10px;}
+.page-title{font-family:var(--px);font-size:clamp(14px,3vw,22px);color:#fff;margin-bottom:8px;}
+.page-desc{font-family:var(--rb);color:var(--dim);font-size:14px;}
+
+/* TABS */
+.forum-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px;overflow-x:auto;scrollbar-width:none;}
+.forum-tabs::-webkit-scrollbar{display:none;}
+.ftab{padding:11px 20px;background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:var(--px);font-size:8px;letter-spacing:1px;cursor:pointer;white-space:nowrap;transition:all .2s;margin-bottom:-2px;}
+.ftab:hover{color:var(--text);}
+.ftab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* FORUM SECTION */
+.forum-section{display:none;}
+.forum-section.active{display:block;}
+
+/* CATEGORY HEADER */
+.cat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.cat-title{font-family:var(--px);font-size:10px;color:#fff;}
+.cat-count{font-size:12px;color:var(--dim);}
+.btn-new-post{padding:9px 18px;background:var(--gold);color:var(--bg);border:none;font-family:var(--px);font-size:9px;cursor:pointer;transition:background .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-new-post:hover{background:var(--gold2);}
+
+/* POST FILTERS */
+.post-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.pf-btn{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;cursor:pointer;transition:all .15s;}
+.pf-btn:hover{border-color:var(--steel);color:var(--text);}
+.pf-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,188,56,0.07);}
+
+/* POST LIST */
+.post-list{display:flex;flex-direction:column;gap:2px;background:var(--border);}
+.post-row{background:var(--card);padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;transition:background .15s;cursor:pointer;}
+.post-row:hover{background:var(--surf);}
+.post-row.pinned{border-left:3px solid var(--gold);}
+.post-row.locked{opacity:.7;}
+.post-avatar{width:42px;height:42px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:16px;color:var(--gold);flex-shrink:0;}
+.post-main{}
+.post-badges{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.post-badge{font-family:var(--px);font-size:7px;padding:3px 8px;border:1px solid;white-space:nowrap;}
+.post-badge.pinned{color:var(--gold);border-color:rgba(232,188,56,0.4);background:rgba(232,188,56,0.07);}
+.post-badge.hot{color:#e88038;border-color:rgba(232,128,56,0.4);background:rgba(232,128,56,0.07);}
+.post-badge.new{color:var(--green);border-color:rgba(74,170,90,0.4);background:rgba(74,170,90,0.07);}
+.post-badge.locked{color:var(--dim);border-color:var(--border);}
+.post-badge.update{color:var(--steel);border-color:rgba(142,176,204,0.4);}
+.post-badge.bug{color:#e84040;border-color:rgba(232,64,64,0.4);}
+.post-badge.idea{color:#a070cc;border-color:rgba(160,112,204,0.4);}
+.post-title{font-size:15px;color:#fff;margin-bottom:6px;line-height:1.4;}
+.post-meta{font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;}
+.post-meta span{display:flex;align-items:center;gap:4px;}
+.post-stats{text-align:right;flex-shrink:0;}
+.post-replies{font-family:var(--px);font-size:13px;color:var(--gold);display:block;margin-bottom:4px;}
+.post-views{font-size:11px;color:var(--dim);}
+
+/* POST DETAIL */
+#post-detail{display:none;}
+.back-btn{font-family:var(--px);font-size:9px;color:var(--dim);background:transparent;border:1px solid var(--border);padding:8px 16px;cursor:pointer;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;transition:all .2s;}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
+.post-detail-header{background:var(--card);border:1px solid var(--border);padding:28px 28px 20px;margin-bottom:2px;}
+.post-detail-title{font-family:var(--px);font-size:clamp(12px,2.5vw,18px);color:#fff;margin-bottom:16px;line-height:1.5;}
+.post-detail-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.post-author{display:flex;align-items:center;gap:10px;}
+.post-author-av{width:36px;height:36px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:13px;color:var(--gold);}
+.post-author-name{font-size:13px;color:#fff;}
+.post-author-role{font-size:10px;color:var(--gold);}
+.post-date{font-size:11px;color:var(--dim);}
+.post-detail-body{font-family:var(--rb);font-size:14px;line-height:1.9;color:var(--text);border-top:1px solid var(--border);padding-top:16px;}
+.post-detail-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+.post-action-btn{padding:7px 14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.post-action-btn:hover{border-color:var(--steel);color:var(--text);}
+.post-action-btn.liked{border-color:var(--gold);color:var(--gold);}
+
+/* COMMENTS */
+.comments-section{margin-top:2px;}
+.comments-header{background:var(--card);border:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.comments-title{font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;}
+.comment-list{display:flex;flex-direction:column;gap:1px;background:var(--border);}
+.comment-row{background:var(--card);padding:16px 20px;display:grid;grid-template-columns:36px 1fr;gap:12px;}
+.comment-row.admin-comment{background:rgba(232,188,56,0.04);border-left:3px solid rgba(232,188,56,0.3);}
+.comment-av{width:36px;height:36px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:13px;color:var(--gold);flex-shrink:0;}
+.comment-body{}
+.comment-author{font-size:13px;color:#fff;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.comment-role-badge{font-family:var(--px);font-size:7px;padding:2px 6px;background:rgba(232,188,56,0.12);color:var(--gold);border:1px solid rgba(232,188,56,0.3);}
+.comment-date{font-size:10px;color:var(--dim);margin-bottom:8px;}
+.comment-text{font-size:13px;color:var(--text);line-height:1.7;}
+.comment-actions{display:flex;gap:10px;margin-top:10px;}
+.comment-like-btn{font-size:11px;color:var(--dim);background:none;border:none;cursor:pointer;transition:color .15s;display:flex;align-items:center;gap:4px;}
+.comment-like-btn:hover,.comment-like-btn.liked{color:var(--gold);}
+.comment-reply-btn{font-size:11px;color:var(--dim);background:none;border:none;cursor:pointer;transition:color .15s;}
+.comment-reply-btn:hover{color:var(--steel);}
+
+/* COMMENT FORM */
+.comment-form{background:var(--card);border:1px solid var(--border);padding:20px;margin-top:2px;}
+.comment-form-title{font-family:var(--px);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;}
+.comment-textarea{width:100%;padding:12px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;font-family:var(--rb);resize:vertical;min-height:100px;outline:none;transition:border-color .2s;line-height:1.7;}
+.comment-textarea:focus{border-color:var(--gold);}
+.comment-textarea::placeholder{color:var(--dim);}
+.comment-form-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;flex-wrap:wrap;}
+.comment-chars{font-size:11px;color:var(--dim);}
+.btn-submit-comment{padding:10px 22px;background:var(--gold);color:var(--bg);border:none;font-family:var(--px);font-size:9px;cursor:pointer;transition:background .2s;}
+.btn-submit-comment:hover{background:var(--gold2);}
+.btn-submit-comment:disabled{opacity:.5;cursor:not-allowed;}
+.login-prompt{font-family:var(--px);font-size:9px;color:var(--dim);padding:16px;text-align:center;background:var(--surf);border:1px dashed var(--border);}
+.login-prompt a{color:var(--gold);text-decoration:none;}
+
+/* NEWS WITH COMMENTS */
+.news-item-ext{background:var(--card);border:1px solid var(--border);margin-bottom:2px;overflow:hidden;}
+.news-item-body{padding:24px 24px 16px;}
+.news-item-tag{display:inline-block;font-family:var(--px);font-size:7px;color:var(--gold);border:1px solid rgba(232,188,56,.3);padding:3px 10px;margin-bottom:12px;}
+.news-item-title{font-family:var(--px);font-size:clamp(10px,2vw,14px);color:#fff;margin-bottom:10px;line-height:1.6;}
+.news-item-date{font-family:var(--px);font-size:7px;color:var(--dim);margin-bottom:12px;}
+.news-item-text{font-family:var(--rb);font-size:13px;color:var(--dim);line-height:1.8;}
+.news-item-footer{padding:12px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.news-toggle-comments{font-family:var(--px);font-size:8px;color:var(--steel);background:transparent;border:1px solid var(--border);padding:7px 14px;cursor:pointer;transition:all .2s;}
+.news-toggle-comments:hover{border-color:var(--steel);color:#fff;}
+.news-comments-count{font-size:12px;color:var(--dim);}
+.news-comments-wrap{display:none;border-top:1px solid var(--border);}
+.news-comments-wrap.open{display:block;}
+
+/* SIDEBAR */
+.forum-sidebar{display:flex;flex-direction:column;gap:16px;position:sticky;top:84px;}
+.sidebar-card{background:var(--card);border:1px solid var(--border);padding:20px;}
+.sidebar-title{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;}
+.sidebar-stat{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(26,48,80,.4);font-size:13px;}
+.sidebar-stat:last-child{border-bottom:none;}
+.sidebar-stat-val{font-family:var(--px);font-size:11px;color:var(--gold);}
+.online-dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:5px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.top-post{padding:10px 0;border-bottom:1px solid rgba(26,48,80,.3);cursor:pointer;transition:color .15s;}
+.top-post:last-child{border-bottom:none;}
+.top-post:hover .tp-title{color:var(--gold);}
+.tp-title{font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.4;transition:color .15s;}
+.tp-meta{font-size:10px;color:var(--dim);}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px;}
+.tag-pill{font-family:var(--px);font-size:7px;padding:5px 10px;border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .15s;}
+.tag-pill:hover{border-color:var(--gold);color:var(--gold);}
+.sidebar-ad{height:250px;background:var(--surf);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;position:relative;}
+.sidebar-ad-lbl{font-family:var(--px);font-size:7px;color:var(--dim);letter-spacing:1px;}
+
+/* NEW POST MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;backdrop-filter:blur(4px);}
+#modal-new-post{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:501;width:min(640px,95vw);max-height:88vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1;}
+.modal-title{font-family:var(--px);font-size:10px;color:var(--gold);}
+.modal-close{background:transparent;border:1px solid var(--border);color:var(--dim);width:32px;height:32px;font-size:16px;cursor:pointer;transition:all .2s;}
+.modal-close:hover{border-color:var(--gold);color:var(--gold);}
+.modal-body{padding:24px;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:11px;color:var(--dim);display:block;margin-bottom:6px;letter-spacing:1px;}
+.form-input{width:100%;padding:11px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;transition:border-color .2s;font-family:var(--rb);}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--dim);}
+.form-select{width:100%;padding:11px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;cursor:pointer;}
+.form-textarea{width:100%;padding:12px 14px;background:var(--surf);border:1px solid var(--border);color:var(--text);font-size:13px;resize:vertical;min-height:140px;outline:none;transition:border-color .2s;font-family:var(--rb);line-height:1.7;}
+.form-textarea:focus{border-color:var(--gold);}
+.form-textarea::placeholder{color:var(--dim);}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{padding:10px 20px;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:12px;cursor:pointer;transition:all .2s;}
+.btn-cancel:hover{border-color:var(--steel);color:var(--text);}
+.btn-publish{padding:10px 24px;background:var(--gold);color:var(--bg);border:none;font-family:var(--px);font-size:9px;cursor:pointer;transition:background .2s;}
+.btn-publish:hover{background:var(--gold2);}
+#post-msg{font-size:12px;padding:10px 12px;margin-bottom:12px;display:none;border:1px solid;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:14px 20px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--text);max-width:320px;transform:translateY(80px);opacity:0;transition:all .3s;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.error{border-color:var(--red);color:#c07070;}
+
+/* AUTH GATE */
+#auth-gate{display:none;min-height:calc(100vh - 64px);align-items:center;justify-content:center;padding:40px 20px;}
+.auth-gate-card{background:var(--card);border:1px solid var(--border);padding:56px 48px;text-align:center;max-width:420px;width:100%;}
+.auth-gate-icon{font-size:56px;margin-bottom:24px;display:block;}
+.auth-gate-title{font-family:var(--px);font-size:16px;color:#fff;margin-bottom:12px;line-height:1.5;}
+.auth-gate-desc{font-family:var(--rb);color:var(--dim);font-size:14px;line-height:1.8;margin-bottom:32px;}
+.auth-gate-btn{display:inline-block;padding:14px 32px;background:var(--gold);color:var(--bg);font-family:var(--px);font-size:10px;letter-spacing:1px;text-decoration:none;transition:background .2s;border:none;cursor:pointer;}
+.auth-gate-btn:hover{background:var(--gold2);}
+.auth-gate-sub{margin-top:16px;font-size:12px;color:var(--dim);}
+.auth-gate-sub a{color:var(--steel);text-decoration:none;}
+.auth-gate-sub a:hover{color:var(--gold);}
+
+/* USER BAR */
+#user-bar{display:none;background:var(--surf);border-bottom:1px solid var(--border);padding:0 40px;}
+.user-bar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;height:52px;}
+.user-bar-av{width:34px;height:34px;background:var(--card);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--px);font-size:13px;color:var(--gold);flex-shrink:0;}
+.user-bar-nick{font-size:13px;color:#fff;font-weight:500;}
+.user-bar-level{font-family:var(--px);font-size:8px;color:var(--gold);background:rgba(232,188,56,0.1);border:1px solid rgba(232,188,56,0.3);padding:3px 8px;}
+.user-bar-sep{width:1px;height:24px;background:var(--border);margin:0 4px;}
+.user-bar-res{display:flex;align-items:center;gap:14px;}
+.user-bar-res span{font-size:12px;color:var(--dim);}
+.user-bar-res b{color:var(--text);font-family:var(--px);font-size:10px;}
+.user-bar-right{margin-left:auto;display:flex;gap:10px;align-items:center;}
+.user-bar-link{font-family:var(--px);font-size:8px;color:var(--dim);text-decoration:none;padding:5px 12px;border:1px solid var(--border);transition:all .2s;}
+.user-bar-link:hover{border-color:var(--gold);color:var(--gold);}
+@media(max-width:768px){
+  #user-bar{padding:0 16px;}
+  .user-bar-res{display:none;}
+  .user-bar-sep{display:none;}
+}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 20px;color:var(--dim);}
+.empty-icon{font-size:40px;margin-bottom:14px;}
+.empty-text{font-size:14px;color:var(--text);margin-bottom:6px;}
+.empty-sub{font-size:12px;}
+
+/* LOAD MORE */
+.load-more-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:var(--px);font-size:8px;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:1px;}
+.load-more-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .forum-wrap{grid-template-columns:1fr;padding:24px 16px 40px;}
+  .forum-sidebar{position:static;display:none;}
+}
+@media(max-width:768px){
+  nav{padding:0 16px;}
+  .nav-links{display:none;}
+  .burger{display:flex;}
+  .post-row{grid-template-columns:auto 1fr;}
+  .post-stats{display:none;}
+  .post-meta span:nth-child(n+3){display:none;}
+}
+@media(max-width:480px){
+  .post-row{grid-template-columns:1fr;gap:10px;}
+  .post-avatar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
+    <span class="nav-logo-text">BT 8BIT</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Головна</a></li>
+    <li><a href="index.html#features">Особливості</a></li>
+    <li><a href="index.html#leaderboard">Рейтинг</a></li>
+    <li><a href="index.html#news">Новини</a></li>
+    <li><a href="forum.html" class="active" style="color:var(--gold)">💬 Форум</a></li>
+    <li><a href="market.html" style="color:var(--green)">🏪 Ринок</a></li>
+    <li><a href="support.html" style="color:var(--steel)">🎫 Підтримка</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn-cab" href="profile.html" id="nav-cab-btn">👤 Кабінет</a>
+    <button class="burger" id="burger-btn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html" onclick="toggleMenu()">Головна</a>
+  <a href="forum.html" onclick="toggleMenu()" style="color:var(--gold)">💬 Форум</a>
+  <a href="market.html" onclick="toggleMenu()" style="color:var(--green)">🏪 Ринок</a>
+  <a href="support.html" onclick="toggleMenu()" style="color:var(--steel)">🎫 Підтримка</a>
+  <a href="profile.html" onclick="toggleMenu()" style="color:var(--gold)">👤 Кабінет →</a>
+</div>
+
+<div class="pixel-div"></div>
+
+<!-- AUTH GATE — shown when not logged in -->
+<div id="auth-gate">
+  <div class="auth-gate-card">
+    <span class="auth-gate-icon">🔒</span>
+    <h2 class="auth-gate-title">Форум тільки для гравців</h2>
+    <p class="auth-gate-desc">Щоб читати теми, писати коментарі та брати участь в обговореннях — увійди в свій акаунт BT 8BIT.</p>
+    <a class="auth-gate-btn" href="profile.html">👤 Увійти / Зареєструватись</a>
+    <p class="auth-gate-sub">Ще немає акаунту? <a href="profile.html">Реєстрація безкоштовна →</a></p>
+  </div>
+</div>
+
+<!-- USER BAR — shown when logged in -->
+<div id="user-bar">
+  <div class="user-bar-inner">
+    <div class="user-bar-av" id="ub-avatar">G</div>
+    <div>
+      <div class="user-bar-nick" id="ub-nick">—</div>
+    </div>
+    <span class="user-bar-level" id="ub-level">LVL 1</span>
+    <div class="user-bar-sep"></div>
+    <div class="user-bar-res">
+      <span>⭐ <b id="ub-gold">0</b></span>
+      <span>⛽ <b id="ub-fuel">0</b></span>
+      <span>🪙 <b id="ub-coins">0</b></span>
+    </div>
+    <div class="user-bar-right">
+      <a class="user-bar-link" href="profile.html">← Кабінет</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="forum-wrap" id="forum-main" style="display:none">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <span class="page-eye">BT 8BIT · СПІЛЬНОТА</span>
+    <h1 class="page-title">💬 Форум</h1>
+    <p class="page-desc">Обговорення гри, новин та оновлень разом із гравцями.</p>
+  </div>
+
+  <!-- LEFT: FORUM CONTENT -->
+  <div>
+
+    <!-- TABS -->
+    <div class="forum-tabs">
+      <button class="ftab active" onclick="showForumTab('news')">📰 Новини</button>
+      <button class="ftab" onclick="showForumTab('general')">💬 Загальне</button>
+      <button class="ftab" onclick="showForumTab('bugs')">🐛 Баги</button>
+      <button class="ftab" onclick="showForumTab('ideas')">💡 Ідеї</button>
+      <button class="ftab" onclick="showForumTab('clans')">🏰 Клани</button>
+      <button class="ftab" onclick="showForumTab('tournaments')">🏆 Турніри</button>
+    </div>
+
+    <!-- ═══ NEWS WITH COMMENTS ═══ -->
+    <div id="tab-news" class="forum-section active">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">📰 Новини та оголошення</div>
+          <div class="cat-count" id="news-count">Завантаження...</div>
+        </div>
+      </div>
+      <div id="news-list">
+        <div class="empty-state"><div class="empty-icon">📰</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ GENERAL ═══ -->
+    <div id="tab-general" class="forum-section">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">💬 Загальне обговорення</div>
+          <div class="cat-count" id="general-count">Завантаження...</div>
+        </div>
+        <button class="btn-new-post" onclick="openNewPost('general')">+ Нова тема</button>
+      </div>
+      <div class="post-filters">
+        <button class="pf-btn active" onclick="setFilter('general','all',this)">Всі</button>
+        <button class="pf-btn" onclick="setFilter('general','hot',this)">🔥 Гарячі</button>
+        <button class="pf-btn" onclick="setFilter('general','new',this)">🆕 Нові</button>
+        <button class="pf-btn" onclick="setFilter('general','pinned',this)">📌 Закріплені</button>
+      </div>
+      <div id="general-list">
+        <div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+      <button class="load-more-btn" id="general-more" onclick="loadMore('general')" style="display:none">▼ Завантажити більше</button>
+    </div>
+
+    <!-- ═══ BUGS ═══ -->
+    <div id="tab-bugs" class="forum-section">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">🐛 Звіти про баги</div>
+          <div class="cat-count" id="bugs-count">Завантаження...</div>
+        </div>
+        <button class="btn-new-post" onclick="openNewPost('bug')">+ Повідомити про баг</button>
+      </div>
+      <div class="post-filters">
+        <button class="pf-btn active" onclick="setFilter('bugs','all',this)">Всі</button>
+        <button class="pf-btn" onclick="setFilter('bugs','open',this)">🔴 Відкриті</button>
+        <button class="pf-btn" onclick="setFilter('bugs','inprogress',this)">🔵 В роботі</button>
+        <button class="pf-btn" onclick="setFilter('bugs','resolved',this)">✅ Вирішені</button>
+      </div>
+      <div id="bugs-list">
+        <div class="empty-state"><div class="empty-icon">🐛</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+      <button class="load-more-btn" id="bugs-more" onclick="loadMore('bugs')" style="display:none">▼ Завантажити більше</button>
+    </div>
+
+    <!-- ═══ IDEAS ═══ -->
+    <div id="tab-ideas" class="forum-section">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">💡 Ідеї та пропозиції</div>
+          <div class="cat-count" id="ideas-count">Завантаження...</div>
+        </div>
+        <button class="btn-new-post" onclick="openNewPost('idea')">+ Запропонувати ідею</button>
+      </div>
+      <div class="post-filters">
+        <button class="pf-btn active" onclick="setFilter('ideas','all',this)">Всі</button>
+        <button class="pf-btn" onclick="setFilter('ideas','hot',this)">🔥 Популярні</button>
+        <button class="pf-btn" onclick="setFilter('ideas','planned',this)">✅ Заплановані</button>
+        <button class="pf-btn" onclick="setFilter('ideas','declined',this)">❌ Відхилені</button>
+      </div>
+      <div id="ideas-list">
+        <div class="empty-state"><div class="empty-icon">💡</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+      <button class="load-more-btn" id="ideas-more" onclick="loadMore('ideas')" style="display:none">▼ Завантажити більше</button>
+    </div>
+
+    <!-- ═══ CLANS ═══ -->
+    <div id="tab-clans" class="forum-section">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">🏰 Пошук клану</div>
+          <div class="cat-count" id="clans-count">Завантаження...</div>
+        </div>
+        <button class="btn-new-post" onclick="openNewPost('clan')">+ Оголошення клану</button>
+      </div>
+      <div id="clans-list">
+        <div class="empty-state"><div class="empty-icon">🏰</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ TOURNAMENTS ═══ -->
+    <div id="tab-tournaments" class="forum-section">
+      <div class="cat-header">
+        <div>
+          <div class="cat-title">🏆 Турніри та події</div>
+          <div class="cat-count" id="tournaments-count">Завантаження...</div>
+        </div>
+      </div>
+      <div id="tournaments-list">
+        <div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-text">Завантаження...</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ POST DETAIL VIEW ═══ -->
+    <div id="post-detail">
+      <button class="back-btn" onclick="closePostDetail()">← Назад до списку</button>
+      <div id="post-detail-content"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: SIDEBAR -->
+  <div class="forum-sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-title">📊 Статистика форуму</div>
+      <div class="sidebar-stat"><span>Всього тем</span><span class="sidebar-stat-val" id="sb-total-posts">—</span></div>
+      <div class="sidebar-stat"><span>Коментарів</span><span class="sidebar-stat-val" id="sb-total-comments">—</span></div>
+      <div class="sidebar-stat"><span>Гравців</span><span class="sidebar-stat-val" id="sb-players">—</span></div>
+      <div class="sidebar-stat"><span><span class="online-dot"></span>Онлайн зараз</span><span class="sidebar-stat-val" style="color:var(--green)" id="sb-online">—</span></div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">🔥 Гарячі теми</div>
+      <div id="sb-hot-posts">
+        <div style="color:var(--dim);font-size:12px;padding:4px 0">Завантаження...</div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">🏷 Теги</div>
+      <div class="tag-cloud">
+        <span class="tag-pill" onclick="searchByTag('танки')">танки</span>
+        <span class="tag-pill" onclick="searchByTag('баланс')">баланс</span>
+        <span class="tag-pill" onclick="searchByTag('клани')">клани</span>
+        <span class="tag-pill" onclick="searchByTag('pvp')">PvP</span>
+        <span class="tag-pill" onclick="searchByTag('оновлення')">оновлення</span>
+        <span class="tag-pill" onclick="searchByTag('турнір')">турнір</span>
+        <span class="tag-pill" onclick="searchByTag('баг')">баг</span>
+        <span class="tag-pill" onclick="searchByTag('ринок')">ринок</span>
+        <span class="tag-pill" onclick="searchByTag('ідея')">ідея</span>
+      </div>
+    </div>
+
+    <div class="sidebar-ad">
+      <span class="sidebar-ad-lbl">РЕКЛАМА 300×250</span>
+    </div>
+
+    <div class="sidebar-card" style="text-align:center;padding:24px 20px;">
+      <div style="font-size:28px;margin-bottom:10px">💬</div>
+      <div style="font-family:var(--px);font-size:9px;color:#fff;margin-bottom:8px">Discord</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">Спілкуйся з гравцями у реальному часі</div>
+      <a href="https://discord.gg/Rezw5FSMUC" target="_blank" style="display:block;padding:9px;background:transparent;border:1px solid #5865f2;color:#5865f2;font-family:var(--px);font-size:8px;text-decoration:none;transition:all .2s;" onmouseover="this.style.background='rgba(88,101,242,0.1)'" onmouseout="this.style.background='transparent'">▶ Відкрити Discord</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- NEW POST MODAL -->
+<div id="modal-overlay" onclick="closeNewPost()"></div>
+<div id="modal-new-post">
+  <div class="modal-header">
+    <span class="modal-title" id="modal-post-title">+ Нова тема</span>
+    <button class="modal-close" onclick="closeNewPost()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="post-msg"></div>
+    <div class="form-group">
+      <label class="form-label">Категорія</label>
+      <select class="form-select" id="new-post-cat">
+        <option value="general">💬 Загальне обговорення</option>
+        <option value="bug">🐛 Баг / Помилка</option>
+        <option value="idea">💡 Ідея / Пропозиція</option>
+        <option value="clan">🏰 Клан</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заголовок</label>
+      <input class="form-input" id="new-post-title" type="text" placeholder="Коротко про що тема..." maxlength="120">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Текст</label>
+      <textarea class="form-textarea" id="new-post-body" placeholder="Розкажи детальніше..." maxlength="5000"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Теги (через кому)</label>
+      <input class="form-input" id="new-post-tags" type="text" placeholder="танки, баланс, pvp" maxlength="100">
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel" onclick="closeNewPost()">Скасувати</button>
+    <button class="btn-publish" onclick="submitPost()">📢 Опублікувати</button>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {
+  getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+  query, orderBy, limit, where, increment, onSnapshot, serverTimestamp, startAfter
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyC3VbYFS0AfyY9TquptvezYu66w-djUkiw",
+  authDomain:"tanksbattles3d.firebaseapp.com",
+  projectId:"tanksbattles3d",
+  storageBucket:"tanksbattles3d.firebasestorage.app",
+  messagingSenderId:"626439210789",
+  appId:"1:626439210789:web:3445ea49a9196e08e27ccc"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+window._db   = db;
+window._auth = auth;
+
+let currentUser = null;
+let currentUserData = null;
+
+// ── AUTH ──────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  window._currentUser = user;
+
+  const gate  = document.getElementById('auth-gate');
+  const main  = document.getElementById('forum-main');
+  const ubar  = document.getElementById('user-bar');
+
+  if (user) {
+    // Logged in — show forum, hide gate
+    gate.style.display  = 'none';
+    main.style.display  = 'grid';
+    ubar.style.display  = 'block';
+
+    try {
+      const snap = await getDoc(doc(db,'players',user.uid));
+      if (snap.exists()) {
+        currentUserData = { uid: user.uid, ...snap.data() };
+        const d = currentUserData;
+        // Fill user bar
+        const nick = d.nickname || user.email?.split('@')[0] || 'Гравець';
+        document.getElementById('ub-avatar').textContent = nick[0].toUpperCase();
+        document.getElementById('ub-nick').textContent   = nick;
+        document.getElementById('ub-level').textContent  = 'LVL ' + (d.level || 1);
+        document.getElementById('ub-gold').textContent   = (d.gold  || 0).toLocaleString('uk-UA');
+        document.getElementById('ub-fuel').textContent   = (d.fuel  || 0).toLocaleString('uk-UA');
+        document.getElementById('ub-coins').textContent  = (d.coins || 0).toLocaleString('uk-UA');
+      }
+    } catch(e) {}
+
+    // Load forum content
+    loadNews();
+    loadPosts('general');
+    updateSidebarStats();
+  } else {
+    // Not logged in — show gate, hide forum
+    gate.style.display  = 'flex';
+    main.style.display  = 'none';
+    ubar.style.display  = 'none';
+    currentUserData = null;
+  }
+  window._currentUserData = currentUserData;
+});
+
+// ── LOAD NEWS ─────────────────────────────────────────────────
+async function loadNews() {
+  const el = document.getElementById('news-list');
+  try {
+    const q = query(collection(db,'news'), orderBy('createdAt','desc'), limit(10));
+    const snap = await getDocs(q);
+    document.getElementById('news-count').textContent = snap.size + ' публікацій';
+    if (snap.empty) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">📰</div><div class="empty-text">Новин ще немає</div><div class="empty-sub">Слідкуй за оновленнями</div></div>`;
+      return;
+    }
+    el.innerHTML = '';
+    for (const d of snap.docs) {
+      const n = d.data();
+      const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'}) : '—';
+      // count comments
+      let commentCount = 0;
+      try {
+        const cSnap = await getDocs(collection(db,'news',d.id,'comments'));
+        commentCount = cSnap.size;
+      } catch(e) {}
+
+      const item = document.createElement('div');
+      item.className = 'news-item-ext';
+      item.innerHTML = `
+        <div class="news-item-body">
+          <span class="news-item-tag">${n.tag||'Оновлення'}</span>
+          <h3 class="news-item-title">${escHtml(n.title||'—')}</h3>
+          <div class="news-item-date">${date} · ${escHtml(n.authorNick||'Адмін')}</div>
+          <p class="news-item-text">${escHtml(n.text||'').replace(/\n/g,'<br>')}</p>
+        </div>
+        <div class="news-item-footer">
+          <button class="news-toggle-comments" onclick="toggleNewsComments('${d.id}',this)">
+            💬 ${commentCount > 0 ? commentCount + ' коментарів' : 'Залишити коментар'}
+          </button>
+          <span class="news-comments-count">${commentCount > 0 ? '💬 ' + commentCount : ''}</span>
+        </div>
+        <div class="news-comments-wrap" id="news-comments-${d.id}"></div>
+      `;
+      el.appendChild(item);
+    }
+    // Update sidebar stats
+    updateSidebarStats();
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка завантаження</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+window.toggleNewsComments = async function(newsId, btn) {
+  const wrap = document.getElementById('news-comments-' + newsId);
+  if (!wrap) return;
+  const isOpen = wrap.classList.contains('open');
+  if (isOpen) { wrap.classList.remove('open'); btn.textContent = '💬 Показати коментарі'; return; }
+  wrap.classList.add('open');
+  wrap.innerHTML = '<div style="padding:16px;color:var(--dim);font-size:12px">Завантаження...</div>';
+  try {
+    const snap = await getDocs(query(collection(db,'news',newsId,'comments'), orderBy('createdAt','asc')));
+    let html = '<div class="comment-list">';
+    snap.forEach(d => {
+      const c = d.data();
+      const date = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('uk-UA') : '—';
+      const isAdmin = ['admin','moderator'].includes(c.role);
+      html += `<div class="comment-row ${isAdmin?'admin-comment':''}">
+        <div class="comment-av">${(c.authorNick||'?')[0].toUpperCase()}</div>
+        <div class="comment-body">
+          <div class="comment-author">${escHtml(c.authorNick||'—')} ${isAdmin?'<span class="comment-role-badge">'+escHtml(c.role)+'</span>':''}</div>
+          <div class="comment-date">${date}</div>
+          <div class="comment-text">${escHtml(c.text||'').replace(/\n/g,'<br>')}</div>
+          <div class="comment-actions">
+            <button class="comment-like-btn" onclick="likeComment('news_comments','${newsId}','${d.id}',this)">👍 ${c.likes||0}</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    // Comment form
+    html += buildCommentForm('news', newsId, snap.size);
+    wrap.innerHTML = html;
+    btn.textContent = `💬 Сховати коментарі`;
+  } catch(e) {
+    wrap.innerHTML = `<div style="padding:16px;color:#c07070;font-size:12px">Помилка: ${e.message}</div>`;
+  }
+};
+
+// ── LOAD POSTS (general, bugs, ideas, clans, tournaments) ─────
+const PAGE_SIZE = 15;
+const lastDocs = {};
+
+async function loadPosts(cat, filter = 'all', append = false) {
+  const listEl = document.getElementById(cat + '-list');
+  const countEl = document.getElementById(cat + '-count');
+  const moreBtn = document.getElementById(cat + '-more');
+  if (!append) { listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Завантаження...</div></div>'; }
+
+  try {
+    let q = query(collection(db,'forum_posts'), where('category','==',cat), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+
+    // Filters
+    if (filter === 'hot')       q = query(collection(db,'forum_posts'), where('category','==',cat), orderBy('likes','desc'), limit(PAGE_SIZE));
+    if (filter === 'new')       q = query(collection(db,'forum_posts'), where('category','==',cat), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'pinned')    q = query(collection(db,'forum_posts'), where('category','==',cat), where('pinned','==',true), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'open')      q = query(collection(db,'forum_posts'), where('category','==',cat), where('status','==','open'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'inprogress')q = query(collection(db,'forum_posts'), where('category','==',cat), where('status','==','inprogress'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'resolved')  q = query(collection(db,'forum_posts'), where('category','==',cat), where('status','==','resolved'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'hot' && cat === 'ideas') q = query(collection(db,'forum_posts'), where('category','==',cat), where('ideaStatus','==','hot'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'planned')   q = query(collection(db,'forum_posts'), where('category','==',cat), where('ideaStatus','==','planned'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+    if (filter === 'declined')  q = query(collection(db,'forum_posts'), where('category','==',cat), where('ideaStatus','==','declined'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
+
+    if (append && lastDocs[cat]) q = query(collection(db,'forum_posts'), where('category','==',cat), orderBy('createdAt','desc'), startAfter(lastDocs[cat]), limit(PAGE_SIZE));
+
+    const snap = await getDocs(q);
+    if (!append && countEl) {
+      // total count
+      const totalSnap = await getDocs(query(collection(db,'forum_posts'), where('category','==',cat)));
+      countEl.textContent = totalSnap.size + ' тем';
+    }
+
+    if (snap.empty && !append) {
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${getCatIcon(cat)}</div><div class="empty-text">Тут ще порожньо</div><div class="empty-sub">Будь першим хто створить тему!</div></div>`;
+      if (moreBtn) moreBtn.style.display = 'none';
+      return;
+    }
+    if (snap.docs.length > 0) lastDocs[cat] = snap.docs[snap.docs.length - 1];
+
+    const listHTML = snap.docs.map(d => {
+      const p = d.data();
+      const date = p.createdAt?.toDate ? formatDate(p.createdAt.toDate()) : '—';
+      const lastReply = p.lastReplyAt?.toDate ? formatDate(p.lastReplyAt.toDate()) : date;
+      const badges = buildPostBadges(p);
+      const statusBadge = buildStatusBadge(p);
+      return `<div class="post-row ${p.pinned?'pinned':''}" onclick="openPostDetail('${d.id}')">
+        <div class="post-avatar">${(p.authorNick||'?')[0].toUpperCase()}</div>
+        <div class="post-main">
+          <div class="post-badges">${badges}${statusBadge}</div>
+          <div class="post-title">${escHtml(p.title||'—')}</div>
+          <div class="post-meta">
+            <span>👤 ${escHtml(p.authorNick||'—')}</span>
+            <span>📅 ${date}</span>
+            <span>💬 ${p.replyCount||0}</span>
+            <span>👁 ${p.views||0}</span>
+            ${p.tags?.length ? '<span>🏷 '+p.tags.slice(0,2).map(t=>escHtml(t)).join(', ')+'</span>' : ''}
+          </div>
+        </div>
+        <div class="post-stats">
+          <span class="post-replies">${p.replyCount||0}</span>
+          <span class="post-views">👁 ${p.views||0}</span>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px">${lastReply}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (!append) listEl.innerHTML = `<div class="post-list">${listHTML}</div>`;
+    else listEl.querySelector('.post-list').insertAdjacentHTML('beforeend', listHTML);
+
+    if (moreBtn) moreBtn.style.display = snap.docs.length < PAGE_SIZE ? 'none' : 'block';
+
+  } catch(e) {
+    console.error(e);
+    if (!append) listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+window.loadMore = function(cat) { loadPosts(cat, 'all', true); };
+
+// ── POST DETAIL ───────────────────────────────────────────────
+window.openPostDetail = async function(postId) {
+  const detailEl = document.getElementById('post-detail');
+  const contentEl = document.getElementById('post-detail-content');
+  // Hide all sections, show detail
+  document.querySelectorAll('.forum-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.cat-header,.post-filters').forEach(s => s.style.display = 'none');
+  detailEl.style.display = 'block';
+  contentEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Завантаження...</div></div>';
+
+  try {
+    const postRef = doc(db,'forum_posts',postId);
+    const snap = await getDoc(postRef);
+    if (!snap.exists()) { contentEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Тему не знайдено</div></div>'; return; }
+    const p = snap.data();
+
+    // increment views
+    updateDoc(postRef, { views: increment(1) }).catch(()=>{});
+
+    const date = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString('uk-UA') : '—';
+    const isAdmin = ['admin','moderator'].includes(p.authorRole);
+    const badges = buildPostBadges(p);
+    const statusBadge = buildStatusBadge(p);
+
+    // Load replies
+    const rSnap = await getDocs(query(collection(db,'forum_posts',postId,'replies'), orderBy('createdAt','asc')));
+    let repliesHTML = '<div class="comment-list">';
+    rSnap.forEach(d => {
+      const r = d.data();
+      const rd = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleString('uk-UA') : '—';
+      const rIsAdmin = ['admin','moderator'].includes(r.authorRole);
+      repliesHTML += `<div class="comment-row ${rIsAdmin?'admin-comment':''}">
+        <div class="comment-av">${(r.authorNick||'?')[0].toUpperCase()}</div>
+        <div class="comment-body">
+          <div class="comment-author">${escHtml(r.authorNick||'—')} ${rIsAdmin?'<span class="comment-role-badge">'+escHtml(r.authorRole)+'</span>':''}</div>
+          <div class="comment-date">${rd}</div>
+          <div class="comment-text">${escHtml(r.text||'').replace(/\n/g,'<br>')}</div>
+          <div class="comment-actions">
+            <button class="comment-like-btn" onclick="likeComment('forum_replies','${postId}','${d.id}',this)">👍 ${r.likes||0}</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    repliesHTML += '</div>';
+
+    contentEl.innerHTML = `
+      <div class="post-detail-header">
+        <div class="post-badges" style="margin-bottom:12px">${badges}${statusBadge}</div>
+        <h2 class="post-detail-title">${escHtml(p.title||'—')}</h2>
+        <div class="post-detail-meta">
+          <div class="post-author">
+            <div class="post-author-av">${(p.authorNick||'?')[0].toUpperCase()}</div>
+            <div>
+              <div class="post-author-name">${escHtml(p.authorNick||'—')}</div>
+              ${isAdmin ? '<div class="post-author-role">'+escHtml(p.authorRole)+'</div>' : ''}
+            </div>
+          </div>
+          <span class="post-date">${date}</span>
+          <span style="font-size:11px;color:var(--dim)">👁 ${(p.views||0)+1} · 💬 ${p.replyCount||0}</span>
+        </div>
+        <div class="post-detail-body">${escHtml(p.body||'').replace(/\n/g,'<br>')}</div>
+        <div class="post-detail-actions">
+          <button class="post-action-btn" onclick="likePost('${postId}',this)">👍 ${p.likes||0} подобається</button>
+          ${p.tags?.length ? '<span style="font-size:11px;color:var(--dim)">🏷 '+p.tags.map(t=>escHtml(t)).join(', ')+'</span>' : ''}
+        </div>
+      </div>
+      <div class="comments-section">
+        <div class="comments-header">
+          <span class="comments-title">💬 Відповіді · ${p.replyCount||0}</span>
+        </div>
+        ${repliesHTML}
+        <div class="comment-form" id="reply-form-${postId}">
+          ${buildCommentForm('post', postId, rSnap.size)}
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    contentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка: ${e.message}</div></div>`;
+  }
+};
+
+window.closePostDetail = function() {
+  document.getElementById('post-detail').style.display = 'none';
+  document.querySelectorAll('.forum-section').forEach(s => {
+    if (s.classList.contains('active')) s.style.display = 'block';
+  });
+};
+
+// ── COMMENT FORM ──────────────────────────────────────────────
+function buildCommentForm(type, parentId, count) {
+  const isLoggedIn = !!window._currentUser;
+  if (!isLoggedIn) {
+    return `<div class="login-prompt">
+      <a href="profile.html">Увійди</a>, щоб залишити коментар
+    </div>`;
+  }
+  return `
+    <div class="comment-form-title">Написати відповідь</div>
+    <textarea class="comment-textarea" id="cf-text-${parentId}" placeholder="Твій коментар..." maxlength="2000" oninput="updateCharCount('${parentId}')"></textarea>
+    <div class="comment-form-footer">
+      <span class="comment-chars" id="cf-chars-${parentId}">0 / 2000</span>
+      <button class="btn-submit-comment" onclick="submitComment('${type}','${parentId}')">💬 Надіслати</button>
+    </div>
+  `;
+}
+
+window.updateCharCount = function(id) {
+  const ta = document.getElementById('cf-text-'+id);
+  const sp = document.getElementById('cf-chars-'+id);
+  if (ta && sp) sp.textContent = ta.value.length + ' / 2000';
+};
+
+window.submitComment = async function(type, parentId) {
+  const u = window._currentUser;
+  if (!u) { showToast('Потрібно увійти!','error'); return; }
+  const ta = document.getElementById('cf-text-'+parentId);
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text || text.length < 3) { showToast('Коментар занадто короткий','error'); return; }
+
+  const btn = ta.parentElement?.querySelector('.btn-submit-comment');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  try {
+    const ud = window._currentUserData;
+    const nick = ud?.nickname || u.email?.split('@')[0] || 'Гравець';
+    const role = ud?.role || 'user';
+    const commentData = {
+      authorUid: u.uid, authorNick: nick, authorRole: role,
+      text, likes: 0, createdAt: serverTimestamp()
+    };
+
+    if (type === 'news') {
+      await addDoc(collection(db,'news',parentId,'comments'), commentData);
+      showToast('✅ Коментар додано!');
+      // Reload news comments
+      const wrap = document.getElementById('news-comments-'+parentId);
+      if (wrap && wrap.classList.contains('open')) {
+        const toggleBtn = wrap.previousElementSibling?.querySelector('.news-toggle-comments');
+        if (toggleBtn) {
+          wrap.classList.remove('open');
+          toggleBtn.click();
+        }
+      }
+    } else {
+      // Post reply
+      await addDoc(collection(db,'forum_posts',parentId,'replies'), commentData);
+      await updateDoc(doc(db,'forum_posts',parentId), { replyCount: increment(1), lastReplyAt: serverTimestamp() });
+      showToast('✅ Відповідь додано!');
+      openPostDetail(parentId);
+    }
+    ta.value = '';
+  } catch(e) {
+    showToast('Помилка: '+e.message,'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💬 Надіслати'; }
+  }
+};
+
+// ── LIKES ─────────────────────────────────────────────────────
+window.likePost = async function(postId, btn) {
+  const u = window._currentUser;
+  if (!u) { showToast('Потрібно увійти!','error'); return; }
+  try {
+    await updateDoc(doc(db,'forum_posts',postId), { likes: increment(1) });
+    btn.classList.add('liked');
+    const m = btn.textContent.match(/(\d+)/);
+    if (m) btn.textContent = `👍 ${parseInt(m[1])+1} подобається`;
+  } catch(e) {}
+};
+
+window.likeComment = async function(collType, parentId, commentId, btn) {
+  const u = window._currentUser;
+  if (!u) return;
+  try {
+    let ref;
+    if (collType === 'news_comments') ref = doc(db,'news',parentId,'comments',commentId);
+    else ref = doc(db,'forum_posts',parentId,'replies',commentId);
+    await updateDoc(ref, { likes: increment(1) });
+    btn.classList.add('liked');
+    const m = btn.textContent.match(/(\d+)/);
+    if (m) btn.textContent = `👍 ${parseInt(m[1])+1}`;
+  } catch(e) {}
+};
+
+// ── SUBMIT NEW POST ───────────────────────────────────────────
+window.submitPost = async function() {
+  const u = window._currentUser;
+  if (!u) { showToast('Потрібно увійти для публікації!','error'); return; }
+
+  const title = document.getElementById('new-post-title').value.trim();
+  const body  = document.getElementById('new-post-body').value.trim();
+  const cat   = document.getElementById('new-post-cat').value;
+  const tagsRaw = document.getElementById('new-post-tags').value.trim();
+  const msgEl = document.getElementById('post-msg');
+
+  const showMsg = (txt, ok) => {
+    msgEl.textContent = txt;
+    msgEl.style.cssText = `display:block;padding:10px 12px;font-size:12px;border:1px solid;border-color:${ok?'#4aaa5a':'var(--red)'};color:${ok?'#4aaa5a':'#c07070'};background:${ok?'rgba(30,80,30,0.15)':'rgba(120,30,30,0.15)'};margin-bottom:12px`;
+  };
+
+  if (!title || title.length < 5) { showMsg('Заголовок занадто короткий (мін. 5 символів)', false); return; }
+  if (!body || body.length < 10)  { showMsg('Текст занадто короткий (мін. 10 символів)', false); return; }
+
+  const btn = document.querySelector('.btn-publish');
+  btn.disabled = true; btn.textContent = '...';
+
+  try {
+    const ud = window._currentUserData;
+    const nick = ud?.nickname || u.email?.split('@')[0] || 'Гравець';
+    const tags = tagsRaw ? tagsRaw.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean).slice(0,5) : [];
+
+    await addDoc(collection(db,'forum_posts'), {
+      category: cat, title, body, tags,
+      authorUid: u.uid, authorNick: nick, authorRole: ud?.role||'user',
+      likes: 0, views: 0, replyCount: 0,
+      pinned: false, locked: false,
+      status: cat === 'bug' ? 'open' : null,
+      ideaStatus: cat === 'idea' ? null : null,
+      createdAt: serverTimestamp(), lastReplyAt: serverTimestamp(),
+    });
+
+    showMsg('✅ Тему опубліковано!', true);
+    setTimeout(() => {
+      closeNewPost();
+      // Reload appropriate tab
+      const tabMap = { general:'general', bug:'bugs', idea:'ideas', clan:'clans' };
+      loadPosts(tabMap[cat] || cat);
+    }, 800);
+  } catch(e) {
+    showMsg('Помилка: '+e.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = '📢 Опублікувати';
+  }
+};
+
+// ── SIDEBAR ───────────────────────────────────────────────────
+async function updateSidebarStats() {
+  try {
+    const [postsSnap, pSnap] = await Promise.all([
+      getDocs(collection(db,'forum_posts')),
+      getDocs(collection(db,'players')),
+    ]);
+    document.getElementById('sb-total-posts').textContent = postsSnap.size.toLocaleString();
+    document.getElementById('sb-players').textContent = pSnap.size.toLocaleString();
+
+    // Count all replies
+    let totalComments = 0;
+    for (const d of postsSnap.docs) totalComments += (d.data().replyCount || 0);
+    document.getElementById('sb-total-comments').textContent = totalComments.toLocaleString();
+
+    // Hot posts
+    const hotSnap = await getDocs(query(collection(db,'forum_posts'), orderBy('likes','desc'), limit(5)));
+    let hotHTML = '';
+    hotSnap.forEach(d => {
+      const p = d.data();
+      hotHTML += `<div class="top-post" onclick="openPostDetail('${d.id}')">
+        <div class="tp-title">${escHtml(p.title||'—')}</div>
+        <div class="tp-meta">👍 ${p.likes||0} · 💬 ${p.replyCount||0}</div>
+      </div>`;
+    });
+    document.getElementById('sb-hot-posts').innerHTML = hotHTML || '<div style="font-size:12px;color:var(--dim)">Ще немає активних тем</div>';
+  } catch(e) {}
+
+  // Online = random 3-12 for now; real would use presence system
+  document.getElementById('sb-online').textContent = Math.floor(Math.random()*10)+3;
+}
+
+// Expose functions to global
+window._loadPosts = loadPosts;
+window._loadNews  = loadNews;
+</script>
+
+<script>
+// ── UI HELPERS ────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(date) {
+  const now = new Date();
+  const diff = (now - date) / 1000;
+  if (diff < 60)     return 'щойно';
+  if (diff < 3600)   return Math.floor(diff/60) + ' хв тому';
+  if (diff < 86400)  return Math.floor(diff/3600) + ' год тому';
+  if (diff < 604800) return Math.floor(diff/86400) + ' дн тому';
+  return date.toLocaleDateString('uk-UA');
+}
+
+function getCatIcon(cat) {
+  const m = { general:'💬', bugs:'🐛', ideas:'💡', clans:'🏰', tournaments:'🏆' };
+  return m[cat] || '📝';
+}
+
+function buildPostBadges(p) {
+  let b = '';
+  if (p.pinned) b += '<span class="post-badge pinned">📌 Закріплено</span>';
+  if (p.locked) b += '<span class="post-badge locked">🔒 Закрито</span>';
+  if (p.isHot)  b += '<span class="post-badge hot">🔥 Гаряче</span>';
+  const nowMs = Date.now();
+  const crMs = p.createdAt?.toDate ? p.createdAt.toDate().getTime() : 0;
+  if (crMs && (nowMs - crMs) < 86400000) b += '<span class="post-badge new">🆕 Нове</span>';
+  if (p.category === 'bug') b += '<span class="post-badge bug">🐛 Баг</span>';
+  if (p.category === 'idea') b += '<span class="post-badge idea">💡 Ідея</span>';
+  return b;
+}
+
+function buildStatusBadge(p) {
+  if (p.category === 'bug') {
+    const s = { open:'🔴 Відкрито', inprogress:'🔵 В роботі', resolved:'✅ Вирішено' };
+    const c = { open:'#e84040', inprogress:' #8eb0cc', resolved:'#4aaa5a' };
+    const st = p.status || 'open';
+    return `<span class="post-badge" style="color:${c[st]||'var(--dim)'};border-color:${c[st]||'var(--border)'}44">${s[st]||st}</span>`;
+  }
+  if (p.category === 'idea' && p.ideaStatus) {
+    const s = { hot:'🔥 Популярне', planned:'✅ Заплановано', declined:'❌ Відхилено' };
+    const c = { hot:'#e88038', planned:'#4aaa5a', declined:'#aa4a4a' };
+    const st = p.ideaStatus;
+    return `<span class="post-badge" style="color:${c[st]||'var(--dim)'};border-color:${c[st]||'var(--border)'}44">${s[st]||st}</span>`;
+  }
+  return '';
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+const TAB_CATS = { news:null, general:'general', bugs:'bugs', ideas:'ideas', clans:'clans', tournaments:'tournaments' };
+
+window.showForumTab = function(name) {
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.forum-section').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+  document.getElementById('post-detail').style.display = 'none';
+
+  const el = document.getElementById('tab-' + name);
+  if (el) { el.classList.add('active'); el.style.display = 'block'; }
+
+  const btn = document.querySelector(`.ftab[onclick="showForumTab('${name}')"]`);
+  if (btn) btn.classList.add('active');
+
+  // Lazy load
+  const cat = TAB_CATS[name];
+  if (cat && window._loadPosts) window._loadPosts(cat);
+  if (name === 'news' && window._loadNews) window._loadNews();
+};
+
+// Filters
+const activeFilters = {};
+window.setFilter = function(cat, filter, btn) {
+  document.querySelectorAll(`#tab-${catToTab(cat)} .pf-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilters[cat] = filter;
+  if (window._loadPosts) window._loadPosts(cat, filter);
+};
+function catToTab(cat) {
+  const m = { general:'general', bugs:'bugs', ideas:'ideas', clans:'clans', tournaments:'tournaments' };
+  return m[cat] || cat;
+}
+
+// ── NEW POST MODAL ─────────────────────────────────────────────
+window.openNewPost = function(cat) {
+  const u = window._currentUser;
+  if (!u) { showToast('Потрібно увійти для публікації!','error'); window.location.href = 'profile.html'; return; }
+  document.getElementById('modal-overlay').style.display = 'block';
+  document.getElementById('modal-new-post').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  if (cat) {
+    const sel = document.getElementById('new-post-cat');
+    const catMap = { general:'general', bug:'bug', idea:'idea', clan:'clan' };
+    sel.value = catMap[cat] || 'general';
+    const titles = { general:'💬 Нова тема', bug:'🐛 Повідомити про баг', idea:'💡 Нова ідея', clan:'🏰 Оголошення клану' };
+    document.getElementById('modal-post-title').textContent = titles[cat] || '+ Нова тема';
+  }
+  document.getElementById('post-msg').style.display = 'none';
+};
+
+window.closeNewPost = function() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.getElementById('modal-new-post').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('new-post-title').value = '';
+  document.getElementById('new-post-body').value = '';
+  document.getElementById('new-post-tags').value = '';
+};
+
+// ── BURGER MENU ───────────────────────────────────────────────
+window.toggleMenu = function() {
+  document.getElementById('burger-btn').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+};
+
+// ── TAG SEARCH ────────────────────────────────────────────────
+window.searchByTag = function(tag) {
+  showToast('Пошук за тегом: ' + tag);
+  // Could filter posts by tag — for now just a UX hint
+};
+
+// ── ESC to close modal ────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNewPost(); });
+</script>
+</body>
+</html>
