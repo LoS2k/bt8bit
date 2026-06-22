@@ -1803,7 +1803,7 @@ function translateFirebaseError(code) {
 }
 
 // TABS
-const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','referral','streamer','shop'];
+const TABS=['stats','cosmetics','inventory','legend','promo','search','compare','clan','warzone','referral','streamer','shop'];
 function showTab(name){
   TABS.forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'block':'none'; });
   // Використовуємо data-tab замість індексу — точне співпадіння
