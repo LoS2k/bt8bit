@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<title>TB3D — Особистий кабінет</title>
+<title>BT 8BIT — Особистий кабінет</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="192x192" href="favicon-192.png">
@@ -949,7 +949,7 @@
 <div id="login-screen">
   <div class="login-card">
     <span class="login-icon">🎖️</span>
-    <h2 class="login-title">TB3D</h2>
+    <h2 class="login-title">BT 8BIT</h2>
     <p class="login-desc">Особистий кабінет. Статистика, Легенда, промокоди і донат.</p>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">Вхід</button>
@@ -1400,116 +1400,223 @@
       <div id="tab-warzone" class="content-panel" style="display:none">
         <div class="panel-title">🗺️ Зона бойових дій</div>
 
-        <!-- В РОЗРОБЦІ банер -->
-        <div style="background:linear-gradient(135deg,rgba(232,188,56,0.06),rgba(142,176,204,0.04));border:1px solid rgba(232,188,56,0.25);padding:28px 24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:10px;right:14px;font-family:var(--font-d);font-size:7px;color:var(--gold);letter-spacing:2px;opacity:.5">BETA</div>
-          <div style="font-size:40px;margin-bottom:14px">🚧</div>
-          <div style="font-family:var(--font-d);font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">В РОЗРОБЦІ</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.8;max-width:420px;margin:0 auto">
-            Глобальна карта Зони бойових дій — стратегічний режим де клани борються за контроль над регіонами планети.
+        <!-- ДИСКЛЕЙМЕР -->
+        <div style="background:rgba(232,188,56,0.05);border:1px solid rgba(232,188,56,0.25);padding:18px 20px;margin-bottom:16px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+          <div style="font-size:26px;flex-shrink:0;line-height:1.2">🚧</div>
+          <div style="flex:1;min-width:200px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+              <span style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px">В РОЗРОБЦІ</span>
+              <span style="font-family:var(--font-d);font-size:7px;color:var(--dim);border:1px solid var(--border);padding:2px 7px;letter-spacing:1px">НЕ КІНЦЕВИЙ РЕЗУЛЬТАТ</span>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.8;margin-bottom:6px">
+              Нижче показано <span style="color:var(--gold)">попередній концепт</span> — механіка, карта і регіони ще в процесі розробки та можуть кардинально змінитися.
+            </div>
+            <div style="font-size:12px;color:var(--dim);line-height:1.7">
+              Концепція: коаліція = основний танк → бій у грі з прапором регіону → при перемозі клан + особиста нагорода.
+            </div>
           </div>
         </div>
 
-        <!-- Концепт-сітка регіонів -->
-        <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">РЕГІОНИ — ПОПЕРЕДНІЙ ПЕРЕГЛЯД</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:24px;opacity:.55;pointer-events:none;">
-          <div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--gold)">НАШ</div>
-              <div style="font-size:18px;margin-bottom:6px">🏔️</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Північний хребет</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:72%;background:var(--gold);border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">72% контролю</div>
-            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--steel)">СОЮЗНИК</div>
-              <div style="font-size:18px;margin-bottom:6px">🌊</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Тихоокеанський рубіж</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:45%;background:var(--steel);border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">45% контролю</div>
-            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:#4aaa5a">ВОРОГИ</div>
-              <div style="font-size:18px;margin-bottom:6px">🏜️</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Залізна пустеля</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:18%;background:#c07070;border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">18% контролю</div>
-            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--dim)">НЕЙТРАЛ</div>
-              <div style="font-size:18px;margin-bottom:6px">🌲</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Темний ліс</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--dim);border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">60% контролю</div>
-            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--gold)">НАШ</div>
-              <div style="font-size:18px;margin-bottom:6px">🏙️</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Залізне місто</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:88%;background:var(--gold);border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">88% контролю</div>
-            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
-              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--steel)">СОЮЗНИК</div>
-              <div style="font-size:18px;margin-bottom:6px">🌋</div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Вулканічна зона</div>
-              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:33%;background:var(--steel);border-radius:2px;"></div></div>
-              <div style="font-size:10px;color:var(--dim);margin-top:4px">33% контролю</div>
-            </div>
+        <!-- КОНЦЕПТ КАРТА -->
+        <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">КОНЦЕПТ КАРТИ — НЕ ФІНАЛ</div>
+
+        <div style="position:relative;opacity:.9">
+          <!-- Watermark -->
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);font-family:var(--font-d);font-size:22px;color:rgba(232,188,56,0.07);letter-spacing:4px;pointer-events:none;z-index:2;white-space:nowrap">КОНЦЕПТ · НЕ ФІНАЛ</div>
+
+          <svg width="100%" viewBox="0 0 680 370" style="display:block">
+            <defs>
+              <marker id="wz-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <clipPath id="wz-clip"><rect x="20" y="12" width="440" height="348" rx="8"/></clipPath>
+              <style>
+                .wz-reg{cursor:pointer;transition:opacity .15s}.wz-reg:hover{opacity:.82}
+                @keyframes wz-atk{to{stroke-dashoffset:-20}}
+                .wz-atk{stroke-dasharray:5 4;animation:wz-atk .8s linear infinite}
+                @keyframes wz-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+                .wz-pulse{animation:wz-pulse 1.4s ease-in-out infinite}
+              </style>
+            </defs>
+
+            <!-- MAP BG -->
+            <rect x="20" y="12" width="440" height="348" rx="8" fill="#141e2e" stroke="#243048" stroke-width="1"/>
+
+            <!-- Grid -->
+            <g clip-path="url(#wz-clip)" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5">
+              <line x1="20" y1="140" x2="460" y2="140"/>
+              <line x1="20" y1="268" x2="460" y2="268"/>
+              <line x1="168" y1="12" x2="168" y2="360"/>
+              <line x1="316" y1="12" x2="316" y2="360"/>
+            </g>
+
+            <!-- Northern Front — top -->
+            <g class="wz-reg" id="wz-n" onclick="wzSelect('north')">
+              <path clip-path="url(#wz-clip)" d="M20,12 L460,12 L460,132 L360,142 L240,136 L120,144 L20,138 Z" fill="#1a2f40" stroke="#2e5070" stroke-width="0.8"/>
+              <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:rgba(100,160,200,0.7);font-weight:500" x="240" y="60" text-anchor="middle">NORTHERN FRONT</text>
+              <text style="font-family:inherit;font-size:12px;font-weight:500;fill:#7db8d8" x="240" y="78" text-anchor="middle">Північ</text>
+              <text style="font-family:inherit;font-size:10px;fill:rgba(125,184,216,0.55)" x="240" y="94" text-anchor="middle">12 регіонів · нейтральна</text>
+            </g>
+
+            <!-- West Alliance — left -->
+            <g class="wz-reg" id="wz-w" onclick="wzSelect('west')">
+              <path clip-path="url(#wz-clip)" d="M20,138 L120,144 L136,272 L96,326 L20,334 Z" fill="#0d2040" stroke="#1a4a8a" stroke-width="0.8"/>
+              <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:rgba(80,130,220,0.7);font-weight:500" x="76" y="214" text-anchor="middle">WEST</text>
+              <text style="font-family:inherit;font-size:12px;font-weight:500;fill:#5087d8" x="76" y="232" text-anchor="middle">Захід</text>
+              <text style="font-family:inherit;font-size:10px;fill:rgba(80,130,220,0.55)" x="76" y="248" text-anchor="middle">8 рег.</text>
+            </g>
+
+            <!-- Euro Union — center-left -->
+            <g class="wz-reg" id="wz-e" onclick="wzSelect('euro')">
+              <path clip-path="url(#wz-clip)" d="M120,144 L240,136 L256,170 L226,306 L136,316 L96,326 L136,272 Z" fill="#1c1040" stroke="#5040a0" stroke-width="0.8"/>
+              <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:rgba(140,110,230,0.7);font-weight:500" x="178" y="218" text-anchor="middle">EURO</text>
+              <text style="font-family:inherit;font-size:12px;font-weight:500;fill:#9070e0" x="178" y="236" text-anchor="middle">Євро</text>
+              <text style="font-family:inherit;font-size:10px;fill:rgba(140,110,230,0.55)" x="178" y="252" text-anchor="middle">10 рег.</text>
+            </g>
+
+            <!-- East Coalition — center-right -->
+            <g class="wz-reg" id="wz-ec" onclick="wzSelect('east')">
+              <path clip-path="url(#wz-clip)" d="M240,136 L360,142 L378,170 L386,322 L298,340 L226,306 L256,170 Z" fill="#2a0e18" stroke="#7a2030" stroke-width="0.8"/>
+              <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:rgba(210,80,80,0.7);font-weight:500" x="302" y="226" text-anchor="middle">EAST</text>
+              <text style="font-family:inherit;font-size:12px;font-weight:500;fill:#d05060" x="302" y="244" text-anchor="middle">Схід</text>
+              <text style="font-family:inherit;font-size:10px;fill:rgba(210,80,80,0.55)" x="302" y="260" text-anchor="middle">14 рег.</text>
+            </g>
+
+            <!-- Asian Pact — right -->
+            <g class="wz-reg" id="wz-a" onclick="wzSelect('asian')">
+              <path clip-path="url(#wz-clip)" d="M360,142 L460,132 L460,340 L396,350 L386,322 L378,170 Z" fill="#0f2510" stroke="#2a6030" stroke-width="0.8"/>
+              <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:rgba(80,180,90,0.7);font-weight:500" x="414" y="228" text-anchor="middle">ASIAN</text>
+              <text style="font-family:inherit;font-size:12px;font-weight:500;fill:#50b060" x="414" y="246" text-anchor="middle">Азія</text>
+              <text style="font-family:inherit;font-size:10px;fill:rgba(80,180,90,0.55)" x="414" y="262" text-anchor="middle">11 рег.</text>
+            </g>
+
+            <!-- Bottom water -->
+            <g clip-path="url(#wz-clip)">
+              <path d="M20,334 L96,326 L136,316 L226,306 L298,340 L386,322 L396,350 L460,340 L460,360 L20,360 Z" fill="#0c1620"/>
+              <text style="font-family:inherit;font-size:9px;fill:rgba(255,255,255,0.2)" x="240" y="354" text-anchor="middle">Нейтральні водні шляхи</text>
+            </g>
+
+            <!-- Map border -->
+            <rect x="20" y="12" width="440" height="348" rx="8" fill="none" stroke="#304060" stroke-width="1"/>
+
+            <!-- City dots -->
+            <circle cx="76" cy="280" r="2.5" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="178" cy="275" r="2.5" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="302" cy="288" r="2.5" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="414" cy="282" r="2.5" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="240" cy="74" r="2.5" fill="rgba(255,255,255,0.5)"/>
+            <!-- Pulse on one city -->
+            <circle class="wz-pulse" cx="302" cy="288" r="6" fill="none" stroke="#e8bc38" stroke-width="1"/>
+
+            <!-- Attack lines (hidden by default) -->
+            <g id="wz-atk-lines" opacity="0" style="transition:opacity .3s">
+              <line class="wz-atk" x1="240" y1="195" x2="90"  y2="240" stroke="#e8bc38" stroke-width="1.5" marker-end="url(#wz-arr)"/>
+              <line class="wz-atk" x1="240" y1="195" x2="188" y2="240" stroke="#e8bc38" stroke-width="1.5" marker-end="url(#wz-arr)"/>
+              <line class="wz-atk" x1="240" y1="195" x2="360" y2="240" stroke="#e8bc38" stroke-width="1.5" marker-end="url(#wz-arr)"/>
+            </g>
+
+            <!-- RIGHT PANEL -->
+            <rect x="472" y="12" width="192" height="348" rx="8" fill="var(--card)" stroke="var(--border)" stroke-width="0.5"/>
+
+            <!-- Selected info -->
+            <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:var(--dim);font-weight:500" x="568" y="40" text-anchor="middle">РЕГІОН</text>
+            <rect x="484" y="48" width="168" height="50" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="0.5"/>
+            <text id="wz-sel-name" style="font-family:inherit;font-size:13px;font-weight:500;fill:var(--text)" x="568" y="70" text-anchor="middle">—</text>
+            <text id="wz-sel-sub"  style="font-family:inherit;font-size:10px;fill:var(--dim)" x="568" y="88" text-anchor="middle">Натисни на регіон</text>
+
+            <line x1="484" y1="108" x2="652" y2="108" stroke="var(--border)" stroke-width="0.5"/>
+
+            <!-- Mechanic steps -->
+            <text style="font-family:inherit;font-size:8px;letter-spacing:2px;fill:var(--dim);font-weight:500" x="568" y="128" text-anchor="middle">МЕХАНІКА</text>
+
+            <rect x="484" y="136" width="168" height="48" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="0.5"/>
+            <text style="font-family:inherit;font-size:9px;font-weight:500;fill:var(--dim)" x="496" y="153">1 · Коаліція</text>
+            <text style="font-family:inherit;font-size:11px;fill:var(--text)" x="496" y="169">= основний танк</text>
+
+            <rect x="484" y="192" width="168" height="48" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="0.5"/>
+            <text style="font-family:inherit;font-size:9px;font-weight:500;fill:var(--dim)" x="496" y="209">2 · Атака</text>
+            <text style="font-family:inherit;font-size:11px;fill:var(--text)" x="496" y="225">Бій + прапор регіону</text>
+
+            <rect x="484" y="248" width="168" height="48" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="0.5"/>
+            <text style="font-family:inherit;font-size:9px;font-weight:500;fill:var(--dim)" x="496" y="265">3 · Перемога</text>
+            <text style="font-family:inherit;font-size:11px;fill:var(--text)" x="496" y="281">Клан + особиста нагорода</text>
+
+            <rect x="484" y="304" width="168" height="48" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="0.5"/>
+            <text style="font-family:inherit;font-size:9px;font-weight:500;fill:var(--dim)" x="496" y="321">4 · Контроль</text>
+            <text style="font-family:inherit;font-size:11px;fill:var(--text)" x="496" y="337">Ресурси для клану щодня</text>
+          </svg>
+
+          <script>
+          (function(){
+            const R={
+              north:{name:'Північний рубіж',sub:'Northern Front · 12 регіонів',c:'#7db8d8'},
+              west: {name:'Захід',sub:'West Alliance · 8 регіонів',c:'#5087d8'},
+              euro: {name:'Євросоюз',sub:'Euro Union · 10 регіонів',c:'#9070e0'},
+              east: {name:'Схід',sub:'East Coalition · 14 регіонів',c:'#d05060'},
+              asian:{name:'Азія',sub:'Asian Pact · 11 регіонів',c:'#50b060'},
+            };
+            let cur=null;
+            window.wzSelect=function(k){
+              if(cur===k){cur=null;reset();return;}
+              cur=k;
+              const d=R[k];
+              const n=document.getElementById('wz-sel-name');
+              const s=document.getElementById('wz-sel-sub');
+              n.textContent=d.name;n.setAttribute('fill',d.c);
+              s.textContent=d.sub;
+              document.getElementById('wz-atk-lines').style.opacity='1';
+            };
+            function reset(){
+              const n=document.getElementById('wz-sel-name');
+              n.textContent='—';n.setAttribute('fill','var(--text)');
+              document.getElementById('wz-sel-sub').textContent='Натисни на регіон';
+              document.getElementById('wz-atk-lines').style.opacity='0';
+            }
+          })();
+          </script>
         </div>
 
-        <!-- Що буде доступно -->
+        <!-- Legend -->
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;margin-bottom:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border)">
+          <span style="font-family:var(--font-d);font-size:8px;color:var(--dim);letter-spacing:1px;margin-right:4px;align-self:center">ФРАКЦІЇ:</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)"><span style="width:10px;height:10px;background:#2e5070;border-radius:2px;display:inline-block"></span>Північ</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)"><span style="width:10px;height:10px;background:#1a4a8a;border-radius:2px;display:inline-block"></span>Захід</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)"><span style="width:10px;height:10px;background:#5040a0;border-radius:2px;display:inline-block"></span>Євро</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)"><span style="width:10px;height:10px;background:#7a2030;border-radius:2px;display:inline-block"></span>Схід</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)"><span style="width:10px;height:10px;background:#2a6030;border-radius:2px;display:inline-block"></span>Азія</span>
+        </div>
+
+        <!-- Заплановані функції -->
         <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">ЗАПЛАНОВАНІ ФУНКЦІЇ</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px">
           <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:22px;flex-shrink:0">🏰</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Кланові сутички</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Клани воюють за регіони у реальному часі</div>
-            </div>
+            <div><div style="font-size:12px;color:#fff;margin-bottom:4px">Кланові сутички</div><div style="font-size:11px;color:var(--dim);line-height:1.6">Клани воюють за регіони у реальному часі</div></div>
           </div>
           <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:22px;flex-shrink:0">💰</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Ресурсні зони</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Контрольовані регіони дають ресурси клану щодня</div>
-            </div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
-            <span style="font-size:22px;flex-shrink:0">🗺️</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Інтерактивна карта</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Візуальна глобальна карта з 40+ регіонами</div>
-            </div>
+            <div><div style="font-size:12px;color:#fff;margin-bottom:4px">Ресурсні зони</div><div style="font-size:11px;color:var(--dim);line-height:1.6">Контрольовані регіони дають ресурси клану щодня</div></div>
           </div>
           <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:22px;flex-shrink:0">🏆</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Сезонні нагороди</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Топ-клани отримують ексклюзивні танки і скіни</div>
-            </div>
+            <div><div style="font-size:12px;color:#fff;margin-bottom:4px">Сезонні нагороди</div><div style="font-size:11px;color:var(--dim);line-height:1.6">Топ-клани отримують ексклюзивні танки і скіни</div></div>
           </div>
           <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:22px;flex-shrink:0">⚡</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Особливі події</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Тижневі глобальні операції з унікальними умовами</div>
-            </div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
-            <span style="font-size:22px;flex-shrink:0">📊</span>
-            <div>
-              <div style="font-size:12px;color:#fff;margin-bottom:4px">Рейтинг фракцій</div>
-              <div style="font-size:11px;color:var(--dim);line-height:1.6">Глобальний баланс сил між East, West, North, Euro, Asian</div>
-            </div>
+            <div><div style="font-size:12px;color:#fff;margin-bottom:4px">Особливі події</div><div style="font-size:11px;color:var(--dim);line-height:1.6">Тижневі глобальні операції з унікальними умовами</div></div>
           </div>
         </div>
 
-        <!-- Підписка на сповіщення -->
-        <div style="background:rgba(232,188,56,0.05);border:1px solid rgba(232,188,56,0.2);padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
+        <!-- Підписка -->
+        <div style="background:rgba(232,188,56,0.05);border:1px solid rgba(232,188,56,0.2);padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px">
             <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);margin-bottom:6px">ОТРИМАТИ СПОВІЩЕННЯ</div>
-            <div style="font-size:12px;color:var(--dim)">Дізнайся першим коли Зона бойових дій запуститься</div>
+            <div style="font-size:12px;color:var(--dim)">Дізнайся першим коли запуститься</div>
           </div>
           <button id="warzone-notify-btn" onclick="subscribeWarzoneNotify()" style="padding:10px 22px;background:var(--gold);color:var(--bg);border:none;font-family:var(--font-d);font-size:9px;cursor:pointer;letter-spacing:1px;transition:opacity .2s;white-space:nowrap">🔔 Повідом мене</button>
         </div>
 
       </div>
-
       <div id="tab-referral" class="content-panel" style="display:none">
         <div class="panel-title">🎁 Реферальна програма</div>
 
