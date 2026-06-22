@@ -1025,6 +1025,7 @@
         <div class="side-nav-item" data-tab="search" onclick="showTab('search')"><span class="side-nav-icon">🔍</span> <span data-t="nav.search">Пошук гравців</span></div>
         <div class="side-nav-item" data-tab="compare" onclick="showTab('compare')"><span class="side-nav-icon">⚖️</span> <span data-t="nav.compare">Порівняння</span></div>
         <div class="side-nav-item" data-tab="clan" onclick="showTab('clan')"><span class="side-nav-icon">🏰</span> <span data-t="nav.clan">Клан</span></div>
+        <div class="side-nav-item" data-tab="warzone" onclick="showTab('warzone')"><span class="side-nav-icon">🗺️</span> <span>Зона бойових дій</span></div>
         <div class="side-nav-item" data-tab="referral" onclick="showTab('referral')"><span class="side-nav-icon">🎁</span> <span data-t="nav.referral">Реферали</span></div>
         <div class="side-nav-item" data-tab="streamer" onclick="showTab('streamer')"><span class="side-nav-icon">🎥</span> <span data-t="nav.streamer">Партнер</span></div>
         <div class="side-nav-item" data-tab="forum" onclick="window.location.href='forum.html'"><span class="side-nav-icon">💬</span> <span>Форум</span></div>
@@ -1395,6 +1396,120 @@
       </div>
 
       <!-- REFERRAL -->
+      <!-- WARZONE TAB -->
+      <div id="tab-warzone" class="content-panel" style="display:none">
+        <div class="panel-title">🗺️ Зона бойових дій</div>
+
+        <!-- В РОЗРОБЦІ банер -->
+        <div style="background:linear-gradient(135deg,rgba(232,188,56,0.06),rgba(142,176,204,0.04));border:1px solid rgba(232,188,56,0.25);padding:28px 24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:10px;right:14px;font-family:var(--font-d);font-size:7px;color:var(--gold);letter-spacing:2px;opacity:.5">BETA</div>
+          <div style="font-size:40px;margin-bottom:14px">🚧</div>
+          <div style="font-family:var(--font-d);font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">В РОЗРОБЦІ</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.8;max-width:420px;margin:0 auto">
+            Глобальна карта Зони бойових дій — стратегічний режим де клани борються за контроль над регіонами планети.
+          </div>
+        </div>
+
+        <!-- Концепт-сітка регіонів -->
+        <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">РЕГІОНИ — ПОПЕРЕДНІЙ ПЕРЕГЛЯД</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:24px;opacity:.55;pointer-events:none;">
+          <div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--gold)">НАШ</div>
+              <div style="font-size:18px;margin-bottom:6px">🏔️</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Північний хребет</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:72%;background:var(--gold);border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">72% контролю</div>
+            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--steel)">СОЮЗНИК</div>
+              <div style="font-size:18px;margin-bottom:6px">🌊</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Тихоокеанський рубіж</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:45%;background:var(--steel);border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">45% контролю</div>
+            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:#4aaa5a">ВОРОГИ</div>
+              <div style="font-size:18px;margin-bottom:6px">🏜️</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Залізна пустеля</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:18%;background:#c07070;border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">18% контролю</div>
+            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--dim)">НЕЙТРАЛ</div>
+              <div style="font-size:18px;margin-bottom:6px">🌲</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Темний ліс</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--dim);border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">60% контролю</div>
+            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--gold)">НАШ</div>
+              <div style="font-size:18px;margin-bottom:6px">🏙️</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Залізне місто</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:88%;background:var(--gold);border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">88% контролю</div>
+            </div><div style="background:var(--card);border:1px solid var(--border);padding:14px;position:relative;">
+              <div style="position:absolute;top:8px;right:8px;font-size:8px;font-family:var(--font-d);color:var(--steel)">СОЮЗНИК</div>
+              <div style="font-size:18px;margin-bottom:6px">🌋</div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Вулканічна зона</div>
+              <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:33%;background:var(--steel);border-radius:2px;"></div></div>
+              <div style="font-size:10px;color:var(--dim);margin-top:4px">33% контролю</div>
+            </div>
+        </div>
+
+        <!-- Що буде доступно -->
+        <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">ЗАПЛАНОВАНІ ФУНКЦІЇ</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px">
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">🏰</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Кланові сутички</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Клани воюють за регіони у реальному часі</div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">💰</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Ресурсні зони</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Контрольовані регіони дають ресурси клану щодня</div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">🗺️</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Інтерактивна карта</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Візуальна глобальна карта з 40+ регіонами</div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">🏆</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Сезонні нагороди</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Топ-клани отримують ексклюзивні танки і скіни</div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">⚡</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Особливі події</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Тижневі глобальні операції з унікальними умовами</div>
+            </div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:22px;flex-shrink:0">📊</span>
+            <div>
+              <div style="font-size:12px;color:#fff;margin-bottom:4px">Рейтинг фракцій</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.6">Глобальний баланс сил між East, West, North, Euro, Asian</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Підписка на сповіщення -->
+        <div style="background:rgba(232,188,56,0.05);border:1px solid rgba(232,188,56,0.2);padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-family:var(--font-d);font-size:9px;color:var(--gold);margin-bottom:6px">ОТРИМАТИ СПОВІЩЕННЯ</div>
+            <div style="font-size:12px;color:var(--dim)">Дізнайся першим коли Зона бойових дій запуститься</div>
+          </div>
+          <button id="warzone-notify-btn" onclick="subscribeWarzoneNotify()" style="padding:10px 22px;background:var(--gold);color:var(--bg);border:none;font-family:var(--font-d);font-size:9px;cursor:pointer;letter-spacing:1px;transition:opacity .2s;white-space:nowrap">🔔 Повідом мене</button>
+        </div>
+
+      </div>
+
       <div id="tab-referral" class="content-panel" style="display:none">
         <div class="panel-title">🎁 Реферальна програма</div>
 
@@ -3909,5 +4024,23 @@ window.closeClanManagePanel = function() {
 };
 </script>
 
+<script>
+window.subscribeWarzoneNotify = async function() {
+  const btn = document.getElementById('warzone-notify-btn');
+  if (!btn) return;
+  const uid = window._currentUser?.uid;
+  if (!uid) { btn.textContent = '🔒 Увійди спочатку'; return; }
+  try {
+    const db = window._db;
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await updateDoc(doc(db,'players',uid), { warzoneNotify: true });
+    btn.textContent = '✅ Підписано!';
+    btn.style.opacity = '.6';
+    btn.disabled = true;
+  } catch(e) {
+    btn.textContent = '❌ Помилка';
+  }
+};
+</script>
 </body>
 </html>
