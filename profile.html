@@ -247,42 +247,77 @@
         </div>`;
       }).join('');
 
-      // Члени
+      // Члени — два способи завантаження:
+      // 1) якщо members — масив UID → getDoc для кожного
+      // 2) fallback: query players where clanId == clanId
       const mEl=document.getElementById('clan-members-list');
-      if(c.members?.length){
+
+      function renderMembersTable(members){
+        if(!members.length){
+          mEl.innerHTML='<div style="font-size:12px;color:var(--dim)">Список порожній</div>';
+          return;
+        }
+        members.sort((a,b)=>(b.rating||0)-(a.rating||0));
+        mEl.innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:380px">
+          <thead><tr>
+            <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px">Гравець</th>
+            <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px">Роль</th>
+            <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Рейтинг</th>
+            <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Бої</th>
+            <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">WR</th>
+          </tr></thead><tbody>`+
+          members.map(m=>{
+            const isL=c.leaderId===m.uid,isO=c.officers?.includes(m.uid);
+            const role=isL?'👑 Лідер':isO?'⭐ Офіцер':'Член';
+            const rc=isL?'var(--gold)':isO?'var(--steel)':'var(--dim)';
+            const isMe=m.uid===myUid;
+            const wr=m.battles>0?Math.round(m.wins/m.battles*100):0;
+            return`<tr style="${isMe?'background:rgba(232,188,56,0.04)':''}">
+              <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3)">
+                <span style="font-size:13px;color:${isMe?'var(--gold)':'#fff'}">${m.nickname||'—'}${isMe?' ✦':''}</span>
+                <div style="font-size:10px;color:var(--dim)">LVL ${m.level||1}</div>
+              </td>
+              <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);font-size:11px;color:${rc}">${role}</td>
+              <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-family:var(--font-d);font-size:10px;color:var(--gold)">${(m.rating||0).toLocaleString()}</td>
+              <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:var(--dim)">${m.battles||0}</td>
+              <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:${wr>=50?'#4aaa5a':'var(--dim)'}">${wr}%</td>
+            </tr>`;
+          }).join('')+
+        '</tbody></table>';
+      }
+
+      // Спосіб 1 — members[] масив uid-рядків
+      const memberUids = (c.members||[]).filter(m => typeof m === 'string');
+
+      if(memberUids.length){
         try{
-          const mDocs=await Promise.all(c.members.slice(0,25).map(uid=>getDoc(doc(db,'players',uid))));
-          const members=mDocs.filter(d=>d.exists()).map(d=>({uid:d.id,...d.data()}));
-          members.sort((a,b)=>(b.rating||0)-(a.rating||0));
-          mEl.innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:380px">
-            <thead><tr>
-              <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px">Гравець</th>
-              <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px">Роль</th>
-              <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Рейтинг</th>
-              <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">Бої</th>
-              <th style="font-family:var(--font-d);font-size:7px;color:var(--dim);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);letter-spacing:1px">WR</th>
-            </tr></thead><tbody>`+
-            members.map(m=>{
-              const isL=c.leaderId===m.uid,isO=c.officers?.includes(m.uid);
-              const role=isL?'👑 Лідер':isO?'⭐ Офіцер':'Член';
-              const rc=isL?'var(--gold)':isO?'var(--steel)':'var(--dim)';
-              const isMe=m.uid===myUid;
-              const wr=m.battles>0?Math.round(m.wins/m.battles*100):0;
-              return`<tr style="${isMe?'background:rgba(232,188,56,0.04)':''}">
-                <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3)">
-                  <span style="font-size:13px;color:${isMe?'var(--gold)':'#fff'}">${m.nickname||'—'}${isMe?' ✦':''}</span>
-                  <div style="font-size:10px;color:var(--dim)">LVL ${m.level||1}</div>
-                </td>
-                <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);font-size:11px;color:${rc}">${role}</td>
-                <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-family:var(--font-d);font-size:10px;color:var(--gold)">${(m.rating||0).toLocaleString()}</td>
-                <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:var(--dim)">${m.battles||0}</td>
-                <td style="padding:10px;border-bottom:1px solid rgba(26,48,80,.3);text-align:right;font-size:12px;color:${wr>=50?'#4aaa5a':'var(--dim)'}">${wr}%</td>
-              </tr>`;
-            }).join('')+
-          '</tbody></table>';
-        }catch(e){mEl.innerHTML='<div style="font-size:12px;color:var(--dim)">Не вдалось завантажити список</div>';}
+          const mDocs = await Promise.all(
+            memberUids.slice(0,25).map(uid => getDoc(doc(db,'players',uid)))
+          );
+          const members = mDocs.filter(d=>d.exists()).map(d=>({uid:d.id,...d.data()}));
+          renderMembersTable(members);
+        }catch(e){
+          console.error('Members load (by uid array) error:', e);
+          // Спосіб 2 — query по clanId
+          try{
+            const qSnap = await getDocs(query(collection(db,'players'), where('clanId','==',clanId), limit(25)));
+            const members = qSnap.docs.map(d=>({uid:d.id,...d.data()}));
+            renderMembersTable(members);
+          }catch(e2){
+            console.error('Members load (by clanId query) error:', e2);
+            mEl.innerHTML=`<div style="font-size:12px;color:var(--dim)">Помилка: ${e2.message}</div>`;
+          }
+        }
       } else {
-        mEl.innerHTML='<div style="font-size:12px;color:var(--dim)">Список порожній</div>';
+        // members не масив uid або порожній — одразу query
+        try{
+          const qSnap = await getDocs(query(collection(db,'players'), where('clanId','==',clanId), limit(25)));
+          const members = qSnap.docs.map(d=>({uid:d.id,...d.data()}));
+          renderMembersTable(members);
+        }catch(e){
+          console.error('Members load (fallback query) error:', e);
+          mEl.innerHTML=`<div style="font-size:12px;color:var(--dim)">Помилка: ${e.message}</div>`;
+        }
       }
 
       // Кланові бої
