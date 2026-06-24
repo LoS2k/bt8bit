@@ -70,6 +70,7 @@
   .btn-secondary{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:transparent;color:var(--steel);font-family:var(--px);font-size:9px;letter-spacing:1px;text-decoration:none;border:1px solid var(--border);transition:all .2s;}
   .btn-secondary:hover{border-color:var(--steel);color:#fff;}
 
+  /* STATS BAR — тепер з лічильниками гравців */
   .stats-bar{background:var(--surf);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:24px 40px;display:flex;justify-content:center;flex-wrap:wrap;gap:0;}
   .stat-item{flex:1;min-width:140px;max-width:200px;text-align:center;padding:0 20px;border-right:1px solid var(--border);}
   .stat-item:last-child{border-right:none;}
@@ -89,10 +90,14 @@
   #modal-tournaments::-webkit-scrollbar-track{background:var(--bg);}
   #modal-tournaments::-webkit-scrollbar-thumb{background:var(--border);}
 
+
+  /* AD BLOCK */
   .ad-block{background:var(--surf);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:16px 40px;display:flex;justify-content:center;align-items:center;}
   .ad-inner{width:728px;max-width:100%;height:90px;background:var(--card);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
   .ad-placeholder{font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px;}
   .ad-label{position:absolute;top:4px;right:8px;font-size:9px;color:var(--dim);font-family:var(--rb);}
+  /* Реальний AdSense блок — замінити div.ad-inner на: */
+  /* <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXX"></ins> */
 
   section{padding:80px 40px;max-width:1100px;margin:0 auto;}
   .s-eye{font-family:var(--px);font-size:8px;letter-spacing:3px;color:var(--gold);display:block;margin-bottom:14px;}
@@ -120,6 +125,7 @@
   .tank-stat-bar{flex:1;height:4px;background:var(--border);position:relative;}
   .tank-stat-fill{position:absolute;left:0;top:0;bottom:0;background:var(--gold);}
 
+  /* LEADERBOARD */
   .leaderboard-table{width:100%;border-collapse:collapse;}
   .leaderboard-table th{font-family:var(--px);font-size:8px;color:var(--dim);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:1px;}
   .leaderboard-table td{padding:12px 16px;border-bottom:1px solid rgba(26,48,80,0.4);font-size:13px;color:var(--text);}
@@ -146,6 +152,7 @@
   .ni-title{font-family:var(--rb);font-size:13px;color:var(--text);margin-bottom:6px;line-height:1.4;}
   .ni-date{font-family:var(--px);font-size:7px;color:var(--dim);}
 
+  /* AD блок між секціями */
   .ad-mid{max-width:1100px;margin:0 auto;padding:0 40px 40px;}
   .ad-mid-inner{width:100%;height:90px;background:var(--card);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;position:relative;}
 
@@ -173,6 +180,7 @@
   .footer-social:hover{border-color:var(--gold);color:var(--gold);}
   .footer-col a{display:flex;align-items:center;gap:6px;}
 
+  /* AD у футері */
   .footer-ad{max-width:1100px;margin:0 auto 32px;padding:0;}
   .footer-ad-inner{width:100%;height:90px;background:var(--card);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;position:relative;}
 
@@ -211,24 +219,34 @@
     .dl-btns{flex-direction:column;width:100%;}
     .btn-dl{min-width:auto;width:100%;}
     h2{font-size:16px;}
+    /* Features grid */
     .features-grid{grid-template-columns:1fr!important;}
+    /* Hero buttons */
     .hero-btns{flex-direction:column;align-items:center;gap:10px;}
     .hero-btns a{width:100%;max-width:280px;text-align:center;}
+    /* Version info */
     #version-info{width:100%;justify-content:center;}
+    /* Download counter */
     #dl-count{font-size:13px;}
   }
   @media(max-width:480px){
     .stat-item{min-width:100%;border-right:none;}
     .stat-item:nth-child(odd){border-right:none;}
     nav .btn-cab{padding:6px 12px;font-size:8px;}
+    /* Hide damage column on small phones */
     .leaderboard-table th:nth-child(4),.leaderboard-table td:nth-child(4){display:none;}
+    /* Smaller hero text */
     .hero-sub{font-size:clamp(14px,5vw,24px)!important;}
     h2{font-size:14px;}
+    /* Mobile menu support link */
     .mobile-menu a{padding:12px 20px;font-size:9px;}
+    /* Tank cards smaller */
     .tank-card{min-width:200px!important;}
+    /* Footer compact */
     .footer-col{margin-top:0;}
   }
 
+  /* Бургер-меню */
   .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
   .burger span{display:block;width:22px;height:2px;background:var(--dim);transition:all .3s;}
   .burger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
@@ -243,6 +261,7 @@
 </head>
 <body>
 
+<!-- Firebase для лічильника -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot }
@@ -262,37 +281,49 @@
     const today = new Date().toISOString().slice(0,10);
     const statsRef = doc(db, 'siteStats', 'main');
     const dailyRef = doc(db, 'siteStats', 'daily_' + today);
+
+    // Унікальність через localStorage — один браузер рахується раз на добу
     const uniqueKey = 'bt8bit_visited_' + today;
     const isUniqueToday = !localStorage.getItem(uniqueKey);
     if (isUniqueToday) localStorage.setItem(uniqueKey, '1');
+
+    // Унікальність за весь час — через localStorage (fingerprint браузера)
     const everKey = 'bt8bit_ever_visited';
     const isUniqueEver = !localStorage.getItem(everKey);
     if (isUniqueEver) localStorage.setItem(everKey, '1');
+
     try {
       const updates = { totalVisits: increment(1) };
-      if (isUniqueEver) updates.uniqueVisitors = increment(1);
+      if (isUniqueEver)  updates.uniqueVisitors = increment(1);
+
       const dailyUpdates = { date: today, visits: increment(1) };
       if (isUniqueToday) dailyUpdates.uniqueToday = increment(1);
+
       await Promise.all([
         setDoc(statsRef, updates, { merge: true }),
         setDoc(dailyRef, dailyUpdates, { merge: true })
       ]);
+
+      // Live listeners — оновлюють всі елементи з відповідним id
       onSnapshot(statsRef, snap => {
         if (!snap.exists()) return;
         const d = snap.data();
-        const total  = (d.totalVisits    || 0).toLocaleString('uk-UA');
-        const unique = (d.uniqueVisitors || 0).toLocaleString('uk-UA');
-        ['stat-total-visits','stat-total-visits-2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=total; });
-        ['stat-unique-visits','stat-unique-visits-2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=unique; });
+        const total   = (d.totalVisits    || 0).toLocaleString('uk-UA');
+        const unique  = (d.uniqueVisitors || 0).toLocaleString('uk-UA');
+        ['stat-total-visits',  'stat-total-visits-2' ].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=total; });
+        ['stat-unique-visits', 'stat-unique-visits-2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=unique; });
       });
+
       onSnapshot(dailyRef, snap => {
         if (!snap.exists()) return;
         const d = snap.data();
         const todayAll    = (d.visits      || 0).toLocaleString('uk-UA');
         const todayUnique = (d.uniqueToday || 0).toLocaleString('uk-UA');
-        ['stat-today-visits','stat-today-visits-2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=todayAll; });
-        ['stat-today-unique','stat-today-unique-2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=todayUnique; });
+        ['stat-today-visits',  'stat-today-visits-2' ].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=todayAll; });
+        ['stat-today-unique',  'stat-today-unique-2' ].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=todayUnique; });
       });
+
+      // Leaderboard
       const { collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
       const q = query(collection(db,'players'), orderBy('rating','desc'), limit(10));
       const snap = await getDocs(q);
@@ -308,14 +339,21 @@
       return;
     }
     const medals = ['🥇','🥈','🥉'];
-    let html = ''; let i = 0;
+    let html = '';
+    let i = 0;
     snap.forEach(d => {
       const p = d.data();
       const wr = p.battles > 0 ? Math.round(p.wins/p.battles*100) : 0;
       const rankCls = i===0?'lb-rank gold':i===1?'lb-rank silver':i===2?'lb-rank bronze':'lb-rank';
       const rankTxt = i < 3 ? medals[i] : '#' + (i+1);
       const dmg = p.totalDamage ? Math.round(p.totalDamage/1000000*10)/10 + 'M' : '—';
-      html += `<tr><td><span class="${rankCls}">${rankTxt}</span></td><td class="lb-nick">${p.nickname||'—'}</td><td><span class="lb-val">${(p.rating||0).toLocaleString()}</span></td><td><span class="lb-wr">${wr}%</span></td><td style="color:var(--dim);font-size:12px">${dmg}</td></tr>`;
+      html += `<tr>
+        <td><span class="${rankCls}">${rankTxt}</span></td>
+        <td class="lb-nick">${p.nickname||'—'}</td>
+        <td><span class="lb-val">${(p.rating||0).toLocaleString()}</span></td>
+        <td><span class="lb-wr">${wr}%</span></td>
+        <td style="color:var(--dim);font-size:12px">${dmg}</td>
+      </tr>`;
       i++;
     });
     tbody.innerHTML = html;
@@ -323,34 +361,51 @@
 
   trackAndShow();
 
-  const APK_URL_DEFAULT = 'https://github.com/LoS2k/bt8bit/releases/download/v0.2.2/TanksBattles3D_Online_v022.apk';
+  const APK_URL_DEFAULT = 'https://github.com/LoS2k/bt8bit/releases/download/v0.2.1/TanksBattles3D_Online_v021.1.apk';
 
   async function loadAppVersion() {
     try {
       const snap = await getDoc(doc(db,'config','version'));
-      let version = '0.2.2'; let apkUrl = APK_URL_DEFAULT; let changelog = ''; let downloads = 0;
+
+      let version = '0.2.1';
+      let apkUrl  = APK_URL_DEFAULT;
+      let changelog = '';
+      let downloads = 0;
+
       if (snap.exists()) {
         const d = snap.data();
-        version = d.latest || d.version || version;
-        apkUrl  = d.apkUrl || apkUrl;
+        version   = d.latest    || d.version || version;
+        apkUrl    = d.apkUrl    || apkUrl;
         changelog = d.changelog || '';
         downloads = d.downloads || 0;
       }
+
+      // Версія
       const verEl = document.getElementById('app-version');
       if (verEl) verEl.textContent = 'v' + version;
+
+      // APK кнопка
       const apkBtn = document.getElementById('btn-apk');
-      if (apkBtn) { apkBtn.href = apkUrl; apkBtn.onclick = () => trackDownload(); }
+      if (apkBtn) {
+        apkBtn.href = apkUrl;
+        apkBtn.onclick = () => trackDownload();
+      }
       const apkVer = document.getElementById('btn-apk-ver');
       if (apkVer) apkVer.textContent = 'v' + version;
+
+      // Лічильник завантажень
       const dlCount = document.getElementById('dl-count');
       if (dlCount) dlCount.textContent = downloads.toLocaleString('uk-UA');
+
+      // Changelog
       const changeEl = document.getElementById('version-changelog');
       if (changeEl && changelog) changeEl.innerHTML = '📋 ' + changelog;
+
     } catch(e) {
       const apkBtn = document.getElementById('btn-apk');
       if (apkBtn) { apkBtn.href = APK_URL_DEFAULT; apkBtn.onclick = () => trackDownload(); }
       const verEl = document.getElementById('app-version');
-      if (verEl) verEl.textContent = 'v0.2.2';
+      if (verEl) verEl.textContent = 'v0.2.1';
     }
   }
 
@@ -361,7 +416,12 @@
       if (snap.exists()) {
         await updateDoc(ref, { downloads: increment(1) });
       } else {
-        await setDoc(ref, { latest:'0.2.2', minimum:'0.1.0', apkUrl: APK_URL_DEFAULT, changelog:'Нова техніка та виправлення', downloads: 1 });
+        await setDoc(ref, {
+          latest: '0.2.1', minimum: '0.1.0',
+          apkUrl: APK_URL_DEFAULT,
+          changelog: 'Перший публічний реліз',
+          downloads: 1
+        });
       }
       const dlCount = document.getElementById('dl-count');
       if (dlCount) {
@@ -374,7 +434,6 @@
   loadAppVersion();
 </script>
 
-<!-- ── NAV ──────────────────────────────────────────────────── -->
 <nav>
   <a class="nav-logo" href="#">
     <img src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
@@ -388,7 +447,6 @@
     <li><a href="market.html" style="color:var(--green)" data-t="nav.market">🏪 Ринок</a></li>
     <li><a href="gallery.html" style="color:var(--steel)" data-t="nav.gallery">📸 Галерея</a></li>
     <li><a href="tanks.html" style="color:var(--steel)" data-t="nav.tanks.db">🚀 Техніка</a></li>
-    <li><a href="workshop.html" style="color:var(--gold)" data-t="nav.workshop">🎨 Майстерня</a></li>
     <li><a href="support.html" style="color:var(--steel)" data-t="nav.support">🎫 Підтримка</a></li>
     <li><a href="#download" data-t="nav.download">Завантажити</a></li>
   </ul>
@@ -411,8 +469,7 @@
       <button class="lang-btn active" onclick="setLang('uk')">UA</button>
       <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <!-- ── МАЙСТЕРНЯ замість Завантажити ── -->
-    <a class="btn-cab" href="workshop.html" style="border-color:var(--gold);color:var(--gold)" data-t="nav.workshop.btn">🎨 Майстерня</a>
+    <a class="btn-cab" href="profile.html" data-t="nav.cabinet">Кабінет</a>
     <button class="burger" id="burger-btn" onclick="toggleMenu()" aria-label="Меню">
       <span></span><span></span><span></span>
     </button>
@@ -427,8 +484,6 @@
   <a href="#news" onclick="toggleMenu()" data-t="nav.news">Новини</a>
   <a href="market.html" style="color:var(--green)" data-t="nav.market">🏪 Ринок</a>
   <a href="gallery.html" style="color:var(--steel)" data-t="nav.gallery">📸 Галерея</a>
-  <a href="tanks.html" style="color:var(--steel)" data-t="nav.tanks.db">🚀 Техніка</a>
-  <a href="workshop.html" style="color:var(--gold)">🎨 Майстерня</a>
   <a href="support.html" style="color:var(--steel)" data-t="nav.support">🎫 Підтримка</a>
   <a href="#download" onclick="toggleMenu()" data-t="nav.download">Завантажити</a>
   <a href="profile.html" style="color:var(--gold)" data-t="nav.cabinet.arrow">Кабінет →</a>
@@ -440,22 +495,22 @@
   <div class="hero-content">
     <img class="hero-logo" src="logo.png" alt="BT 8BIT" onerror="this.style.display='none'">
     <div class="hero-eyebrow" data-t="hero.eyebrow">Відкрите бета-тестування</div>
-    <h1 class="hero-title">TANKS BATTLES <span>3D</span></h1>
+    <h1 class="hero-title">TANKS BATTLED <span>3D</span></h1>
     <div class="hero-sub" data-t="hero.sub">ТАНКОВІ БОЇ 3D</div>
     <p class="hero-desc" data-t="hero.desc">Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.</p>
     <div class="hero-btns">
       <a class="btn-primary" href="#download" data-t="hero.btn1">▶ Завантажити</a>
-      <a class="btn-secondary" href="workshop.html" data-t="hero.btn2">🎨 Майстерня</a>
+      <a class="btn-secondary" href="#features" data-t="hero.btn2">Дізнатись більше</a>
     </div>
   </div>
 </div>
 
-<!-- ТУРНІРИ -->
+<!-- ТУРНІРИ — модальна кнопка одразу після hero -->
 <div id="tournaments-bar" style="background:var(--surf);border-bottom:2px solid rgba(232,188,56,0.25);padding:0;">
   <div style="max-width:1100px;margin:0 auto;padding:0 40px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;min-height:56px;">
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
       <span style="font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:2px">🏆 ТУРНІРИ</span>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;" id="tournament-pills">
         <span class="t-pill active-pill">Відкрита ліга · 12 черв</span>
         <span class="t-pill">Клановий кубок · 20 черв</span>
         <span class="t-pill upcoming-pill">Гранд-фінал · Серпень</span>
@@ -470,16 +525,20 @@
 <div id="modal-tournaments" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:501;width:min(760px,95vw);max-height:85vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);">
   <div style="padding:28px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1;">
     <div>
-      <span style="font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:2px;display:block;margin-bottom:6px">TB3D</span>
+      <span style="font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:2px;display:block;margin-bottom:6px">BT 8BIT</span>
       <span style="font-family:var(--px);font-size:14px;color:#fff">🏆 Турніри та ліги</span>
     </div>
     <button onclick="closeTournaments()" style="background:transparent;border:1px solid var(--border);color:var(--dim);width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">✕</button>
   </div>
   <div style="padding:24px 32px;display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Активний турнір -->
     <div style="background:var(--surface);border:1px solid rgba(232,188,56,0.4);padding:20px 24px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="font-family:var(--px);font-size:7px;background:var(--gold);color:var(--bg);padding:4px 10px;">РЕЄСТРАЦІЯ ВІДКРИТА</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-family:var(--px);font-size:7px;background:var(--gold);color:var(--bg);padding:4px 10px;">РЕЄСТРАЦІЯ ВІДКРИТА</span>
+          </div>
           <div style="font-family:var(--px);font-size:13px;color:#fff;margin-bottom:8px;">Відкрита ліга TANKS BATTLES 3D</div>
           <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px;">Відкритий турнір для всіх гравців. Формат 6v6, одиночне вибування. Призовий фонд: 5000 золота + ексклюзивний камуфляж переможцю.</div>
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
@@ -492,32 +551,52 @@
         <a href="profile.html" style="display:inline-flex;align-items:center;padding:12px 20px;background:var(--gold);color:var(--bg);font-family:var(--px);font-size:10px;text-decoration:none;transition:background .2s;white-space:nowrap;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">Реєстрація →</a>
       </div>
     </div>
+
+    <!-- Клановий кубок -->
     <div style="background:var(--surface);border:1px solid var(--border);padding:20px 24px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="font-family:var(--px);font-size:7px;background:var(--border);color:var(--steel);padding:4px 10px;">НЕЗАБАРОМ</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-family:var(--px);font-size:7px;background:var(--border);color:var(--steel);padding:4px 10px;">НЕЗАБАРОМ</span>
+          </div>
           <div style="font-family:var(--px);font-size:13px;color:#fff;margin-bottom:8px;">Клановий кубок · Сезон 1</div>
-          <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px;">Турнір для кланів. Мінімум 5 гравців у клані для участі.</div>
+          <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px;">Турнір для кланів. Мінімум 5 гравців у клані для участі. Призи для топ-3 кланів: золото, кресленики, унікальний прапор клану.</div>
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
             <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Дата</span><span style="font-family:var(--px);font-size:10px;color:var(--steel)">20 Червня 2026</span></div>
+            <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Формат</span><span style="font-family:var(--px);font-size:10px;color:var(--text)">Клани 6v6</span></div>
+            <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Кланів</span><span style="font-family:var(--px);font-size:10px;color:var(--steel)">8 / 16</span></div>
             <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Призовий</span><span style="font-family:var(--px);font-size:10px;color:var(--gold)">20,000 🪙</span></div>
           </div>
         </div>
         <button style="display:inline-flex;align-items:center;padding:12px 20px;background:transparent;color:var(--steel);border:1px solid var(--border);font-family:var(--px);font-size:10px;cursor:pointer;white-space:nowrap;">Нагадати</button>
       </div>
     </div>
+
+    <!-- Гранд-фінал -->
     <div style="background:var(--surface);border:1px solid rgba(232,188,56,0.15);padding:20px 24px;opacity:.7;">
-      <div style="flex:1;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="font-family:var(--px);font-size:7px;background:rgba(232,188,56,0.1);color:var(--gold);padding:4px 10px;border:1px solid rgba(232,188,56,0.2);">АНОНС</span></div>
-        <div style="font-family:var(--px);font-size:13px;color:#fff;margin-bottom:8px;">Гранд-фінал TB3D · Сезон 1</div>
-        <div style="font-size:13px;color:var(--dim);line-height:1.7;">Головний турнір року. Деталі будуть оголошені пізніше.</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-family:var(--px);font-size:7px;background:rgba(232,188,56,0.1);color:var(--gold);padding:4px 10px;border:1px solid rgba(232,188,56,0.2);">АНОНС</span>
+          </div>
+          <div style="font-family:var(--px);font-size:13px;color:#fff;margin-bottom:8px;">Гранд-фінал BT 8BIT · Сезон 1</div>
+          <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px;">Головний турнір року. Відбір через ліги і кубки. Деталі будуть оголошені пізніше.</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Дата</span><span style="font-family:var(--px);font-size:10px;color:var(--dim)">Серпень 2026</span></div>
+            <div><span style="font-size:10px;color:var(--dim);display:block;margin-bottom:2px">Призовий</span><span style="font-family:var(--px);font-size:10px;color:var(--gold)">TBA 🏆</span></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--dim);text-align:center;padding:8px 0;line-height:1.7">Реєстрація через особистий кабінет · Результати в Discord і Telegram</div>
+
+    <div style="font-size:11px;color:var(--dim);text-align:center;padding:8px 0;line-height:1.7">
+      Реєстрація на турніри відбувається через особистий кабінет · Результати публікуються в Discord і Telegram
+    </div>
   </div>
 </div>
 
-<!-- STATS BAR 1 -->
+
+<!-- БЛОК 1 — ігрова статистика -->
 <div class="stats-bar">
   <div class="stat-item"><span class="stat-value">50+</span><span class="stat-label" data-t="stat.tanks">Танків</span></div>
   <div class="stat-item"><span class="stat-value">6v6</span><span class="stat-label" data-t="stat.battles">Командні бої</span></div>
@@ -534,14 +613,30 @@
   </div>
 </div>
 
-<!-- STATS BAR 2 — відвідуваність -->
+<!-- БЛОК 2 — онлайн і відвідуваність -->
 <div class="stats-bar" style="background:var(--bg);">
-  <div class="stat-item"><span class="stat-value live" id="stat-total-visits">...</span><span class="stat-label" data-t="stat.total">Всього відвідувань</span></div>
-  <div class="stat-item"><span class="stat-value live" id="stat-unique-visits">...</span><span class="stat-label" data-t="stat.unique">Унікальних гостей</span></div>
-  <div class="stat-item"><span class="stat-value live" id="stat-today-visits">...</span><span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.all">Сьогодні всього</span></span></div>
-  <div class="stat-item"><span class="stat-value live" id="stat-today-unique">...</span><span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.unique">Сьогодні унікальних</span></span></div>
+  <div class="stat-item">
+    <span class="stat-value live" id="stat-total-visits">...</span>
+    <span class="stat-label" data-t="stat.total">Всього відвідувань</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-value live" id="stat-unique-visits">...</span>
+    <span class="stat-label" data-t="stat.unique">Унікальних гостей</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-value live" id="stat-today-visits">...</span>
+    <span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.all">Сьогодні всього</span></span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-value live" id="stat-today-unique">...</span>
+    <span class="stat-label"><span class="live-dot"></span><span data-t="stat.today.unique">Сьогодні унікальних</span></span>
+  </div>
 </div>
 <div class="pixel-div"></div>
+
+
+  </div>
+</div>
 
 <!-- FEATURES -->
 <section id="features">
@@ -567,6 +662,7 @@
     <p class="s-desc" data-t="tanks.desc">Від легких розвідників до важких штурмових машин.</p>
   </div>
   <div class="tanks-scroll" id="tanks-scroll">
+    <!-- Завантажується динамічно -->
     <div class="tank-card" style="opacity:.5;pointer-events:none">
       <div class="tank-nation">⏳ Завантаження...</div>
       <div class="tank-name" style="color:var(--dim)">Техніка</div>
@@ -578,7 +674,7 @@
 </div>
 <div class="pixel-div"></div>
 
-<!-- РЕКЛАМА #2 -->
+<!-- РЕКЛАМА #2 — між танками і рейтингом -->
 <div class="ad-mid">
   <div class="ad-mid-inner">
     <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px" data-t="ad.label">РЕКЛАМНИЙ БЛОК 970×90</span>
@@ -592,8 +688,18 @@
   <h2 data-t="lb.title">Топ гравців</h2>
   <p class="s-desc" data-t="lb.desc">Найкращі командири TB3D за рейтингом. Оновлюється в реальному часі.</p>
   <table class="leaderboard-table">
-    <thead><tr><th>#</th><th data-t="lb.player">Гравець</th><th data-t="lb.rating">Рейтинг</th><th data-t="lb.wr">Вінрейт</th><th data-t="lb.dmg">Урон</th></tr></thead>
-    <tbody id="lb-body"><tr><td colspan="5" style="text-align:center;color:var(--dim);padding:24px;font-size:13px" data-t="lb.loading">Завантаження рейтингу...</td></tr></tbody>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th data-t="lb.player">Гравець</th>
+        <th data-t="lb.rating">Рейтинг</th>
+        <th data-t="lb.wr">Вінрейт</th>
+        <th data-t="lb.dmg">Урон</th>
+      </tr>
+    </thead>
+    <tbody id="lb-body">
+      <tr><td colspan="5" style="text-align:center;color:var(--dim);padding:24px;font-size:13px" data-t="lb.loading">Завантаження рейтингу...</td></tr>
+    </tbody>
   </table>
 </section>
 <div class="pixel-div"></div>
@@ -625,6 +731,7 @@
       <span class="s-eye" data-t="dl.eye">Завантажити</span>
       <h2 data-t="dl.title">Готовий до бою?</h2>
       <p class="s-desc" data-t="dl.desc">Доступно безкоштовно на Android.</p>
+      <!-- Версія — підвантажується з Firebase -->
       <div id="version-info" style="margin-top:16px;display:inline-flex;align-items:center;gap:10px;background:rgba(74,170,90,0.1);border:1px solid rgba(74,170,90,0.3);padding:8px 16px;">
         <span style="font-size:11px;color:var(--dim)" data-t="dl.version">Остання версія:</span>
         <span style="font-family:var(--px);font-size:11px;color:#4aaa5a" id="app-version">...</span>
@@ -632,15 +739,24 @@
       <div id="version-changelog" style="margin-top:10px;font-size:12px;color:var(--dim);line-height:1.6;max-width:400px"></div>
     </div>
     <div class="dl-btns">
+      <!-- Google Play -->
       <a class="btn-dl" id="btn-play" href="https://play.google.com/store/apps/details?id=com.bt8bit.tanksbattles3d" target="_blank">
         <span class="btn-dl-icon">📱</span>
-        <span><span class="btn-dl-sub" data-t="dl.gp.sub">Завантажити в</span><span class="btn-dl-label">Google Play</span></span>
+        <span>
+          <span class="btn-dl-sub" data-t="dl.gp.sub">Завантажити в</span>
+          <span class="btn-dl-label">Google Play</span>
+        </span>
       </a>
+      <!-- Прямий APK -->
       <a class="btn-dl btn-dl-apk" id="btn-apk" href="https://github.com/LoS2k/bt8bit/releases/download/v0.2.2/TanksBattles3D_Online_v022.apk" target="_blank">
         <span class="btn-dl-icon">📦</span>
-        <span><span class="btn-dl-sub" data-t="dl.apk.sub">Прямий APK</span><span class="btn-dl-label" id="btn-apk-ver">v0.2.2</span></span>
+        <span>
+          <span class="btn-dl-sub" data-t="dl.apk.sub">Прямий APK</span>
+          <span class="btn-dl-label" id="btn-apk-ver">v0.2.2</span>
+        </span>
       </a>
     </div>
+    <!-- Лічильник завантажень -->
     <div style="margin-top:16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)">
       <span style="font-size:16px">📥</span>
       <span data-t="dl.downloads">Завантажено:</span>
@@ -652,6 +768,7 @@
 
 <!-- FOOTER -->
 <footer>
+  <!-- РЕКЛАМА #3 -->
   <div class="footer-ad">
     <div class="footer-ad-inner">
       <span style="font-family:var(--px);font-size:8px;color:var(--dim);letter-spacing:2px" data-t="ad.label">РЕКЛАМНИЙ БЛОК 728×90</span>
@@ -662,27 +779,33 @@
     <div class="footer-brand">
       <a class="nav-logo" href="#"><span class="nav-logo-text">TB3D</span></a>
       <p data-t="footer.desc">Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.</p>
+      <!-- Соціальні мережі -->
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-        <a href="https://t.me/tanks_battles_3d" target="_blank" class="footer-social">✈️ Telegram</a>
-        <a href="https://discord.gg/Rezw5FSMUC" target="_blank" class="footer-social">🎮 Discord</a>
-        <a href="https://www.youtube.com/@Los_2k" target="_blank" class="footer-social">▶️ YouTube</a>
+        <a href="https://t.me/tanks_battles_3d" target="_blank" class="footer-social" title="Telegram">
+          <span>✈️</span> Telegram
+        </a>
+        <a href="https://discord.gg/Rezw5FSMUC" target="_blank" class="footer-social" title="Discord">
+          <span>🎮</span> Discord
+        </a>
+        <a href="https://www.youtube.com/@Los_2k" target="_blank" class="footer-social" title="YouTube">
+          <span>▶️</span> YouTube
+        </a>
       </div>
     </div>
     <div class="footer-col">
       <h4 data-t="footer.game">🎯 Гра</h4>
       <ul>
-        <li><a href="#features">⚙️ Особливості</a></li>
-        <li><a href="#tanks">🚀 Танки</a></li>
-        <li><a href="#leaderboard">🏆 Рейтинг</a></li>
-        <li><a href="market.html">🏪 Ринок</a></li>
-        <li><a href="gallery.html">📸 Галерея</a></li>
-        <li><a href="workshop.html">🎨 Майстерня</a></li>
+        <li><a href="#features" data-t="nav.features">⚙️ Особливості</a></li>
+        <li><a href="#tanks" data-t="nav.tanks">🚀 Танки</a></li>
+        <li><a href="#leaderboard" data-t="nav.leaderboard">🏆 Рейтинг</a></li>
+        <li><a href="market.html" data-t="nav.market">🏪 Ринок</a></li>
+        <li><a href="gallery.html" data-t="nav.gallery">📸 Галерея</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4 data-t="footer.support">🎫 Підтримка</h4>
       <ul>
-        <li><a href="support.html">🎫 Центр підтримки</a></li>
+        <li><a href="support.html" data-t="nav.support.full">🎫 Центр підтримки</a></li>
         <li><a href="https://t.me/tanks_battles_3d" target="_blank">✈️ Telegram</a></li>
         <li><a href="https://discord.gg/Rezw5FSMUC" target="_blank">🎮 Discord</a></li>
         <li><a href="mailto:tanksbattles3d@gmail.com">📧 Email</a></li>
@@ -691,18 +814,18 @@
     <div class="footer-col">
       <h4 data-t="footer.legal">📋 Правове</h4>
       <ul>
-        <li><a href="terms.html">📄 Угода користувача</a></li>
-        <li><a href="privacy.html">🔒 Конфіденційність</a></li>
-        <li><a href="profile.html">👤 Кабінет</a></li>
+        <li><a href="terms.html" data-t="footer.terms">📄 Угода користувача</a></li>
+        <li><a href="privacy.html" data-t="footer.privacy">🔒 Конфіденційність</a></li>
+        <li><a href="profile.html" data-t="nav.cabinet">👤 Кабінет</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 TB3D · 🇺🇦 Розроблено в Україні</span>
+    <span>© 2026 TB3D · 🇺🇦 <span data-t="footer.made">Розроблено в Україні</span></span>
     <span style="display:flex;gap:12px">
-      <a href="https://t.me/tanks_battles_3d" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px">✈️</a>
-      <a href="https://discord.gg/Rezw5FSMUC" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px">🎮</a>
-      <a href="https://www.youtube.com/@Los_2k" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px">▶️</a>
+      <a href="https://t.me/tanks_battles_3d" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="Telegram">✈️</a>
+      <a href="https://discord.gg/Rezw5FSMUC" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="Discord">🎮</a>
+      <a href="https://www.youtube.com/@Los_2k" target="_blank" style="color:var(--dim);text-decoration:none;font-size:16px" title="YouTube">▶️</a>
     </span>
   </div>
 </footer>
@@ -713,15 +836,15 @@ const T = {
     'nav.features':'⚙️ Особливості','nav.tanks':'🚀 Танки','nav.leaderboard':'🏆 Рейтинг',
     'nav.news':'Новини','nav.download':'Завантажити','nav.cabinet':'👤 Кабінет',
     'nav.cabinet.arrow':'Кабінет →','nav.market':'🏪 Ринок','nav.support':'🎫 Підтримка',
-    'nav.gallery':'📸 Галерея','nav.workshop':'🎨 Майстерня','nav.workshop.btn':'🎨 Майстерня',
+    'nav.gallery':'📸 Галерея',
     'hero.eyebrow':'Відкрите бета-тестування','hero.sub':'ТАНКОВІ БОЇ 3D',
     'hero.desc':'Мобільна танкова гра з реалістичною фізикою, кланами і глобальними боями.',
-    'hero.btn1':'▶ Завантажити','hero.btn2':'🎨 Майстерня',
+    'hero.btn1':'▶ Завантажити','hero.btn2':'Дізнатись більше',
     'stat.tanks':'Танків','stat.battles':'Командні бої','stat.nations':'Націй',
     'stat.beta.val':'ЗБТ','stat.status':'Статус',
     'stat.total':'Всього відвідувань','stat.unique':'Унікальних гостей',
     'stat.today.all':'Сьогодні всього','stat.today.unique':'Сьогодні унікальних',
-    'feat.eye':'Можливості','feat.title':'Що робить TB3D особливим',
+    'feat.eye':'Можливості','feat.title':'Що робить BT 8BIT особливим',
     'feat.desc':'Реалістична механіка бронювання, система кланів і глобальна карта.',
     'f1.t':'Реалістична броня','f1.d':'Система пробиття з урахуванням кута нахилу, товщини і типу снаряда.',
     'f2.t':'6 на 6 бої','f2.d':'Командні бої в реальному часі. Координація, захоплення точок і знищення баз.',
@@ -729,65 +852,78 @@ const T = {
     'f4.t':'Система «Легенда»','f4.d':'Накопичуй урон за всі бої — розблоковуй апгрейди бази і нагороди.',
     'f5.t':'Календар активності','f5.d':'Відстежуй серії входів, отримуй бонуси за щоденну гру.',
     'f6.t':'ДНК гравця','f6.d':'Радарна діаграма стилю гри — атака, захист, виживання, підтримка, активність.',
-    'tanks.eye':'Техніка','tanks.title':'Обирай свій танк','tanks.desc':'Від легких розвідників до важких штурмових машин.',
-    'lb.eye':'Рейтинг','lb.title':'Топ гравців','lb.desc':'Найкращі командири TB3D за рейтингом.',
-    'lb.player':'Гравець','lb.rating':'Рейтинг','lb.wr':'Вінрейт','lb.dmg':'Урон','lb.loading':'Завантаження...',
+    'tanks.eye':'Техніка','tanks.title':'Обирай свій танк',
+    'tanks.desc':'Від легких розвідників до важких штурмових машин.',
+    'lb.eye':'Рейтинг','lb.title':'Топ гравців',
+    'lb.desc':'Найкращі командири BT 8BIT за рейтингом. Оновлюється в реальному часі.',
+    'lb.player':'Гравець','lb.rating':'Рейтинг','lb.wr':'Вінрейт','lb.dmg':'Урон',
+    'lb.loading':'Завантаження рейтингу...',
     'news.eye':'Новини','news.title':'Останні оновлення','news.tag1':'Оновлення',
     'news.main.title':'Відкрите бета-тестування — скоро','news.main.date':'Червень 2026',
-    'news.main.text':'Ми готуємося до запуску відкритого бета-тестування TB3D. Реєструйся зараз щоб отримати стартовий бонус.',
+    'news.main.text':'Ми готуємося до запуску відкритого бета-тестування BT 8BIT. Реєструйся зараз щоб отримати ранній доступ і стартовий бонус — 500 золота і ексклюзивний камуфляж.',
     'tag.clans':'Клани','tag.tanks':'Техніка','tag.balance':'Баланс','tag.maps':'Карти',
     'n1.title':'Система кланів — глобальна карта і клан-війни',
     'n2.title':'Додано 5 нових танків: Франція та США',
     'n3.title':'Оновлено фізику пробиття і рікошетів',
     'n4.title':'Нова карта Полігон — міські бої',
-    'dl.eye':'Завантажити','dl.title':'Готовий до бою?','dl.desc':'Доступно безкоштовно на Android.',
+    'dl.eye':'Завантажити','dl.title':'Готовий до бою?',
+    'dl.desc':'Доступно безкоштовно на Android.',
     'dl.gp.sub':'Завантажити в','dl.apk.sub':'Прямий APK',
     'dl.downloads':'Завантажено:','dl.times':'разів','dl.version':'Остання версія:',
-    'footer.desc':'Мобільна танкова гра. Розроблено в Україні.',
+    'footer.desc':'Мобільна танкова гра з реалістичною механікою бронювання і системою кланів. Розроблено в Україні.',
     'footer.game':'🎯 Гра','footer.support':'🎫 Підтримка','footer.legal':'📋 Правове',
     'footer.terms':'📄 Угода користувача','footer.privacy':'🔒 Конфіденційність',
+    'footer.made':'Розроблено в Україні','nav.gallery':'📸 Галерея',
+    'nav.support.full':'🎫 Центр підтримки',
     'ad.label':'РЕКЛАМНИЙ БЛОК','ad.tag':'Реклама',
-    'nav.support.full':'🎫 Центр підтримки','nav.tanks.db':'🚀 Техніка',
+    'tourn.title':'Турніри','tourn.register':'Реєстрація',
+    'tourn.more':'Детальніше','tourn.join':'Взяти участь',
   },
   en: {
     'nav.features':'⚙️ Features','nav.tanks':'🚀 Tanks','nav.leaderboard':'🏆 Leaderboard',
     'nav.news':'News','nav.download':'Download','nav.cabinet':'👤 Cabinet',
     'nav.cabinet.arrow':'Cabinet →','nav.market':'🏪 Market','nav.support':'🎫 Support',
-    'nav.gallery':'📸 Gallery','nav.workshop':'🎨 Workshop','nav.workshop.btn':'🎨 Workshop',
+    'nav.gallery':'📸 Gallery','nav.support.full':'🎫 Support Center',
     'hero.eyebrow':'Open Beta Coming Soon','hero.sub':'TANK BATTLES 3D',
     'hero.desc':'Mobile tank game with realistic physics, clans and global battles.',
-    'hero.btn1':'▶ Download Free','hero.btn2':'🎨 Workshop',
+    'hero.btn1':'▶ Download Free','hero.btn2':'Learn More',
     'stat.tanks':'Tanks','stat.battles':'Team Battles','stat.nations':'Nations',
     'stat.beta.val':'OBT','stat.status':'Status',
     'stat.total':'Total Visits','stat.unique':'Unique Visitors',
     'stat.today.all':'Today Total','stat.today.unique':'Today Unique',
-    'feat.eye':'Features','feat.title':'What makes TB3D special',
-    'feat.desc':'Realistic armor mechanics, clan system and global map.',
-    'f1.t':'Realistic Armor','f1.d':'Shell penetration with angle, thickness and shell type.',
+    'feat.eye':'Features','feat.title':'What makes BT 8BIT special',
+    'feat.desc':'Realistic armor mechanics, clan system and global map — all in one mobile game.',
+    'f1.t':'Realistic Armor','f1.d':'Shell penetration with angle, thickness and shell type calculation.',
     'f2.t':'6 vs 6 Battles','f2.d':'Real-time team battles. Capture points and destroy enemy bases.',
-    'f3.t':'Clan System','f3.d':'Create a clan, build structures and capture regions.',
-    'f4.t':'"Legend" System','f4.d':'Accumulate damage — unlock base upgrades and rewards.',
-    'f5.t':'Activity Calendar','f5.d':'Track login streaks and earn bonuses for daily play.',
-    'f6.t':'Player DNA','f6.d':'Radar chart — attack, defense, survival, support, activity.',
-    'tanks.eye':'Vehicles','tanks.title':'Choose Your Tank','tanks.desc':'From light scouts to heavy assault machines.',
-    'lb.eye':'Leaderboard','lb.title':'Top Players','lb.desc':'Best TB3D commanders by rating.',
-    'lb.player':'Player','lb.rating':'Rating','lb.wr':'Winrate','lb.dmg':'Damage','lb.loading':'Loading...',
+    'f3.t':'Clan System','f3.d':'Create a clan, build structures and capture regions on the global map.',
+    'f4.t':'"Legend" System','f4.d':'Accumulate damage across all battles — unlock base upgrades and rewards.',
+    'f5.t':'Activity Calendar','f5.d':'Track your login streaks and earn bonuses for daily play.',
+    'f6.t':'Player DNA','f6.d':'Radar chart of your playstyle — attack, defense, survival, support, activity.',
+    'tanks.eye':'Vehicles','tanks.title':'Choose Your Tank',
+    'tanks.desc':'From light scouts to heavy assault machines.',
+    'lb.eye':'Leaderboard','lb.title':'Top Players',
+    'lb.desc':'Best BT 8BIT commanders by rating. Updated in real time.',
+    'lb.player':'Player','lb.rating':'Rating','lb.wr':'Winrate','lb.dmg':'Damage',
+    'lb.loading':'Loading leaderboard...',
     'news.eye':'News','news.title':'Latest Updates','news.tag1':'Update',
     'news.main.title':'Open Beta — Coming Soon','news.main.date':'June 2026',
-    'news.main.text':'We are preparing for the TB3D open beta. Register now to get early access and a starter bonus.',
+    'news.main.text':'We are preparing for the BT 8BIT open beta. Register now to get early access and a starter bonus — 500 gold and an exclusive camouflage.',
     'tag.clans':'Clans','tag.tanks':'Vehicles','tag.balance':'Balance','tag.maps':'Maps',
     'n1.title':'Clan system — global map and clan wars',
     'n2.title':'5 new tanks added: France and USA',
     'n3.title':'Updated armor penetration and ricochet physics',
     'n4.title':'New map Polygon — urban combat',
-    'dl.eye':'Download','dl.title':'Ready for Battle?','dl.desc':'Free on Android.',
+    'dl.eye':'Download','dl.title':'Ready for Battle?',
+    'dl.desc':'Free on Android.',
     'dl.gp.sub':'Get it on','dl.apk.sub':'Direct APK',
     'dl.downloads':'Downloaded:','dl.times':'times','dl.version':'Latest version:',
-    'footer.desc':'Mobile tank game. Made in Ukraine.',
+    'footer.desc':'Mobile tank game with realistic armor mechanics and clan system. Made in Ukraine.',
     'footer.game':'🎯 Game','footer.support':'🎫 Support','footer.legal':'📋 Legal',
     'footer.terms':'📄 Terms of Service','footer.privacy':'🔒 Privacy Policy',
+    'footer.made':'Made in Ukraine','nav.gallery':'📸 Gallery',
     'ad.label':'AD BLOCK','ad.tag':'Ad',
-    'nav.support.full':'🎫 Support Center','nav.tanks.db':'🚀 Vehicles',
+    'tourn.title':'Tournaments','tourn.register':'Registration',
+    'tourn.more':'Learn More','tourn.join':'Join Now',
   }
 };
 
@@ -802,13 +938,15 @@ function setLang(l) {
     if (T[l] && T[l][k]) el.textContent = T[l][k];
   });
   document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active', (b.textContent==='UA'&&l==='uk')||(b.textContent==='EN'&&l==='en'));
+    b.classList.toggle('active',
+      (b.textContent==='UA' && l==='uk') || (b.textContent==='EN' && l==='en'));
   });
-  document.title = l === 'en' ? 'TB3D — Tank Battles 3D' : 'TANKS BATTLES 3D — Танкові Бої 3D';
+  // Оновити підпис кнопки кабінету якщо є
+  document.title = l === 'en' ? 'BT 8BIT — Tank Battles 3D' : 'BT 8BIT — Танкові Бої 3D';
 }
 setLang(lang);
 
-// ЗАВАНТАЖЕННЯ ТАНКІВ
+// ── ЗАВАНТАЖЕННЯ ТАНКІВ З FIREBASE ────────────────────────────
 (async function loadIndexTanks() {
   const FACTION_FC = { east:'#cc2222', west:'#2244cc', north:'#888', euro:'#4488cc', asian:'#cc44aa' };
   const CLASS_LB   = { assault:'⚔️ Штурм', support:'🛡️ Підт.', recon:'👁️ Розв.', arty:'💥 Арта', medium:'⚙️ Унів.' };
@@ -816,13 +954,18 @@ setLang(lang);
   const scroll     = document.getElementById('tanks-scroll');
   if (!scroll) return;
 
+  const FALLBACK = [];
+
   function renderCard(t) {
     const fc = FACTION_FC[t.faction] || '#888';
     const cl = CLASS_LB[t.tankClass] || '';
     const st = t.stats || {};
     const imgEl = t.imageUrl
-      ? `<div style="height:90px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);margin-bottom:10px"><img src="${t.imageUrl}" alt="${t.name}" style="max-height:86px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 8px ${fc}66)"></div>`
+      ? `<div style="height:90px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);margin-bottom:10px">
+           <img src="${t.imageUrl}" alt="${t.name}" style="max-height:86px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 8px ${fc}66)">
+         </div>`
       : `<div style="font-size:48px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 10px ${fc}66)">${t.emoji||'🚀'}</div>`;
+
     return `<div class="tank-card" style="${t.comingSoon?'opacity:.7;':''}" onclick="window.location.href='tanks.html'">
       <div style="height:3px;background:${fc};margin:-24px -20px 14px"></div>
       ${imgEl}
@@ -849,23 +992,24 @@ setLang(lang);
     const app  = getApps().length ? getApps()[0] : initializeApp(fbCfg);
     const db   = getFirestore(app);
     const snap = await getDocs(collection(db,'tanks_db'));
-    const tanks = snap.empty ? [] : snap.docs.map(d=>({id:d.id,...d.data()}));
+    const tanks = snap.empty ? FALLBACK : snap.docs.map(d=>({id:d.id,...d.data()}));
     scroll.innerHTML = tanks.map(renderCard).join('') +
       `<div class="tank-card" style="border-color:rgba(232,188,56,.2);background:rgba(232,188,56,.03);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px" onclick="window.location.href='tanks.html'">
         <div style="font-size:32px;margin-bottom:12px">🚀</div>
         <div style="font-family:var(--px);font-size:8px;color:var(--gold);text-align:center;line-height:1.8">Вся база<br>техніки →</div>
       </div>`;
-  } catch(e) { scroll.innerHTML = ''; }
+  } catch(e) {
+    scroll.innerHTML = FALLBACK.map(renderCard).join('');
+  }
 })();
-
-function toggleMenu() {
-  const btn  = document.getElementById('burger-btn');
-  const menu = document.getElementById('mobile-menu');
+  function toggleMenu() {
+  const btn=document.getElementById('burger-btn');
+  const menu=document.getElementById('mobile-menu');
   btn.classList.toggle('open');
   menu.classList.toggle('open');
 }
-document.querySelectorAll('.mobile-menu a').forEach(a => {
-  a.addEventListener('click', () => {
+document.querySelectorAll('.mobile-menu a').forEach(a=>{
+  a.addEventListener('click',()=>{
     document.getElementById('burger-btn').classList.remove('open');
     document.getElementById('mobile-menu').classList.remove('open');
   });
